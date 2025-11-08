@@ -1,50 +1,161 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+Version: 1.1.0 → 2.0.0 (Major: Refactored to pure development process)
+Ratification Date: 2025-11-08
+Last Amended: 2025-11-08
 
-## Core Principles
+Changes in v2.0.0:
+- BREAKING: Removed all product-specific principles (moved to product spec)
+- Kept only: Development process principles (Small Steps, Test-First)
+- Kept: Definition of Done, Quality Bar, Work Rhythm, Governance
+- Removed: Product features like "AI as Mirror", "Multiple Forms", "Calm Experience" etc.
+- Result: Constitution is now reusable for ANY project
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+Templates Status:
+✅ plan-template.md - Constitution Check needs updating for new v2.0.0
+⚠️  Product principles moved to /specs/000-product-vision/spec.md (to be created)
+✅ spec-template.md - Alignment unchanged
+✅ tasks-template.md - Task organization unchanged
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Follow-up Actions:
+- Create /specs/000-product-vision/spec.md with product principles
+- Update plan-template.md Constitution Check to reference product spec
+- Update README to reference both constitution (HOW) and product spec (WHAT)
+-->
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+# Project Constitution
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Purpose**: This document defines HOW the project is built, not WHAT is built. It establishes development practices, quality standards, and governance that apply to all features and specs.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+This constitution is project-agnostic and focuses purely on the development process.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Development Principles
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### I. Small Steps, Always
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Work in tiny, testable slices that can be finished in one focused session (max 45 minutes).
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**MUST**: Every task represents a completable unit of work within a single session.
+
+**MUST**: Features are broken down into independently testable stories (per spec template).
+
+**MUST**: Commit after each completed task or logical group.
+
+**Rationale**: Protects developer energy, enables frequent validation, and prevents scope creep.
+
+### II. Test-First Development
+
+Write tests before implementation to ensure correctness and prevent regressions.
+
+**MUST**: Write Acceptance Tests for each task BEFORE implementation.
+
+**MUST**: Tests fail first, then implement to make them pass (Red-Green-Refactor).
+
+**MUST**: All tests pass before marking a task or feature complete.
+
+**Rationale**: Tests document expected behavior and catch issues early.
+
+## Definition of Done
+
+A feature or story is considered done when ALL of the following are true:
+
+1. **Documentation**: Written Spec, Plan, and Tasks exist in `/specs/[###-feature-name]/`
+2. **Pre-Implementation Tests**: Each Task includes clear Acceptance Tests describing expected behavior BEFORE implementation
+3. **Build & Tests Pass**: Code builds locally and all relevant tests pass
+4. **Product Requirements Met**: Feature meets all requirements defined in the product spec (`/specs/000-product-vision/spec.md`)
+5. **Documentation Updated**: CHANGELOG and README reflect the changes
+6. **Manual Validation**: The feature has been manually tested in the actual environment
+
+**Rationale**: DoD ensures quality is built in, not added later. Product-specific requirements (accessibility, privacy, etc.) are verified against the product spec.
+
+## Quality Bar
+
+### Testing Requirements
+
+**MUST**: Every task passes its Acceptance Tests before being marked complete.
+
+**MUST**: Unit tests cover core logic and data operations.
+
+**MUST**: Smoke tests verify main user flows work end-to-end.
+
+**MAY**: Contract and integration tests for complex interactions (when specified in spec).
+
+### Code Quality
+
+**MUST**: Code follows project's style guide and linting rules.
+
+**MUST**: Complex logic includes inline comments explaining intent.
+
+**SHOULD**: Functions/methods are small and focused on single responsibility.
+
+**Rationale**: Quality is not negotiable; these standards ensure maintainability and reliability.
+
+## Work Rhythm
+
+### Session Structure
+
+**MUST**: One work session = one user story OR max 45 minutes (whichever comes first).
+
+**MUST**: After each session: short reflection, then decide — ship or stop.
+
+**SHOULD**: Pause when fatigue or confusion rises, rather than pushing through.
+
+### Release Cadence
+
+**PREFER**: Small releases (micro-versions) over long development streaks.
+
+**PREFER**: Shipping one working story over accumulating multiple incomplete stories.
+
+**Rationale**: Sustainable pace protects energy and maintains clarity of purpose.
+
+## Decision-Making Guidance
+
+When facing implementation choices:
+
+1. **Simplicity First** — Choose the simplest solution that meets requirements.
+2. **YAGNI (You Aren't Gonna Need It)** — Don't build for hypothetical future needs.
+3. **Ship Small** — Prefer delivering working features over perfect features.
+4. **Product Spec Alignment** — Verify decisions against product requirements in spec.
+
+**Rationale**: Guides toward pragmatic, maintainable solutions without over-engineering.
+
+## Collaboration & Workflow
+
+**MUST**: Work in micro-iterations (one story at a time).
+
+**SHOULD**: Review open tasks before adding new ones.
+
+**MUST**: Merge only passing, tested code.
+
+**SHOULD**: Discuss scope changes before implementation.
+
+**MUST**: Keep pull requests small and focused on single feature/fix.
+
+**Rationale**: Incremental progress maintains code quality and project momentum.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This Constitution supersedes all other development practices, coding preferences, and implementation decisions.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Amendments**: Changes to Core Principles, Non-Goals, or Definition of Done require:
+1. Explicit Constitution update with version bump
+2. Sync Impact Report documenting affected templates and specs
+3. Migration plan for existing features (if applicable)
+4. Clear commit message (e.g., `docs: amend constitution to v1.1.0 (add principle IX)`)
+
+**Version Semantics**:
+- **MAJOR**: Backward incompatible changes (remove/redefine principles, change DoD)
+- **MINOR**: New principles/sections added or material expansions
+- **PATCH**: Clarifications, wording improvements, non-semantic refinements
+
+**Compliance Verification**:
+- All specs MUST verify against DoD before task creation
+- All tasks MUST include Acceptance Tests before implementation (Principle I)
+- All PRs MUST pass Quality Bar checks (testing, accessibility, privacy, performance)
+- Constitution Check in plan template gates work appropriately
+
+**Living Document**: This constitution may evolve as development practices mature, but changes must be intentional, documented, and propagated to all dependent templates.
+
+**Product Requirements**: Product-specific requirements (features, UX, privacy, accessibility, etc.) belong in `/specs/000-product-vision/spec.md`, not in this constitution.
+
+**Version**: 2.0.0 | **Ratified**: 2025-11-08 | **Last Amended**: 2025-11-08

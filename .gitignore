@@ -51,3 +51,7 @@ yarn-error.log*
 # Environment variables
 .env
 .env.local
+
+# User data (private, local-first)
+data/
+*.json.backup

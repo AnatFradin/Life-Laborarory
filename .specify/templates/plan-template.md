@@ -11,27 +11,65 @@
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
+**Language/Version**: Node.js 18+ (backend), Vue 3 (frontend with Composition API)  
+**Primary Dependencies**: 
+- Backend: Express.js (simple, well-documented), fs/promises for file operations
+- AI (Future): Ollama (local models - default), optional OpenAI/Anthropic API (online - requires opt-in)
+- Frontend: Vue 3, Vite (fast dev server & build tool), Vue Router (for navigation)
+- Testing: Vitest (Vue-friendly Jest alternative) for unit tests, optional Playwright for e2e
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Storage**: Local JSON files in `data/` directory (can be placed in iCloud Drive for sync)  
+**Testing**: Jest for unit/integration tests, smoke tests for main flows (write → save → view history)  
+**Target Platform**: macOS (primary), cross-platform web app (runs locally via localhost)  
+**Project Type**: Web application (local-first, single-user)  
+**Performance Goals**: 
+- Instant application load (< 2 seconds on modest hardware)
+- UI interactions < 100ms response time
+- File operations feel immediate (< 500ms for save/load)
+
+**Constraints**: 
+- Offline-capable (no internet required; AI features work via local Ollama by default)
+- Runs entirely on user's machine
+- Data never leaves device unless user explicitly exports OR chooses online AI API
+- When online AI used, clear warning that reflection content is sent to external service
+- Minimal memory footprint (< 200MB excluding AI models)
+- Accessible via keyboard only
+- WCAG 2.1 Level AA compliance
+
+**Scale/Scope**: 
+- Single user
+- ~10-100 reflection entries per month expected
+- Simple UI: 3-5 main screens/views
+- No authentication/accounts
+- No backend database (just file system)
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**Principle I - Small Steps**: Can this feature be completed in one focused session (45 min max)? If not, break into smaller stories.
+
+**Principle II - AI as Mirror**: Does any AI interaction avoid instruction/diagnosis? All prompts must be reflective, not directive. If AI feature: user chooses model (local Ollama default), online APIs require opt-in with privacy warning.
+
+**Principle III - Multiple Forms**: Does the feature support diverse expression modes equally?
+
+**Principle IV - Calm Experience**: Does the design minimize choices, use calm colors, avoid time pressure?
+
+**Principle V - Local-First**: Is all data stored locally? No network calls for personal data?
+
+**Principle VI - Trace of Becoming**: Can interactions be persisted with timestamps if user chooses?
+
+**Principle VII - Reversibility**: Are all actions undoable, deletable, exportable?
+
+**Principle VIII - Accessibility**: Full keyboard navigation? WCAG compliance? Plain language?
+
+**Non-Goals Check**: Does NOT include accounts, analytics, cloud sync, diagnosis, gamification, or social features?
+
+**DoD Alignment**: Will this feature have Spec + Plan + Tasks, pass tests, work via keyboard, persist locally, export to Markdown, and update docs?
+
+**Quality Bar**: Can this meet performance goals (instant load, atomic writes), privacy (no telemetry), and tone (calm, reflective) standards?
+
+**✓ PASS** if all checks satisfied | **⚠ NEEDS ADJUSTMENT** if violations exist → document in Complexity Tracking table
 
 ## Project Structure
 
@@ -56,43 +94,44 @@ specs/[###-feature]/
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
 backend/
 ├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
+│   ├── models/          # Data models (notes, sessions, reflections)
+│   ├── services/        # Business logic (storage, reflection tools)
+│   ├── api/             # REST/HTTP endpoints
+│   └── storage/         # Local file system operations
 └── tests/
+    ├── unit/            # Unit tests for models and services
+    ├── integration/     # Integration tests for storage operations
+    └── smoke/           # Smoke tests for main user flows
 
 frontend/
 ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
+│   ├── components/      # Reusable UI components
+│   ├── pages/           # Main application pages/views
+│   ├── services/        # API client, local state management
+│   ├── styles/          # CSS/styling (calm, accessible design)
+│   └── utils/           # Helper functions
+├── public/              # Static assets
 └── tests/
+    ├── unit/            # Component unit tests
+    └── e2e/             # End-to-end user flow tests
 
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+data/                    # Local JSON storage directory (gitignored)
+├── notes/               # User notes and reflections
+├── sessions/            # Session history
+└── exports/             # User-triggered exports
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Web application with local-first architecture. Node.js backend (Express) handles file system operations and serves REST API. Vue 3 frontend with Vite for development and building. Vue's component-based architecture keeps code organized and maintainable. All user data persists in local `data/` directory which can be placed in iCloud Drive for automatic sync across user's macOS devices. No cloud services, no external APIs for user data.
+
+**Why Vue 3?**
+- **Beginner-friendly**: Progressive framework, gentle learning curve from HTML/CSS/JS
+- **Great documentation**: Official Vue docs are excellent for learning
+- **Composition API**: Modern approach, similar to writing functions (familiar to backend devs)
+- **Single File Components**: Each component is HTML + CSS + JS in one file (easy to understand)
+- **Vite dev server**: Lightning-fast hot reload, instant feedback while learning
+- **Wide adoption**: Large community, many resources, good career skill
 
 ## Complexity Tracking
 
