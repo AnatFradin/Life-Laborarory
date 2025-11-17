@@ -1,0 +1,545 @@
+openapi: 3.1.0
+info:
+  title: Laboratory of Life API
+  description: REST API for local-first, AI-assisted self-reflection application
+  version: 1.0.0
+  contact:
+    name: Laboratory of Life
+    
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+tags:
+  - name: Reflections
+    description: Create, retrieve, and delete reflections
+  - name: AI Mirror
+    description: Generate reflective AI responses
+  - name: Export
+    description: Export user data
+  - name: Preferences
+    description: User settings and preferences
+
+paths:
+  /reflections:
+    get:
+      tags: [Reflections]
+      summary: List all reflections
+      description: Retrieve all user reflections, optionally filtered by date range
+      operationId: listReflections
+      parameters:
+        - name: startDate
+          in: query
+          description: Filter reflections from this date (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: Filter reflections until this date (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: mode
+          in: query
+          description: Filter by expression mode
+          required: false
+          schema:
+            type: string
+            enum: [text, visual]
+      responses:
+        '200':
+          description: List of reflections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reflections:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Reflection'
+                  total:
+                    type: integer
+                    description: Total number of reflections
+        '500':
+          $ref: '#/components/responses/Error'
+    
+    post:
+      tags: [Reflections]
+      summary: Create a new reflection
+      description: Create a text, visual, or silence reflection
+      operationId: createReflection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReflectionRequest'
+      responses:
+        '201':
+          description: Reflection created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reflection'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/Error'
+
+  /reflections/{id}:
+    get:
+      tags: [Reflections]
+      summary: Get a specific reflection
+      description: Retrieve a single reflection by ID
+      operationId: getReflection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Reflection UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Reflection found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reflection'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+    
+    delete:
+      tags: [Reflections]
+      summary: Delete a reflection
+      description: Permanently delete a specific reflection (FR-017)
+      operationId: deleteReflection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Reflection UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Reflection deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+
+  /reflections/delete-all:
+    post:
+      tags: [Reflections]
+      summary: Delete all reflections
+      description: Permanently delete all user reflections (FR-018)
+      operationId: deleteAllReflections
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmation:
+                  type: string
+                  enum: [DELETE_ALL]
+                  description: User must send "DELETE_ALL" to confirm
+              required:
+                - confirmation
+      responses:
+        '204':
+          description: All reflections deleted successfully
+        '400':
+          description: Confirmation not provided or invalid
+        '500':
+          $ref: '#/components/responses/Error'
+
+  /ai/mirror:
+    post:
+      tags: [AI Mirror]
+      summary: Generate AI reflection
+      description: Send reflection text to AI and receive reflective response (FR-008 through FR-013)
+      operationId: generateAIMirror
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  minLength: 1
+                  description: User's reflection text
+                provider:
+                  type: string
+                  enum: [local, online]
+                  description: Local (Ollama) or online (OpenAI/Anthropic)
+                  default: local
+                model:
+                  type: string
+                  description: Specific model to use (e.g., "llama2", "gpt-4")
+              required:
+                - prompt
+      responses:
+        '200':
+          description: AI response generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIInteraction'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '503':
+          description: AI provider unavailable (FR-031)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+
+  /export:
+    post:
+      tags: [Export]
+      summary: Export all data
+      description: Generate Markdown export of all reflections (FR-015)
+      operationId: exportData
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exportFormat:
+                  type: string
+                  enum: [single-file, folder]
+                  default: folder
+                  description: |
+                    How to handle visual attachments:
+                    - single-file: Images embedded as base64 in Markdown
+                    - folder: Separate folder with Markdown + image files
+                format:
+                  type: string
+                  enum: [markdown]
+                  default: markdown
+                  description: Export format (only Markdown in V1)
+      responses:
+        '200':
+          description: Export generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportBundle'
+        '500':
+          $ref: '#/components/responses/Error'
+
+  /preferences:
+    get:
+      tags: [Preferences]
+      summary: Get user preferences
+      description: Retrieve current user settings
+      operationId: getPreferences
+      responses:
+        '200':
+          description: User preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '500':
+          $ref: '#/components/responses/Error'
+    
+    put:
+      tags: [Preferences]
+      summary: Update user preferences
+      description: Update user settings (FR-009 for AI provider choice)
+      operationId: updatePreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPreferences'
+      responses:
+        '200':
+          description: Preferences updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/Error'
+
+components:
+  schemas:
+    Reflection:
+      type: object
+      required:
+        - id
+        - timestamp
+        - mode
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique reflection identifier
+        timestamp:
+          type: string
+          format: date-time
+          description: When reflection was created (ISO 8601)
+        mode:
+          type: string
+          enum: [text, visual]
+          description: Expression mode
+        content:
+          type: string
+          description: Text content (required if mode=text)
+        visualAttachment:
+          $ref: '#/components/schemas/VisualAttachment'
+          description: Image reference (required if mode=visual)
+        aiInteraction:
+          $ref: '#/components/schemas/AIInteraction'
+          description: Optional AI mirror response
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional metadata
+
+    VisualAttachment:
+      type: object
+      required:
+        - originalFilename
+        - storedPath
+        - mimeType
+        - sizeBytes
+        - importTimestamp
+      properties:
+        originalFilename:
+          type: string
+          description: Original filename when imported
+        storedPath:
+          type: string
+          description: Path relative to data directory
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/gif, image/webp]
+          description: Image MIME type
+        sizeBytes:
+          type: integer
+          minimum: 1
+          description: File size in bytes
+        dimensions:
+          type: object
+          properties:
+            width:
+              type: integer
+              minimum: 1
+            height:
+              type: integer
+              minimum: 1
+        importTimestamp:
+          type: string
+          format: date-time
+          description: When image was imported
+
+    AIInteraction:
+      type: object
+      required:
+        - model
+        - provider
+        - prompt
+        - response
+        - timestamp
+      properties:
+        model:
+          type: string
+          description: AI model identifier (e.g., "ollama:llama2", "openai:gpt-4")
+        provider:
+          type: string
+          enum: [local, online]
+          description: Local (Ollama) or online (OpenAI/Anthropic)
+        prompt:
+          type: string
+          description: User's reflection text sent to AI
+        response:
+          type: string
+          description: AI's reflective response
+        timestamp:
+          type: string
+          format: date-time
+          description: When AI response was generated
+        systemPromptVersion:
+          type: string
+          pattern: '^\d+\.\d+\.\d+$'
+          example: "1.0.0"
+          description: Semantic version of system prompt used (MAJOR.MINOR.PATCH)
+
+    UserPreferences:
+      type: object
+      required:
+        - aiProvider
+        - hasAcknowledgedOnlineWarning
+        - language
+        - theme
+      properties:
+        aiProvider:
+          type: string
+          enum: [local, online]
+          default: local
+          description: Default AI provider
+        localModel:
+          type: string
+          default: llama2
+          description: Ollama model name
+        onlineModel:
+          type: string
+          nullable: true
+          description: Online AI model (null if never opted in)
+        onlineProvider:
+          type: string
+          enum: [openai, anthropic]
+          nullable: true
+          description: Online AI provider
+        hasAcknowledgedOnlineWarning:
+          type: boolean
+          default: false
+          description: User has seen privacy warning for online AI
+        language:
+          type: string
+          minLength: 2
+          maxLength: 2
+          default: en
+          description: UI language (ISO 639-1 code)
+        theme:
+          type: string
+          enum: [calm-light, calm-dark]
+          default: calm-light
+          description: Color theme
+
+    ExportBundle:
+      type: object
+      required:
+        - exportTimestamp
+        - reflectionCount
+        - dateRange
+        - format
+        - content
+        - visualsIncluded
+      properties:
+        exportTimestamp:
+          type: string
+          format: date-time
+          description: When export was generated
+        reflectionCount:
+          type: integer
+          minimum: 0
+          description: Total number of reflections
+        dateRange:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        format:
+          type: string
+          enum: [markdown]
+          description: Export format
+        content:
+          type: string
+          description: Full export in Markdown format
+        visualsIncluded:
+          type: boolean
+          description: Whether visual attachments were included
+        exportFormat:
+          type: string
+          enum: [single-file, folder]
+          description: How visuals were exported (single-file = base64 embedded, folder = separate files)
+
+    CreateReflectionRequest:
+      type: object
+      required:
+        - mode
+      properties:
+        mode:
+          type: string
+          enum: [text, visual]
+        content:
+          type: string
+          description: Required if mode=text
+        visualAttachment:
+          $ref: '#/components/schemas/VisualAttachment'
+          description: Required if mode=visual
+        aiInteraction:
+          $ref: '#/components/schemas/AIInteraction'
+          description: Optional AI response to include
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Gentle, solution-focused error message (FR-029)
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error details
+
+  responses:
+    Error:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: INTERNAL_ERROR
+            message: "Something unexpected happened. Your reflections are safe."
+    
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: VALIDATION_ERROR
+            message: "We couldn't save this reflection. Please check your input."
+            details:
+              field: content
+              issue: "Content is required for text reflections"
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: NOT_FOUND
+            message: "We couldn't find that reflection."
+
+security: []
+# No authentication needed (local-only, single-user application)

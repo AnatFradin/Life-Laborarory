@@ -28,10 +28,10 @@ The system reflects and clarifies; it MUST NEVER instruct or diagnose.
 
 ### II. Multiple Forms, One Doorway
 
-Writing, metaphor, visual artifacts, or silence — all are valid entries to the self.
+Writing, metaphor, visual artifacts — all are valid entries to the self.
 
 **Requirements**:
-- Support diverse expression modes (text, visual import, silence/pause)
+- Support diverse expression modes (text, visual import)
 - Each mode receives equal design attention and accessibility
 
 **Rationale**: Honors different ways of knowing and being; no single path is privileged.
@@ -123,17 +123,16 @@ A person opens the application to reflect on their day, write freely, and receiv
 
 ### User Story 2 - Multiple Expression Modes (Priority: P2)
 
-A person wants to express themselves through different modalities — sometimes text, sometimes importing visual artifacts (photos, drawings, sketches), sometimes just pausing in silence.
+A person wants to express themselves through different modalities — sometimes text, sometimes importing visual artifacts (photos, drawings, sketches).
 
 **Why this priority**: Core differentiator that honors diverse ways of self-exploration.
 
-**Independent Test**: Can be tested by creating entries using each mode independently (text entry, visual import, timed pause) and verifying equal treatment and accessibility.
+**Independent Test**: Can be tested by creating entries using each mode independently (text entry, visual import) and verifying equal treatment and accessibility.
 
 **Acceptance Scenarios**:
 
 1. **Given** user wants to express visually, **When** they import an image file, **Then** they can add visual reflections (photos, drawings, artwork) with the same calm UX as text mode
-2. **Given** user needs silence, **When** they select pause/silence mode, **Then** they can mark a contemplative period without pressure to produce content
-3. **Given** user has mixed-mode reflections, **When** they review history, **Then** all modes are presented with equal prominence and accessibility
+2. **Given** user has mixed content reflections, **When** they review history, **Then** text and visual reflections are presented with equal prominence and accessibility
 
 ---
 
@@ -194,7 +193,7 @@ A person who uses keyboard-only navigation or screen readers can access all feat
 - How does system handle corrupted local storage or missing data files?
 - What happens when local AI model (Ollama) is not available or fails?
 - How does system behave when user switches AI models mid-reflection?
-- What happens to data export when user has mixed content types (text, imported images, silence markers)?
+- What happens to data export when user has mixed content types (text, imported images)?
 - How does system handle rapid save/delete actions (race conditions)?
 - What happens when user's device runs low on storage during a reflection session?
 - How does system maintain calm UX when errors occur (network failure, disk full, etc.)?
@@ -208,59 +207,57 @@ A person who uses keyboard-only navigation or screen readers can access all feat
 - **FR-001**: System MUST provide a calm, uncluttered interface with minimal on-screen choices at any given time
 - **FR-002**: System MUST support text-based reflections with autosave and manual save options
 - **FR-003**: System MUST support visual expression mode by allowing users to import image files (photos, drawings, sketches, artwork) as reflections
-- **FR-004**: System MUST support silence/pause mode for marking contemplative periods without content creation
-- **FR-005**: System MUST display all reflections in chronological order with human-readable timestamps
-- **FR-006**: System MUST use calm color palette with WCAG 2.1 Level AA contrast ratios minimum
-- **FR-007**: System MUST NOT include animations that grab attention, notifications, or time pressure elements
+- **FR-004**: System MUST display all reflections in chronological order with human-readable timestamps
+- **FR-005**: System MUST use calm color palette with WCAG 2.1 Level AA contrast ratios minimum
+- **FR-006**: System MUST NOT include animations that grab attention, notifications, or time pressure elements
 
 ### Functional Requirements — AI Mirror
 
-- **FR-008**: System MUST integrate local AI model (Ollama) as default for reflective feedback
-- **FR-009**: System MUST allow user to opt-in to online AI models with explicit privacy warning before first use
-- **FR-010**: System MUST generate reflective, non-directive responses using carefully crafted system prompts
-- **FR-011**: System MUST NEVER use imperative language ("you should", "you must") in AI responses
-- **FR-012**: System MUST NEVER attempt diagnosis or therapeutic advice in AI responses
-- **FR-013**: System MUST clearly indicate when AI processing is happening (local vs. online)
+- **FR-007**: System MUST integrate local AI model (Ollama) as default for reflective feedback
+- **FR-008**: System MUST allow user to opt-in to online AI models with explicit privacy warning before first use
+- **FR-009**: System MUST generate reflective, non-directive responses using carefully crafted system prompts
+- **FR-010**: System MUST NEVER use imperative language ("you should", "you must") in AI responses
+- **FR-011**: System MUST NEVER attempt diagnosis or therapeutic advice in AI responses
+- **FR-012**: System MUST clearly indicate when AI processing is happening (local vs. online)
 
 ### Functional Requirements — Privacy & Data
 
-- **FR-014**: System MUST store all user reflections locally in JSON or equivalent structured format
-- **FR-015**: System MUST perform atomic writes to prevent data corruption or half-saved states
-- **FR-016**: System MUST provide "Export All Data" function that generates well-formatted Markdown file
-- **FR-017**: System MUST provide "Delete Specific Entry" function with single confirmation
-- **FR-018**: System MUST provide "Delete All Data" function with two-step confirmation process
-- **FR-019**: System MUST NOT make network calls for user data without explicit user-initiated action
-- **FR-020**: System MUST display privacy status clearly (local-only vs. online AI active)
-- **FR-021**: System MUST support data export with ISO timestamps and human-friendly display format
-- **FR-022**: System MUST allow user content in any language without restriction
+- **FR-013**: System MUST store all user reflections locally in JSON or equivalent structured format
+- **FR-014**: System MUST perform atomic writes to prevent data corruption or half-saved states
+- **FR-015**: System MUST provide "Export All Data" function that generates well-formatted Markdown file
+- **FR-016**: System MUST provide "Delete Specific Entry" function with single confirmation
+- **FR-017**: System MUST provide "Delete All Data" function with two-step confirmation process
+- **FR-018**: System MUST NOT make network calls for user data without explicit user-initiated action
+- **FR-019**: System MUST display privacy status clearly (local-only vs. online AI active)
+- **FR-020**: System MUST support data export with ISO timestamps and human-friendly display format
+- **FR-021**: System MUST allow user content in any language without restriction
 
 ### Functional Requirements — Accessibility
 
-- **FR-023**: System MUST support full keyboard navigation for all features and interactions
-- **FR-024**: System MUST provide visible focus indicators for keyboard navigation (WCAG 2.1 Level AA)
-- **FR-025**: System MUST provide proper ARIA labels and roles for screen reader compatibility
-- **FR-026**: System MUST use plain language throughout interface (no jargon, technical terms, or therapeutic vocabulary)
-- **FR-027**: System MUST maintain logical tab order through all interactive elements
-- **FR-028**: System MUST support standard keyboard shortcuts (Tab, Enter, Escape, Arrow keys)
+- **FR-022**: System MUST support full keyboard navigation for all features and interactions
+- **FR-023**: System MUST provide visible focus indicators for keyboard navigation (WCAG 2.1 Level AA)
+- **FR-024**: System MUST provide proper ARIA labels and roles for screen reader compatibility
+- **FR-025**: System MUST use plain language throughout interface (no jargon, technical terms, or therapeutic vocabulary)
+- **FR-026**: System MUST maintain logical tab order through all interactive elements
+- **FR-027**: System MUST support standard keyboard shortcuts (Tab, Enter, Escape, Arrow keys)
 
 ### Functional Requirements — Error Handling & Safety
 
-- **FR-029**: System MUST display gentle, solution-focused error messages that maintain calm UX
-- **FR-030**: System MUST handle missing or corrupted data files gracefully with recovery options
-- **FR-031**: System MUST detect when local AI (Ollama) is unavailable and offer clear alternatives
-- **FR-032**: System MUST detect crisis keywords (harm, suicide, emergency) and display static crisis resources (phone numbers, text lines) without tracking
-- **FR-033**: System MUST handle low storage scenarios with advance warning before writes fail
-- **FR-034**: System MUST validate data integrity on read and offer recovery/export if corruption detected
+- **FR-028**: System MUST display gentle, solution-focused error messages that maintain calm UX
+- **FR-029**: System MUST handle missing or corrupted data files gracefully with recovery options
+- **FR-030**: System MUST detect when local AI (Ollama) is unavailable and offer clear alternatives
+- **FR-031**: System MUST handle low storage scenarios with advance warning before writes fail
+- **FR-032**: System MUST validate data integrity on read and offer recovery/export if corruption detected
 
 ### Functional Requirements — Performance
 
-- **FR-035**: System MUST load application interface in under 2 seconds on modest hardware (5-year-old laptop)
-- **FR-036**: System MUST respond to UI interactions in under 100ms (perceived as immediate)
-- **FR-037**: System MUST handle large reflection histories (1000+ entries) without performance degradation
+- **FR-033**: System MUST load application interface in under 2 seconds on modest hardware (5-year-old laptop)
+- **FR-034**: System MUST respond to UI interactions in under 100ms (perceived as immediate)
+- **FR-035**: System MUST handle large reflection histories (1000+ entries) without performance degradation
 
 ### Key Entities
 
-- **Reflection Entry**: A single unit of self-expression with timestamp, content (text/imported image reference/silence marker), mode type, optional AI interaction, and metadata
+- **Reflection Entry**: A single unit of self-expression with timestamp, content (text or imported image reference), optional AI interaction, and metadata
 - **Visual Attachment**: Reference to imported image file with original filename, file path/copy, dimensions, and import timestamp
 - **AI Interaction**: A request-response pair between user and AI mirror, including model type used (local/online), system prompt version, and response content
 - **Export Bundle**: Complete data export package including all reflections, AI interactions, timestamps, metadata, and referenced visual files in Markdown format
@@ -291,7 +288,7 @@ A person who uses keyboard-only navigation or screen readers can access all feat
 - **SC-012**: Users report AI responses feel "curious" and "non-judgmental" (qualitative feedback)
 
 **Multiple Expression Modes**:
-- **SC-013**: Users can create reflections in text, visual, and silence modes with equal ease (measured by completion rate)
+- **SC-013**: Users can create reflections in text and visual modes with equal ease (measured by completion rate)
 - **SC-014**: Each expression mode receives equal design attention (measured by feature parity checklist)
 
 **Technical Performance**:
@@ -310,8 +307,6 @@ A person who uses keyboard-only navigation or screen readers can access all feat
 These rules must be honored in every feature and design decision:
 
 **MUST NOT**: The system diagnoses, prescribes, or replaces human contact
-
-**MUST**: If text indicates crisis (keywords: harm, suicide, emergency), display static, non-tracking crisis resources (phone numbers, text lines)
 
 **MUST NOT**: Use "should" or "must" language in prompts presented to users
 
@@ -361,7 +356,6 @@ These rules must be honored in every feature and design decision:
 - **Ollama**: Local AI model provider (must be installable and runnable on target platforms)
 - **File System**: Reliable local file system access for data persistence
 - **Web Technologies**: Modern browser capabilities or equivalent (Electron, Tauri, etc. — implementation detail)
-- **Crisis Resources**: Curated list of crisis hotlines and text services (static, non-tracking)
 
 ## Open Questions
 
