@@ -27,7 +27,7 @@ This is a web application with backend and frontend:
 **Purpose**: Project initialization and basic structure
 
 - [X] T001 Create backend directory structure per plan.md: backend/src/{domain,adapters,config}/, backend/tests/{unit,integration,smoke}/
-- [ ] T002 Create frontend directory structure per plan.md: frontend/src/{components,views,services,composables,router,styles}/, frontend/tests/{unit,e2e}/
+- [X] T002 Create frontend directory structure per plan.md: frontend/src/{components,views,services,composables,router,styles}/, frontend/tests/{unit,e2e}/
 - [ ] T003 [P] Initialize backend: package.json with Node.js 18+, Express, Zod, fs/promises dependencies
 - [ ] T004 [P] Initialize frontend: package.json with Vue 3, Vite, Vue Router, Radix Vue, axios dependencies
 - [ ] T005 [P] Configure ESLint and Prettier for both backend and frontend in respective .eslintrc.js files
