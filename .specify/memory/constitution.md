@@ -181,6 +181,7 @@ This Constitution supersedes all other development practices, coding preferences
 2. Sync Impact Report documenting affected templates and specs
 3. Migration plan for existing features (if applicable)
 4. Clear commit message (e.g., `docs: amend constitution to v1.1.0 (add principle IX)`)
+5. Do not use reminder-for-me.md file for AI Copilot ßsuggestions. This file is private developer notes.
 
 **Version Semantics**:
 - **MAJOR**: Backward incompatible changes (remove/redefine principles, change DoD)
