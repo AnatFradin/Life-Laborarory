@@ -35,8 +35,11 @@
   
   /* Additional UI colors */
   --color-background: #fafaf9; /* Alias for bg */
+  --color-background-secondary: #f5f5f4; /* Alias for bg-secondary */
+  --color-background-hover: #e7e5e4; /* Light gray for hover states */
   --color-surface: #ffffff; /* Alias for elevated backgrounds */
   --color-text-muted: #78716c; /* Alias for tertiary text */
+  --color-primary-dark: #3d6349; /* Alias for primary-hover */
   --color-danger: #991b1b; /* Alias for error/delete actions */
   --color-danger-hover: #7f1d1d; /* Darker danger on hover */
   --color-danger-light: #fecaca; /* Light danger for borders */
