@@ -20,6 +20,7 @@
       v-else
       :reflections="reflections"
       @select="handleSelectReflection"
+      @delete="handleDeleteReflection"
     />
   </div>
 </template>
@@ -31,7 +32,7 @@ import ReflectionList from '../components/ReflectionList.vue';
 import { useReflections } from '../composables/useReflections.js';
 
 const router = useRouter();
-const { reflections, loading, error, reflectionCount, loadReflections } = useReflections();
+const { reflections, loading, error, reflectionCount, loadReflections, deleteReflection } = useReflections();
 
 /**
  * Handle reflection selection
@@ -40,6 +41,18 @@ const handleSelectReflection = (reflection) => {
   // For now, just log - we'll add a detail view later
   console.log('Selected reflection:', reflection);
   // Could navigate to detail view: router.push(`/reflections/${reflection.id}`)
+};
+
+/**
+ * Handle reflection deletion
+ */
+const handleDeleteReflection = async (reflectionId) => {
+  try {
+    await deleteReflection(reflectionId);
+  } catch (err) {
+    console.error('Failed to delete reflection:', err);
+    // Error is already handled in composable
+  }
 };
 
 // Load reflections on mount

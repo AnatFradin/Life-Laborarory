@@ -102,6 +102,55 @@ export function useReflections() {
     }
   };
 
+  /**
+   * Delete reflection by ID
+   * @param {string} id - Reflection ID
+   * @returns {Promise<void>}
+   */
+  const deleteReflection = async (id) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      await reflectionsAPI.delete(id);
+
+      // Remove from local state
+      const index = reflections.value.findIndex((r) => r.id === id);
+      if (index !== -1) {
+        reflections.value.splice(index, 1);
+      }
+    } catch (err) {
+      error.value = err.message;
+      console.error(`Failed to delete reflection ${id}:`, err);
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  /**
+   * Delete all reflections (requires confirmation)
+   * @param {string} confirmation - Must be "DELETE_ALL"
+   * @returns {Promise<void>}
+   */
+  const deleteAllReflections = async (confirmation) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      await reflectionsAPI.deleteAll(confirmation);
+
+      // Clear local state
+      reflections.value = [];
+    } catch (err) {
+      error.value = err.message;
+      console.error('Failed to delete all reflections:', err);
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   // Computed properties
   const reflectionCount = computed(() => reflections.value.length);
 
@@ -122,5 +171,7 @@ export function useReflections() {
     createReflection,
     getReflectionById,
     updateReflectionAI,
+    deleteReflection,
+    deleteAllReflections,
   };
 }

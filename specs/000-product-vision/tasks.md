@@ -115,11 +115,11 @@ This is a web application with backend and frontend:
 - [X] T052 [P] [US3] Create ExportDialog component in frontend/src/components/ExportDialog.vue using Radix Vue Dialog with format choice (single-file vs folder, folder default) and accessible confirmation
 - [X] T053 [P] [US3] Create DeleteDialog component in frontend/src/components/DeleteDialog.vue using Radix Vue Dialog for single-entry deletion with confirmation
 - [X] T054 [P] [US3] Create DeleteAllDialog component in frontend/src/components/DeleteAllDialog.vue using Radix Vue Dialog with 2-step confirmation process per FR-017
-- [ ] T055 [US3] Create ExportView in frontend/src/views/ExportView.vue with export button, delete all button, calm layout, full keyboard navigation
-- [ ] T056 [US3] Add delete button to each reflection in ReflectionList component with confirmation dialog trigger
-- [ ] T057 [US3] Implement export download functionality in ExportView: trigger browser download of generated Markdown file
-- [ ] T058 [US3] Add keyboard shortcut Escape to close all dialogs per FR-027
-- [ ] T059 [US3] Ensure all delete/export actions are reversible through export before delete (guidance text in dialogs)
+- [X] T055 [US3] Create ExportView in frontend/src/views/ExportView.vue with export button, delete all button, calm layout, full keyboard navigation
+- [X] T056 [US3] Add delete button to each reflection in ReflectionList component with confirmation dialog trigger
+- [X] T057 [US3] Implement export download functionality in ExportView: trigger browser download of generated Markdown file
+- [X] T058 [US3] Add keyboard shortcut Escape to close all dialogs per FR-027 (Radix Vue Dialog handles this by default)
+- [X] T059 [US3] Ensure all delete/export actions are reversible through export before delete (guidance text in dialogs)
 
 **Checkpoint**: User Story 3 complete - users have full data control with accessible export and delete functions
 

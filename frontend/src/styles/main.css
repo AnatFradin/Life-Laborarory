@@ -32,6 +32,15 @@
   --color-success: #4d7c5e; /* Same as primary - calm success */
   --color-warning: #92400e; /* Dark brown (contrast ratio: 8.42:1) */
   --color-error: #991b1b; /* Dark red (contrast ratio: 8.55:1) */
+  
+  /* Additional UI colors */
+  --color-background: #fafaf9; /* Alias for bg */
+  --color-surface: #ffffff; /* Alias for elevated backgrounds */
+  --color-text-muted: #78716c; /* Alias for tertiary text */
+  --color-danger: #991b1b; /* Alias for error/delete actions */
+  --color-danger-hover: #7f1d1d; /* Darker danger on hover */
+  --color-danger-light: #fecaca; /* Light danger for borders */
+  --color-danger-surface: #fef2f2; /* Very light danger for backgrounds */
 
   /* Shadow for subtle depth */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);

@@ -1,7 +1,5 @@
 <template>
   <div id="app" class="app-container">
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    
     <header class="app-header">
       <h1 class="app-title">Laboratory of Life</h1>
       <nav class="app-nav" aria-label="Main navigation">
@@ -37,21 +35,6 @@ import { RouterLink, RouterView } from 'vue-router';
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
-}
-
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--color-primary);
-  color: var(--color-bg);
-  padding: 0.5rem 1rem;
-  text-decoration: none;
-  z-index: 100;
-}
-
-.skip-link:focus {
-  top: 0;
 }
 
 .app-header {

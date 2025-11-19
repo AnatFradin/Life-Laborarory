@@ -14,12 +14,23 @@
         @keydown.enter="$emit('select', reflection)"
       >
         <div class="reflection-header">
-          <time class="reflection-time text-tertiary text-sm" :datetime="reflection.timestamp">
-            {{ formatTimestamp(reflection.timestamp) }}
-          </time>
-          <span v-if="reflection.mode" class="reflection-mode text-tertiary text-xs">
-            {{ reflection.mode }}
-          </span>
+          <div class="reflection-meta">
+            <time class="reflection-time text-tertiary text-sm" :datetime="reflection.timestamp">
+              {{ formatTimestamp(reflection.timestamp) }}
+            </time>
+            <span v-if="reflection.mode" class="reflection-mode text-tertiary text-xs">
+              {{ reflection.mode }}
+            </span>
+          </div>
+          <button
+            class="delete-button"
+            @click="openDeleteDialog(reflection, $event)"
+            @keydown.enter.stop="openDeleteDialog(reflection, $event)"
+            aria-label="Delete this reflection"
+            title="Delete"
+          >
+            <span aria-hidden="true">🗑️</span>
+          </button>
         </div>
 
         <div class="reflection-content">
@@ -34,11 +45,20 @@
         </div>
       </article>
     </div>
+
+    <!-- Delete Dialog -->
+    <DeleteDialog
+      :open="showDeleteDialog"
+      :reflection-id="reflectionToDelete?.id"
+      @delete="handleDelete"
+      @close="closeDeleteDialog"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref } from 'vue';
+import DeleteDialog from './DeleteDialog.vue';
 
 const props = defineProps({
   reflections: {
@@ -47,7 +67,41 @@ const props = defineProps({
   },
 });
 
-defineEmits(['select']);
+const emit = defineEmits(['select', 'delete']);
+
+// Delete dialog state
+const showDeleteDialog = ref(false);
+const reflectionToDelete = ref(null);
+
+/**
+ * Open delete confirmation dialog
+ */
+const openDeleteDialog = (reflection, event) => {
+  // Stop propagation to prevent card selection
+  event.stopPropagation();
+  
+  reflectionToDelete.value = reflection;
+  showDeleteDialog.value = true;
+};
+
+/**
+ * Handle delete confirmation
+ */
+const handleDelete = async () => {
+  if (reflectionToDelete.value) {
+    emit('delete', reflectionToDelete.value.id);
+    showDeleteDialog.value = false;
+    reflectionToDelete.value = null;
+  }
+};
+
+/**
+ * Close delete dialog
+ */
+const closeDeleteDialog = () => {
+  showDeleteDialog.value = false;
+  reflectionToDelete.value = null;
+};
 
 // Format timestamp to human-readable
 const formatTimestamp = (timestamp) => {
@@ -123,12 +177,48 @@ const getPreview = (reflection) => {
 .reflection-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: var(--space-sm);
+  gap: var(--space-md);
+}
+
+.reflection-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
 }
 
 .reflection-time {
   font-weight: 500;
+}
+
+.delete-button {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.delete-button:hover {
+  background: var(--color-danger-surface);
+  border-color: var(--color-danger-light);
+  color: var(--color-danger);
+  transform: scale(1.05);
+}
+
+.delete-button:focus-visible {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
+}
+
+.delete-button:active {
+  transform: scale(0.98);
 }
 
 .reflection-mode {
