@@ -76,9 +76,10 @@ describe('Export API Integration', () => {
         })
         .expect(200);
 
-      expect(response.body).toHaveProperty('content');
-      expect(response.body.content).toContain('# My Reflections');
-      expect(response.body.content).toContain('No reflections yet');
+      expect(response.body).toHaveProperty('markdown');
+      expect(response.body).toHaveProperty('filename');
+      expect(response.body.markdown).toContain('# My Reflections');
+      expect(response.body.markdown).toContain('No reflections yet');
       expect(response.body).toHaveProperty('attachments');
       expect(response.body.attachments).toEqual([]);
     });
@@ -110,11 +111,12 @@ describe('Export API Integration', () => {
         })
         .expect(200);
 
-      expect(response.body).toHaveProperty('content');
-      expect(response.body.content).toContain('# My Reflections');
-      expect(response.body.content).toContain('First reflection for export test');
-      expect(response.body.content).toContain('Second reflection for export test');
-      expect(response.body.content).toContain('Total reflections: 2');
+      expect(response.body).toHaveProperty('markdown');
+      expect(response.body).toHaveProperty('filename');
+      expect(response.body.markdown).toContain('# My Reflections');
+      expect(response.body.markdown).toContain('First reflection for export test');
+      expect(response.body.markdown).toContain('Second reflection for export test');
+      expect(response.body.markdown).toContain('Total reflections: 2');
     });
 
     it('should use default options when not provided', async () => {
@@ -123,7 +125,8 @@ describe('Export API Integration', () => {
         .send({})
         .expect(200);
 
-      expect(response.body).toHaveProperty('content');
+      expect(response.body).toHaveProperty('markdown');
+      expect(response.body).toHaveProperty('filename');
       expect(response.body).toHaveProperty('attachments');
     });
 
@@ -146,7 +149,8 @@ describe('Export API Integration', () => {
         })
         .expect(200);
 
-      expect(response.body.content).toContain('Test reflection');
+      expect(response.body).toHaveProperty('markdown');
+      expect(response.body.markdown).toContain('Test reflection');
     });
 
     it('should handle invalid format parameter', async () => {
@@ -167,7 +171,8 @@ describe('Export API Integration', () => {
         .expect(200)
         .expect('Content-Type', /json/);
 
-      expect(response.body).toHaveProperty('content');
+      expect(response.body).toHaveProperty('markdown');
+      expect(response.body).toHaveProperty('filename');
     });
   });
 });
