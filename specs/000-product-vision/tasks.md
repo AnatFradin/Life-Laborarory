@@ -45,12 +45,12 @@ This is a web application with backend and frontend:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T011 Create domain ports in backend/src/domain/ports/IReflectionRepository.js with async methods: save, findById, findAll, deleteById, deleteAll
-- [ ] T012 [P] Create domain port in backend/src/domain/ports/IAIProvider.js with async generateResponse method
-- [ ] T013 [P] Create domain port in backend/src/domain/ports/IExporter.js with async exportToMarkdown method
-- [ ] T014 Create Reflection entity in backend/src/domain/entities/Reflection.js with Zod schema validation (id, timestamp, mode, content, visualAttachment, aiInteraction, metadata)
-- [ ] T015 [P] Create AIInteraction entity in backend/src/domain/entities/AIInteraction.js with Zod schema (model, provider, prompt, response, timestamp, systemPromptVersion)
-- [ ] T016 [P] Create UserPreferences entity in backend/src/domain/entities/UserPreferences.js with Zod schema and state machine validation (aiProvider, localModel, onlineModel, hasAcknowledgedOnlineWarning, language, theme)
+- [X] T011 Create domain ports in backend/src/domain/ports/IReflectionRepository.js with async methods: save, findById, findAll, deleteById, deleteAll
+- [X] T012 [P] Create domain port in backend/src/domain/ports/IAIProvider.js with async generateResponse method
+- [X] T013 [P] Create domain port in backend/src/domain/ports/IExporter.js with async exportToMarkdown method
+- [X] T014 Create Reflection entity in backend/src/domain/entities/Reflection.js with Zod schema validation (id, timestamp, mode, content, visualAttachment, aiInteraction, metadata)
+- [X] T015 [P] Create AIInteraction entity in backend/src/domain/entities/AIInteraction.js with Zod schema (model, provider, prompt, response, timestamp, systemPromptVersion)
+- [X] T016 [P] Create UserPreferences entity in backend/src/domain/entities/UserPreferences.js with Zod schema and state machine validation (aiProvider, localModel, onlineModel, hasAcknowledgedOnlineWarning, language, theme)
 - [ ] T017 Create Express server in backend/src/server.js with CORS configuration for http://localhost:5173, JSON body parser, and basic error handling
 - [ ] T018 [P] Create configuration in backend/src/config/index.js with environment variables for port, data directory path, Ollama URL
 - [ ] T019 [P] Create error handler middleware in backend/src/adapters/http/middleware/errorHandler.js with gentle, solution-focused error messages per FR-028
