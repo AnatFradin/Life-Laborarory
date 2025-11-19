@@ -151,6 +151,34 @@ export function useReflections() {
     }
   };
 
+  /**
+   * Attach external AI session metadata to an existing reflection
+   * @param {string} id - Reflection ID
+   * @param {Object} sessionData - { personaId, personaName, sessionSummary, chatGPTUrl }
+   */
+  const saveExternalAIResponse = async (id, sessionData) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await reflectionsAPI.updateExternalSession(id, sessionData);
+
+      // Update local state if present
+      const reflection = reflections.value.find((r) => r.id === id);
+      if (reflection) {
+        reflection.externalAISession = response.data.externalAISession || response.data.externalAISession || sessionData;
+      }
+
+      return response.data;
+    } catch (err) {
+      error.value = err.message;
+      console.error('Failed to save external AI session:', err);
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   // Computed properties
   const reflectionCount = computed(() => reflections.value.length);
 
@@ -173,5 +201,6 @@ export function useReflections() {
     updateReflectionAI,
     deleteReflection,
     deleteAllReflections,
+    saveExternalAIResponse,
   };
 }

@@ -40,10 +40,13 @@
           <p class="reflection-text">{{ getPreview(reflection) }}</p>
         </div>
 
-        <div v-if="reflection.aiInteraction" class="reflection-footer">
+        <div v-if="reflection.aiInteraction || reflection.externalAISession" class="reflection-footer">
           <span class="ai-badge">
             <span aria-hidden="true">💭</span>
             <span class="sr-only">Has AI reflection</span>
+          </span>
+          <span v-if="reflection.externalAISession" class="persona-badge" :title="reflection.externalAISession.personaName" aria-hidden="true">
+            {{ getPersonaIcon(reflection.externalAISession.personaId) }}
           </span>
         </div>
       </article>
@@ -197,6 +200,20 @@ const getPreview = (reflection) => {
   }
   return 'Empty reflection';
 };
+
+// Add helper to get persona icon
+const getPersonaIcon = (personaId) => {
+  // Basic mapping; prefer emoji in persona definitions
+  const mapping = {
+    'stoic-coach': '🏛️',
+    'franklin': '📜',
+    'compassionate': '💝',
+    'socratic': '❓',
+    'growth-mindset': '🌱',
+    'mindfulness-guide': '🧘',
+  };
+  return mapping[personaId] || '🧑‍🏫';
+};
 </script>
 
 <style scoped>
@@ -312,6 +329,12 @@ const getPreview = (reflection) => {
   align-items: center;
   gap: var(--space-xs);
   font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.persona-badge {
+  font-size: 1.25rem;
+  line-height: 1;
   color: var(--color-text-secondary);
 }
 </style>

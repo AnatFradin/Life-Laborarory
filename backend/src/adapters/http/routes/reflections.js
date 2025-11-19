@@ -133,4 +133,45 @@ router.post('/delete-all', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/reflections/:id/external
+ * Attach external AI session metadata (persona, summary, chatGPT url) to a reflection
+ * Body: { personaId, personaName, sessionSummary, chatGPTUrl, timestamp? }
+ */
+router.post('/:id/external', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { personaId, personaName, sessionSummary, chatGPTUrl, timestamp } = req.body;
+
+    if (!personaId || !personaName || !sessionSummary) {
+      const error = new Error('personaId, personaName and sessionSummary are required');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const sessionData = {
+      personaId,
+      personaName,
+      sessionSummary,
+      chatGPTUrl: chatGPTUrl || null,
+      timestamp: timestamp || new Date().toISOString(),
+    };
+
+    const updated = await reflectionService.updateExternalAISession(id, sessionData);
+
+    if (!updated) {
+      const error = new Error('Reflection not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    res.json({
+      success: true,
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -68,6 +68,7 @@ export const reflectionsAPI = {
   delete: (id) => apiClient.delete(`/reflections/${id}`),
   deleteAll: (confirmation) =>
     apiClient.post('/reflections/delete-all', { confirmation }),
+  updateExternalSession: (id, sessionData) => apiClient.post(`/reflections/${id}/external`, sessionData),
 };
 
 export const aiAPI = {
