@@ -51,18 +51,18 @@ This is a web application with backend and frontend:
 - [X] T014 Create Reflection entity in backend/src/domain/entities/Reflection.js with Zod schema validation (id, timestamp, mode, content, visualAttachment, aiInteraction, metadata)
 - [X] T015 [P] Create AIInteraction entity in backend/src/domain/entities/AIInteraction.js with Zod schema (model, provider, prompt, response, timestamp, systemPromptVersion)
 - [X] T016 [P] Create UserPreferences entity in backend/src/domain/entities/UserPreferences.js with Zod schema and state machine validation (aiProvider, localModel, onlineModel, hasAcknowledgedOnlineWarning, language, theme)
-- [ ] T017 Create Express server in backend/src/server.js with CORS configuration for http://localhost:5173, JSON body parser, and basic error handling
-- [ ] T018 [P] Create configuration in backend/src/config/index.js with environment variables for port, data directory path, Ollama URL
-- [ ] T019 [P] Create error handler middleware in backend/src/adapters/http/middleware/errorHandler.js with gentle, solution-focused error messages per FR-028
-- [ ] T020 [P] Create validation middleware in backend/src/adapters/http/middleware/validation.js using Zod for request validation
-- [ ] T021 Create Vue app entry in frontend/src/main.js with Vue Router initialization and global styles
-- [ ] T022 [P] Create Vue Router configuration in frontend/src/router/index.js with routes: /, /history, /settings, /export
-- [ ] T023 [P] Create root App component in frontend/src/App.vue with router-view and calm, accessible layout
-- [ ] T024 [P] Create calm color palette in frontend/src/styles/main.css with WCAG 2.1 AA contrast ratios (FR-005)
-- [ ] T025 [P] Create accessibility styles in frontend/src/styles/accessibility.css with visible focus indicators per FR-023
-- [ ] T026 [P] Create API client service in frontend/src/services/api.js with axios instance configured for http://localhost:3000/api
-- [ ] T027 Create LocalFileRepository adapter in backend/src/adapters/storage/LocalFileRepository.js implementing IReflectionRepository with atomic writes (temp file + rename pattern) and month-based organization
-- [ ] T028 [P] Create system prompt v1.0.0 in backend/src/adapters/ai/prompts/system-prompt-v1.js with reflective, non-directive language per FR-009, FR-010, FR-011
+- [X] T017 Create Express server in backend/src/server.js with CORS configuration for http://localhost:5173, JSON body parser, and basic error handling
+- [X] T018 [P] Create configuration in backend/src/config/index.js with environment variables for port, data directory path, Ollama URL
+- [X] T019 [P] Create error handler middleware in backend/src/adapters/http/middleware/errorHandler.js with gentle, solution-focused error messages per FR-028
+- [X] T020 [P] Create validation middleware in backend/src/adapters/http/middleware/validation.js using Zod for request validation
+- [X] T021 Create Vue app entry in frontend/src/main.js with Vue Router initialization and global styles
+- [X] T022 [P] Create Vue Router configuration in frontend/src/router/index.js with routes: /, /history, /settings, /export
+- [X] T023 [P] Create root App component in frontend/src/App.vue with router-view and calm, accessible layout
+- [X] T024 [P] Create calm color palette in frontend/src/styles/main.css with WCAG 2.1 AA contrast ratios (FR-005)
+- [X] T025 [P] Create accessibility styles in frontend/src/styles/accessibility.css with visible focus indicators per FR-023
+- [X] T026 [P] Create API client service in frontend/src/services/api.js with axios instance configured for http://localhost:3000/api
+- [X] T027 Create LocalFileRepository adapter in backend/src/adapters/storage/LocalFileRepository.js implementing IReflectionRepository with atomic writes (temp file + rename pattern) and month-based organization
+- [X] T028 [P] Create system prompt v1.0.0 in backend/src/adapters/ai/prompts/system-prompt-v1.js with reflective, non-directive language per FR-009, FR-010, FR-011
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
