@@ -68,7 +68,16 @@ router.post('/', async (req, res, next) => {
       includeMetadata,
     });
 
-    res.json(result);
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const filename = `reflections-${timestamp}.md`;
+
+    // Send response with markdown content and filename
+    res.json({
+      markdown: result.content,
+      filename,
+      attachments: result.attachments || [],
+    });
   } catch (error) {
     next(error);
   }

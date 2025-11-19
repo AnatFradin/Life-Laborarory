@@ -87,9 +87,12 @@ const openDeleteDialog = (reflection, event) => {
 /**
  * Handle delete confirmation
  */
-const handleDelete = async () => {
+const handleDelete = () => {
   if (reflectionToDelete.value) {
+    // Emit delete event to parent (HistoryView handles the async API call)
     emit('delete', reflectionToDelete.value.id);
+    
+    // Close dialog and reset state
     showDeleteDialog.value = false;
     reflectionToDelete.value = null;
   }

@@ -36,19 +36,16 @@ const emit = defineEmits(['update:open', 'delete']);
 
 const isDeleting = ref(false);
 
-const handleDelete = async () => {
+const handleDelete = () => {
   if (!props.reflectionId) return;
   
   isDeleting.value = true;
   
-  try {
-    await emit('delete', props.reflectionId);
-    emit('update:open', false);
-  } catch (error) {
-    console.error('Delete failed:', error);
-  } finally {
-    isDeleting.value = false;
-  }
+  // Emit delete event - parent handles the async operation
+  emit('delete', props.reflectionId);
+  
+  // Note: Dialog will be closed by parent after successful deletion
+  isDeleting.value = false;
 };
 
 const handleCancel = () => {

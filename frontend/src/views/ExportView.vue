@@ -39,7 +39,7 @@ const handleExport = async ({ format, includeMetadata }) => {
 
   try {
     // Request export from backend
-    const response = await exportAPI.exportToMarkdown(format);
+    const response = await exportAPI.exportToMarkdown(format, includeMetadata);
     const { markdown, filename } = response.data;
 
     // Trigger browser download

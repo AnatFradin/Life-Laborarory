@@ -76,7 +76,8 @@ export const aiAPI = {
 };
 
 export const exportAPI = {
-  exportToMarkdown: (format) => apiClient.post('/export', { exportFormat: format }),
+  exportToMarkdown: (format, includeMetadata = true) => 
+    apiClient.post('/export', { format, includeMetadata }),
 };
 
 export const preferencesAPI = {
