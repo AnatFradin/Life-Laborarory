@@ -124,7 +124,7 @@ const openDeleteAllDialog = () => {
             :disabled="reflectionCount === 0"
             aria-label="Export all reflections to Markdown"
           >
-            Export Reflections
+            Export All Reflections
           </button>
         </div>
 

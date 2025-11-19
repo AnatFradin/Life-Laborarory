@@ -106,9 +106,10 @@ import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp.vue';
 
 /* Skip to main content link - visible only on focus */
 .skip-to-main {
-  position: absolute;
+  position: fixed;
   left: -9999px;
-  z-index: 999;
+  top: 1rem;
+  z-index: 9999;
   padding: 0.75rem 1rem;
   background-color: var(--color-primary);
   color: white;
@@ -119,6 +120,7 @@ import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp.vue';
 
 .skip-to-main:focus {
   left: 1rem;
-  top: 1rem;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 </style>
