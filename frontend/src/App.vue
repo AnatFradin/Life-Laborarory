@@ -1,5 +1,7 @@
 <template>
   <div id="app" class="app-container">
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
+    
     <header class="app-header">
       <h1 class="app-title">Laboratory of Life</h1>
       <nav class="app-nav" aria-label="Main navigation">
@@ -19,12 +21,14 @@
         <span class="privacy-icon" aria-hidden="true">🔒</span>
         <span>Your reflections stay on your device</span>
       </p>
+      <KeyboardShortcutsHelp />
     </footer>
   </div>
 </template>
 
 <script setup>
 import { RouterLink, RouterView } from 'vue-router';
+import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp.vue';
 </script>
 
 <style scoped>
@@ -80,13 +84,16 @@ import { RouterLink, RouterView } from 'vue-router';
 .app-footer {
   padding: 1.5rem 0;
   border-top: 1px solid var(--color-border);
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .privacy-indicator {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
@@ -95,5 +102,23 @@ import { RouterLink, RouterView } from 'vue-router';
 
 .privacy-icon {
   font-size: 1rem;
+}
+
+/* Skip to main content link - visible only on focus */
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-primary);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+}
+
+.skip-to-main:focus {
+  left: 1rem;
+  top: 1rem;
 }
 </style>

@@ -48,5 +48,11 @@ To review using AI
     - Lengold collection (inlcluding media fles - play them, files, presentations, ...)
     - Quotes collection
     - ...
-9. 
+9. Create AI perfonal coach (Franklin / Baal Sulam / Stoic / Мужицкая / ...)
+10. make UI more inviting to calm and do reflection
+11. add dark mode
+12. Add statistics about reflections (how many, average length, etc) including reference to Neurobalance.
+13. propose tool according to reflection content and neurobalance state
+14. Add voice input for reflections
+15. 
 

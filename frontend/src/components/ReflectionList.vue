@@ -4,14 +4,17 @@
       <p class="text-secondary">No reflections yet. Start writing to begin your journey.</p>
     </div>
 
-    <div v-else class="reflections-container">
+    <div v-else class="reflections-container" role="list" aria-label="Reflections">
       <article
-        v-for="reflection in reflections"
+        v-for="(reflection, index) in reflections"
         :key="reflection.id"
+        :ref="el => setCardRef(el, index)"
         class="reflection-card"
-        :tabindex="0"
+        role="listitem"
+        :tabindex="index === focusedIndex ? 0 : -1"
+        :aria-label="`Reflection from ${formatTimestamp(reflection.timestamp)}`"
         @click="$emit('select', reflection)"
-        @keydown.enter="$emit('select', reflection)"
+        @keydown="handleKeyDown($event, index, reflection)"
       >
         <div class="reflection-header">
           <div class="reflection-meta">
@@ -57,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import DeleteDialog from './DeleteDialog.vue';
 
 const props = defineProps({
@@ -68,6 +71,19 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['select', 'delete']);
+
+// Keyboard navigation state
+const focusedIndex = ref(0);
+const cardRefs = ref([]);
+
+/**
+ * Store card element references
+ */
+const setCardRef = (el, index) => {
+  if (el) {
+    cardRefs.value[index] = el;
+  }
+};
 
 // Delete dialog state
 const showDeleteDialog = ref(false);
@@ -82,6 +98,55 @@ const openDeleteDialog = (reflection, event) => {
   
   reflectionToDelete.value = reflection;
   showDeleteDialog.value = true;
+};
+
+/**
+ * Handle keyboard navigation
+ */
+const handleKeyDown = (event, index, reflection) => {
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault();
+      focusNextCard(1);
+      break;
+    case 'ArrowUp':
+      event.preventDefault();
+      focusNextCard(-1);
+      break;
+    case 'Enter':
+      event.preventDefault();
+      emit('select', reflection);
+      break;
+    case 'Home':
+      event.preventDefault();
+      focusCard(0);
+      break;
+    case 'End':
+      event.preventDefault();
+      focusCard(props.reflections.length - 1);
+      break;
+  }
+};
+
+/**
+ * Focus the next/previous card
+ */
+const focusNextCard = (direction) => {
+  const newIndex = focusedIndex.value + direction;
+  if (newIndex >= 0 && newIndex < props.reflections.length) {
+    focusCard(newIndex);
+  }
+};
+
+/**
+ * Focus a specific card by index
+ */
+const focusCard = (index) => {
+  focusedIndex.value = index;
+  const card = cardRefs.value[index];
+  if (card) {
+    card.focus();
+  }
 };
 
 /**

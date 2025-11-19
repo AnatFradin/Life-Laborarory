@@ -133,17 +133,17 @@ This is a web application with backend and frontend:
 
 ### Implementation for User Story 5
 
-- [ ] T060 [P] [US5] Add tabindex and focus management to ComposeView in frontend/src/views/ComposeView.vue ensuring logical tab order per FR-026
-- [ ] T061 [P] [US5] Add keyboard shortcuts documentation in frontend/src/components/KeyboardShortcutsHelp.vue (accessible via Shift+? per FR-027)
-- [ ] T062 [P] [US5] Implement focus trap in all Radix Vue dialogs (ExportDialog, DeleteDialog, DeleteAllDialog) for accessibility
-- [ ] T063 [US5] Add skip-to-main-content link in frontend/src/App.vue for screen reader users
-- [ ] T064 [P] [US5] Ensure ReflectionEditor has proper label association (label for="reflection-input") and aria-describedby for hints
-- [ ] T065 [P] [US5] Add aria-live region in AIMirrorPanel for announcing AI response completion to screen readers
-- [ ] T066 [US5] Implement keyboard navigation (arrow keys + Enter) in ReflectionList for selecting reflections per FR-027
-- [ ] T067 [US5] Add aria-busy state to save/AI feedback buttons while processing per FR-024
-- [ ] T068 [US5] Configure axe-core accessibility testing in frontend/tests/e2e/ and run against all views
-- [ ] T069 [US5] Fix any WCAG 2.1 Level AA violations identified by axe-core per FR-023 through FR-027
-- [ ] T070 [US5] Create accessibility testing checklist in specs/000-product-vision/checklists/accessibility.md with VoiceOver/NVDA test scenarios
+- [X] T060 [P] [US5] Add tabindex and focus management to ComposeView in frontend/src/views/ComposeView.vue ensuring logical tab order per FR-026
+- [X] T061 [P] [US5] Add keyboard shortcuts documentation in frontend/src/components/KeyboardShortcutsHelp.vue (accessible via Shift+? per FR-027)
+- [X] T062 [P] [US5] Implement focus trap in all Radix Vue dialogs (ExportDialog, DeleteDialog, DeleteAllDialog) for accessibility
+- [X] T063 [US5] Add skip-to-main-content link in frontend/src/App.vue for screen reader users
+- [X] T064 [P] [US5] Ensure ReflectionEditor has proper label association (label for="reflection-input") and aria-describedby for hints
+- [X] T065 [P] [US5] Add aria-live region in AIMirrorPanel for announcing AI response completion to screen readers
+- [X] T066 [US5] Implement keyboard navigation (arrow keys + Enter) in ReflectionList for selecting reflections per FR-027
+- [X] T067 [US5] Add aria-busy state to save/AI feedback buttons while processing per FR-024
+- [X] T068 [US5] Configure axe-core accessibility testing in frontend/tests/e2e/ and run against all views
+- [X] T069 [US5] Fix any WCAG 2.1 Level AA violations identified by axe-core per FR-023 through FR-027
+- [X] T070 [US5] Create accessibility testing checklist in specs/000-product-vision/checklists/accessibility.md with VoiceOver/NVDA test scenarios
 
 **Checkpoint**: User Story 5 complete - application fully accessible via keyboard and screen reader
 

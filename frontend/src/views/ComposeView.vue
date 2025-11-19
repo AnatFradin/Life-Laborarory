@@ -1,14 +1,14 @@
 <template>
   <div class="compose-view">
     <header class="view-header">
-      <h2>Compose</h2>
-      <div class="privacy-badge">
+      <h2 tabindex="-1">Compose</h2>
+      <div class="privacy-badge" role="status" aria-live="polite">
         <span class="privacy-icon" aria-hidden="true">🔒</span>
         <span class="privacy-text text-sm">Local processing only</span>
       </div>
     </header>
 
-    <div class="compose-content">
+    <div class="compose-content" role="region" aria-label="Reflection composition area">
       <ReflectionEditor
         :initial-content="currentContent"
         :saving="saving"
