@@ -157,15 +157,15 @@ This is a web application with backend and frontend:
 
 ### Implementation for User Story 4
 
-- [ ] T071 [P] [US4] Create OpenAIAdapter in backend/src/adapters/ai/OpenAIAdapter.js implementing IAIProvider using OpenAI SDK
-- [ ] T072 [P] [US4] Create AnthropicAdapter in backend/src/adapters/ai/AnthropicAdapter.js implementing IAIProvider using Anthropic SDK
-- [ ] T073 [US4] Add provider selection logic to AIMirrorService in backend/src/domain/services/AIMirrorService.js: route to OllamaAdapter, OpenAIAdapter, or AnthropicAdapter based on UserPreferences
-- [ ] T074 [US4] Create preferences route in backend/src/adapters/http/routes/preferences.js with GET /api/preferences and PUT /api/preferences endpoints
-- [ ] T075 [US4] Register preferences route in backend/src/server.js: mount /api/preferences
-- [ ] T076 [P] [US4] Create usePreferences composable in frontend/src/composables/usePreferences.js with loadPreferences, updatePreferences methods
-- [ ] T077 [US4] Create SettingsView in frontend/src/views/SettingsView.vue with AI model selection using Radix Vue RadioGroup per FR-008
-- [ ] T078 [US4] Add privacy warning dialog in SettingsView for first-time online model selection with explicit "data leaves device" message per FR-008
-- [ ] T079 [US4] Implement hasAcknowledgedOnlineWarning state machine in UserPreferences: prevent online model use until warning acknowledged per data-model.md
+- [X] T071 [P] [US4] Create OpenAIAdapter in backend/src/adapters/ai/OpenAIAdapter.js implementing IAIProvider using OpenAI SDK
+- [X] T072 [P] [US4] Create AnthropicAdapter in backend/src/adapters/ai/AnthropicAdapter.js implementing IAIProvider using Anthropic SDK
+- [X] T073 [US4] Add provider selection logic to AIMirrorService in backend/src/domain/services/AIMirrorService.js: route to OllamaAdapter, OpenAIAdapter, or AnthropicAdapter based on UserPreferences
+- [X] T074 [US4] Create preferences route in backend/src/adapters/http/routes/preferences.js with GET /api/preferences and PUT /api/preferences endpoints
+- [X] T075 [US4] Register preferences route in backend/src/server.js: mount /api/preferences
+- [X] T076 [P] [US4] Create usePreferences composable in frontend/src/composables/usePreferences.js with loadPreferences, updatePreferences methods
+- [X] T077 [US4] Create SettingsView in frontend/src/views/SettingsView.vue with AI model selection using Radix Vue RadioGroup per FR-008
+- [X] T078 [US4] Add privacy warning dialog in SettingsView for first-time online model selection with explicit "data leaves device" message per FR-008
+- [X] T079 [US4] Implement hasAcknowledgedOnlineWarning state machine in UserPreferences: prevent online model use until warning acknowledged per data-model.md
 - [ ] T080 [US4] Add privacy status indicator in App.vue header showing "Local-only" or "Online AI active" per FR-019
 - [ ] T081 [US4] Add model selection persistence: save to backend/data/preferences.json via LocalFileRepository
 - [ ] T082 [US4] Update ComposeView to use current AI provider from preferences when generating mirror responses

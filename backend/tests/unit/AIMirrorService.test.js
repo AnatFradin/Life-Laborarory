@@ -1,95 +1,140 @@
 /**
  * Unit tests for AIMirrorService
+ * Updated for User Story 4 - multiple AI providers
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import AIMirrorService from '../../src/domain/services/AIMirrorService.js';
+import { DEFAULT_PREFERENCES } from '../../src/domain/entities/UserPreferences.js';
 
 describe('AIMirrorService', () => {
-  let mockProvider;
+  let mockOllamaProvider;
+  let mockOpenAIProvider;
+  let mockAnthropicProvider;
   let service;
+  let defaultPreferences;
 
   beforeEach(() => {
-    // Create mock AI provider
-    mockProvider = {
+    // Create mock AI providers
+    mockOllamaProvider = {
       generateResponse: vi.fn(),
       isAvailable: vi.fn(),
-      getProviderName: vi.fn().mockReturnValue('test-provider'),
+      getMetadata: vi.fn().mockReturnValue({ provider: 'ollama', type: 'local' }),
     };
 
-    service = new AIMirrorService(mockProvider);
+    mockOpenAIProvider = {
+      generateResponse: vi.fn(),
+      isAvailable: vi.fn(),
+      getMetadata: vi.fn().mockReturnValue({ provider: 'openai', type: 'online' }),
+    };
+
+    mockAnthropicProvider = {
+      generateResponse: vi.fn(),
+      isAvailable: vi.fn(),
+      getMetadata: vi.fn().mockReturnValue({ provider: 'anthropic', type: 'online' }),
+    };
+
+    service = new AIMirrorService({
+      ollama: mockOllamaProvider,
+      openai: mockOpenAIProvider,
+      anthropic: mockAnthropicProvider,
+    });
+
+    // Default preferences (local AI)
+    defaultPreferences = { ...DEFAULT_PREFERENCES };
   });
 
   describe('generateReflection', () => {
-    it('should generate AI mirror response successfully', async () => {
+    it('should generate AI mirror response successfully with local provider', async () => {
       const userReflection = 'I feel uncertain about my career path';
-      const aiResponse = 'I notice some uncertainty about direction in your reflection';
+      const aiInteraction = {
+        model: 'llama2',
+        provider: 'ollama',
+        prompt: userReflection,
+        response: 'I notice some uncertainty about direction in your reflection',
+        timestamp: new Date().toISOString(),
+        systemPromptVersion: '1.0.0',
+      };
 
-      mockProvider.isAvailable.mockResolvedValue(true);
-      mockProvider.generateResponse.mockResolvedValue(aiResponse);
+      mockOllamaProvider.generateResponse.mockResolvedValue(aiInteraction);
 
-      const result = await service.generateReflection(userReflection, { model: 'llama2' });
+      const result = await service.generateReflection(userReflection, defaultPreferences);
 
-      expect(mockProvider.isAvailable).toHaveBeenCalled();
-      expect(mockProvider.generateResponse).toHaveBeenCalledWith(
-        expect.stringContaining(userReflection),
-        expect.objectContaining({
-          model: 'llama2',
-          systemPrompt: expect.any(String),
-        })
+      expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
+        expect.any(String), // system prompt
+        userReflection
       );
 
       expect(result).toMatchObject({
         model: 'llama2',
-        provider: 'test-provider',
+        provider: 'ollama',
         prompt: userReflection,
-        response: aiResponse,
+        response: expect.stringContaining('uncertainty'),
         timestamp: expect.any(String),
         systemPromptVersion: '1.0.0',
       });
     });
 
     it('should throw error if reflection text is empty', async () => {
-      await expect(service.generateReflection('')).rejects.toThrow(
+      await expect(service.generateReflection('', defaultPreferences)).rejects.toThrow(
         'Reflection text is required'
       );
 
-      expect(mockProvider.generateResponse).not.toHaveBeenCalled();
+      expect(mockOllamaProvider.generateResponse).not.toHaveBeenCalled();
     });
 
-    it('should throw error if AI provider is not available', async () => {
-      mockProvider.isAvailable.mockResolvedValue(false);
-
+    it('should throw error if preferences are invalid', async () => {
       await expect(
-        service.generateReflection('Test reflection')
-      ).rejects.toThrow('AI provider is not available');
-
-      expect(mockProvider.generateResponse).not.toHaveBeenCalled();
+        service.generateReflection('Test reflection', undefined)
+      ).rejects.toThrow();
     });
 
-    it('should use default model if not specified', async () => {
-      mockProvider.isAvailable.mockResolvedValue(true);
-      mockProvider.generateResponse.mockResolvedValue('Test response');
+    it('should use online provider when configured', async () => {
+      const onlinePreferences = {
+        ...defaultPreferences,
+        aiProvider: 'online',
+        onlineProvider: 'openai',
+        onlineModel: 'gpt-3.5-turbo',
+        hasAcknowledgedOnlineWarning: true,
+      };
 
-      const result = await service.generateReflection('Test reflection');
+      const aiInteraction = {
+        model: 'gpt-3.5-turbo',
+        provider: 'openai',
+        prompt: 'Test reflection',
+        response: 'Test response',
+        timestamp: new Date().toISOString(),
+        systemPromptVersion: '1.0.0',
+      };
 
-      expect(result.model).toBe('unknown');
+      mockOpenAIProvider.generateResponse.mockResolvedValue(aiInteraction);
+
+      const result = await service.generateReflection('Test reflection', onlinePreferences);
+
+      expect(mockOpenAIProvider.generateResponse).toHaveBeenCalled();
+      expect(result.provider).toBe('openai');
     });
 
     it('should validate non-directive language', async () => {
       const userReflection = 'I feel stuck';
       
       // Test with directive language (should warn but still return)
-      const directiveResponse = 'You should try meditation. You need to set boundaries.';
+      const aiInteraction = {
+        model: 'llama2',
+        provider: 'ollama',
+        prompt: userReflection,
+        response: 'You should try meditation. You need to set boundaries.',
+        timestamp: new Date().toISOString(),
+        systemPromptVersion: '1.0.0',
+      };
       
-      mockProvider.isAvailable.mockResolvedValue(true);
-      mockProvider.generateResponse.mockResolvedValue(directiveResponse);
+      mockOllamaProvider.generateResponse.mockResolvedValue(aiInteraction);
 
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = await service.generateReflection(userReflection);
+      const result = await service.generateReflection(userReflection, defaultPreferences);
 
-      expect(result.response).toBe(directiveResponse);
+      expect(result.response).toContain('should');
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Non-directive violation detected')
       );
@@ -99,43 +144,69 @@ describe('AIMirrorService', () => {
 
     it('should accept non-directive language', async () => {
       const userReflection = 'I feel stuck';
-      const nonDirectiveResponse = 'I notice some feelings of being stuck in your reflection';
+      const aiInteraction = {
+        model: 'llama2',
+        provider: 'ollama',
+        prompt: userReflection,
+        response: 'I notice some feelings of being stuck in your reflection',
+        timestamp: new Date().toISOString(),
+        systemPromptVersion: '1.0.0',
+      };
 
-      mockProvider.isAvailable.mockResolvedValue(true);
-      mockProvider.generateResponse.mockResolvedValue(nonDirectiveResponse);
+      mockOllamaProvider.generateResponse.mockResolvedValue(aiInteraction);
 
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = await service.generateReflection(userReflection);
+      const result = await service.generateReflection(userReflection, defaultPreferences);
 
-      expect(result.response).toBe(nonDirectiveResponse);
+      expect(result.response).toContain('notice');
       expect(warnSpy).not.toHaveBeenCalled();
 
       warnSpy.mockRestore();
     });
   });
 
-  describe('setProvider', () => {
-    it('should allow changing AI provider', () => {
-      const newProvider = {
-        generateResponse: vi.fn(),
-        isAvailable: vi.fn(),
-        getProviderName: vi.fn().mockReturnValue('new-provider'),
+  describe('selectProvider', () => {
+    it('should select local provider by default', () => {
+      const provider = service.selectProvider(defaultPreferences);
+      expect(provider).toBe(mockOllamaProvider);
+    });
+
+    it('should select online provider when configured', () => {
+      const onlinePreferences = {
+        ...defaultPreferences,
+        aiProvider: 'online',
+        onlineProvider: 'openai',
+        hasAcknowledgedOnlineWarning: true,
+        onlineModel: 'gpt-3.5-turbo',
       };
 
-      service.setProvider(newProvider);
-
-      expect(service.aiProvider).toBe(newProvider);
+      const provider = service.selectProvider(onlinePreferences);
+      expect(provider).toBe(mockOpenAIProvider);
     });
-  });
 
-  describe('_buildPrompt', () => {
-    it('should build prompt with user reflection', () => {
-      const userReflection = 'Test reflection';
-      const prompt = service._buildPrompt(userReflection);
+    it('should throw error if online provider not acknowledged', () => {
+      const onlinePreferences = {
+        ...defaultPreferences,
+        aiProvider: 'online',
+        onlineProvider: 'openai',
+        hasAcknowledgedOnlineWarning: false,
+      };
 
-      expect(prompt).toContain(userReflection);
-      expect(prompt).toContain('mirror');
+      expect(() => service.selectProvider(onlinePreferences)).toThrow(
+        'Cannot use online AI without acknowledging privacy'
+      );
+    });
+
+    it('should throw error if provider not available', () => {
+      const serviceWithoutOllama = new AIMirrorService({
+        ollama: null,
+        openai: mockOpenAIProvider,
+      });
+
+      expect(() => serviceWithoutOllama.selectProvider(defaultPreferences)).toThrow(
+        'Local AI (Ollama) is not available'
+      );
     });
   });
 

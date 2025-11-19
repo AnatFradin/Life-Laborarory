@@ -11,7 +11,7 @@
  */
 
 import systemPrompt from '../../adapters/ai/prompts/system-prompt-v1.js';
-import { OllamaAdapter } from '../../adapters/ai/OllamaAdapter.js';
+import OllamaAdapter from '../../adapters/ai/OllamaAdapter.js';
 import { OpenAIAdapter } from '../../adapters/ai/OpenAIAdapter.js';
 import { AnthropicAdapter } from '../../adapters/ai/AnthropicAdapter.js';
 

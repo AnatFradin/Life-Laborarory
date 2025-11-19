@@ -1,7 +1,7 @@
 import express from 'express';
-import { LocalPreferencesRepository } from '../../adapters/storage/LocalPreferencesRepository.js';
-import { validateUserPreferences, canUseOnlineAI } from '../../domain/entities/UserPreferences.js';
-import config from '../../config/index.js';
+import { LocalPreferencesRepository } from '../../storage/LocalPreferencesRepository.js';
+import { validateUserPreferences, canUseOnlineAI } from '../../../domain/entities/UserPreferences.js';
+import config from '../../../config/index.js';
 
 const router = express.Router();
 
