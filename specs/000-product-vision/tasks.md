@@ -28,8 +28,8 @@ This is a web application with backend and frontend:
 
 - [X] T001 Create backend directory structure per plan.md: backend/src/{domain,adapters,config}/, backend/tests/{unit,integration,smoke}/
 - [X] T002 Create frontend directory structure per plan.md: frontend/src/{components,views,services,composables,router,styles}/, frontend/tests/{unit,e2e}/
-- [ ] T003 [P] Initialize backend: package.json with Node.js 18+, Express, Zod, fs/promises dependencies
-- [ ] T004 [P] Initialize frontend: package.json with Vue 3, Vite, Vue Router, Radix Vue, axios dependencies
+- [X] T003 [P] Initialize backend: package.json with Node.js 18+, Express, Zod, fs/promises dependencies
+- [X] T004 [P] Initialize frontend: package.json with Vue 3, Vite, Vue Router, Radix Vue, axios dependencies
 - [ ] T005 [P] Configure ESLint and Prettier for both backend and frontend in respective .eslintrc.js files
 - [ ] T006 [P] Create .gitignore with data/, node_modules/, dist/, .env entries
 - [ ] T007 [P] Setup Vitest configuration in backend/vitest.config.js and frontend/vitest.config.js
