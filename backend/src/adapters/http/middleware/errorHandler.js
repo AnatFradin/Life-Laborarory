@@ -60,6 +60,12 @@ const errorHandler = (err, req, res, next) => {
       'Your reflections are still safe',
     ];
   }
+  // Malformed JSON in request (different from file corruption)
+  else if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    statusCode = 400;
+    userMessage = 'The request data wasn\'t formatted correctly.';
+    suggestions = ['Please check the request format and try again'];
+  }
   // Data corruption (FR-029)
   else if (err.name === 'SyntaxError' && err.message.includes('JSON')) {
     statusCode = 500;
@@ -73,10 +79,18 @@ const errorHandler = (err, req, res, next) => {
   // Validation errors (Zod or custom)
   else if (err.name === 'ZodError' || err.statusCode === 400) {
     statusCode = 400;
+    
+    // For Zod errors, extract the validation issues
+    if (err.name === 'ZodError' && err.issues) {
+      // Return validation errors in a more usable format
+      return res.status(400).json({
+        error: JSON.stringify(err.issues, null, 2),
+        validationErrors: err.issues,
+      });
+    }
+    
     userMessage = 'Some information wasn\'t quite right.';
-    suggestions = [
-      err.issues ? err.issues[0]?.message : 'Please check your input and try again',
-    ];
+    suggestions = ['Please check your input and try again'];
   }
   // File size errors
   else if (err.code === 'LIMIT_FILE_SIZE') {

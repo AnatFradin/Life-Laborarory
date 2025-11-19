@@ -32,12 +32,14 @@ app.use('/api/ai', aiRouter);
 // Error handler middleware (must be last)
 app.use(errorHandler);
 
-// Start server
-const PORT = config.port;
-app.listen(PORT, () => {
-  console.log(`🌱 Laboratory of Life backend running on http://localhost:${PORT}`);
-  console.log(`📁 Data directory: ${config.dataDir}`);
-  console.log(`🤖 Ollama URL: ${config.ollamaUrl}`);
-});
+// Start server only if this file is run directly (not imported for testing)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const PORT = config.port;
+  app.listen(PORT, () => {
+    console.log(`🌱 Laboratory of Life backend running on http://localhost:${PORT}`);
+    console.log(`📁 Data directory: ${config.dataDir}`);
+    console.log(`🤖 Ollama URL: ${config.ollamaUrl}`);
+  });
+}
 
 export default app;
