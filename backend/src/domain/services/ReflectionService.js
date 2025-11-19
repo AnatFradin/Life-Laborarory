@@ -102,6 +102,23 @@ class ReflectionService {
     const validated = validateReflection(reflection);
     return await this.repository.save(validated);
   }
+
+  /**
+   * Delete a reflection by ID
+   * @param {string} id - Reflection ID
+   * @returns {Promise<boolean>} True if deleted, false if not found
+   */
+  async deleteReflection(id) {
+    return await this.repository.deleteById(id);
+  }
+
+  /**
+   * Delete all reflections (permanent deletion)
+   * @returns {Promise<number>} Number of reflections deleted
+   */
+  async deleteAllReflections() {
+    return await this.repository.deleteAll();
+  }
 }
 
 export default ReflectionService;

@@ -243,4 +243,58 @@ describe('ReflectionService', () => {
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
+
+  describe('deleteReflection', () => {
+    it('should delete a reflection by id', async () => {
+      const reflectionId = randomUUID();
+      
+      mockRepository.deleteById.mockResolvedValue(true);
+
+      const result = await service.deleteReflection(reflectionId);
+
+      expect(mockRepository.deleteById).toHaveBeenCalledWith(reflectionId);
+      expect(result).toBe(true);
+    });
+
+    it('should return false when reflection not found', async () => {
+      mockRepository.deleteById.mockResolvedValue(false);
+
+      const result = await service.deleteReflection('non-existent-id');
+
+      expect(mockRepository.deleteById).toHaveBeenCalledWith('non-existent-id');
+      expect(result).toBe(false);
+    });
+
+    it('should propagate repository errors', async () => {
+      mockRepository.deleteById.mockRejectedValue(new Error('Delete failed'));
+
+      await expect(service.deleteReflection('some-id')).rejects.toThrow('Delete failed');
+    });
+  });
+
+  describe('deleteAllReflections', () => {
+    it('should delete all reflections', async () => {
+      mockRepository.deleteAll.mockResolvedValue(5);
+
+      const result = await service.deleteAllReflections();
+
+      expect(mockRepository.deleteAll).toHaveBeenCalledOnce();
+      expect(result).toBe(5);
+    });
+
+    it('should return 0 when no reflections exist', async () => {
+      mockRepository.deleteAll.mockResolvedValue(0);
+
+      const result = await service.deleteAllReflections();
+
+      expect(mockRepository.deleteAll).toHaveBeenCalledOnce();
+      expect(result).toBe(0);
+    });
+
+    it('should propagate repository errors', async () => {
+      mockRepository.deleteAll.mockRejectedValue(new Error('Delete all failed'));
+
+      await expect(service.deleteAllReflections()).rejects.toThrow('Delete all failed');
+    });
+  });
 });
