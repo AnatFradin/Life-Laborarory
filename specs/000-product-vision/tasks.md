@@ -112,9 +112,9 @@ This is a web application with backend and frontend:
 - [X] T049 [P] [US3] Add DELETE /api/reflections/:id endpoint to backend/src/adapters/http/routes/reflections.js with single confirmation
 - [X] T050 [P] [US3] Add POST /api/reflections/delete-all endpoint to backend/src/adapters/http/routes/reflections.js requiring "DELETE_ALL" confirmation string per FR-017
 - [X] T051 [US3] Register export route in backend/src/server.js: mount /api/export
-- [ ] T052 [P] [US3] Create ExportDialog component in frontend/src/components/ExportDialog.vue using Radix Vue Dialog with format choice (single-file vs folder, folder default) and accessible confirmation
-- [ ] T053 [P] [US3] Create DeleteDialog component in frontend/src/components/DeleteDialog.vue using Radix Vue Dialog for single-entry deletion with confirmation
-- [ ] T054 [P] [US3] Create DeleteAllDialog component in frontend/src/components/DeleteAllDialog.vue using Radix Vue Dialog with 2-step confirmation process per FR-017
+- [X] T052 [P] [US3] Create ExportDialog component in frontend/src/components/ExportDialog.vue using Radix Vue Dialog with format choice (single-file vs folder, folder default) and accessible confirmation
+- [X] T053 [P] [US3] Create DeleteDialog component in frontend/src/components/DeleteDialog.vue using Radix Vue Dialog for single-entry deletion with confirmation
+- [X] T054 [P] [US3] Create DeleteAllDialog component in frontend/src/components/DeleteAllDialog.vue using Radix Vue Dialog with 2-step confirmation process per FR-017
 - [ ] T055 [US3] Create ExportView in frontend/src/views/ExportView.vue with export button, delete all button, calm layout, full keyboard navigation
 - [ ] T056 [US3] Add delete button to each reflection in ReflectionList component with confirmation dialog trigger
 - [ ] T057 [US3] Implement export download functionality in ExportView: trigger browser download of generated Markdown file
