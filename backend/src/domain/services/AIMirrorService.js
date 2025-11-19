@@ -98,8 +98,13 @@ class AIMirrorService {
     // Select provider based on preferences
     const provider = this.selectProvider(preferences);
 
-    // Generate response using selected provider
-    const aiInteraction = await provider.generateResponse(systemPrompt.prompt, userReflection);
+    // Determine which model to use based on provider
+    const model = preferences.aiProvider === 'local' 
+      ? (preferences.localModel || 'llama2')
+      : (preferences.onlineModel || null);
+
+    // Generate response using selected provider with specified model
+    const aiInteraction = await provider.generateResponse(systemPrompt.prompt, userReflection, { model });
 
     // Validate response quality (non-directive check)
     const isValid = this._validateResponse(aiInteraction.response);

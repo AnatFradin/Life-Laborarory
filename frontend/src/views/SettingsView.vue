@@ -36,10 +36,14 @@ const pendingOnlineModel = ref(null);
 
 // Local state for form
 const selectedProvider = ref('local');
+const selectedLocalModel = ref('llama2');
 const selectedOnlineProvider = ref('openai');
 const selectedOnlineModel = ref('gpt-3.5-turbo');
 
-// Available models
+// Available models (will be loaded from API)
+const ollamaModels = ref([]);
+const loadingOllamaModels = ref(false);
+
 const openaiModels = [
   { value: 'gpt-4', label: 'GPT-4 (Most capable, slower)', description: 'Best for complex reflections' },
   { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (Fast, balanced)', description: 'Good for most reflections' },
@@ -51,12 +55,13 @@ const anthropicModels = [
   { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Fastest)', description: 'Quick responses' },
 ];
 
-// Load preferences on mount
-onMounted(async () => {
-  await loadPreferences();
-  
+// Sync local state with preferences
+const syncWithPreferences = () => {
   if (preferences.value) {
     selectedProvider.value = preferences.value.aiProvider;
+    if (preferences.value.localModel) {
+      selectedLocalModel.value = preferences.value.localModel;
+    }
     if (preferences.value.onlineProvider) {
       selectedOnlineProvider.value = preferences.value.onlineProvider;
     }
@@ -64,12 +69,57 @@ onMounted(async () => {
       selectedOnlineModel.value = preferences.value.onlineModel;
     }
   }
+};
+
+// Load available Ollama models
+const loadOllamaModels = async () => {
+  loadingOllamaModels.value = true;
+  try {
+    const api = await import('../services/api.js');
+    const response = await api.default.get('/ai/models/ollama');
+    ollamaModels.value = response.data.models.map(modelName => ({
+      value: modelName,
+      label: modelName,
+    }));
+    
+    // If no models found, show helpful message
+    if (ollamaModels.value.length === 0) {
+      console.warn('No Ollama models found. Install models with: ollama pull <model-name>');
+    }
+  } catch (err) {
+    console.error('Failed to load Ollama models:', err);
+    // Fallback to some common models
+    ollamaModels.value = [
+      { value: 'llama2', label: 'llama2' },
+      { value: 'mistral', label: 'mistral' },
+      { value: 'llama3', label: 'llama3' },
+    ];
+  } finally {
+    loadingOllamaModels.value = false;
+  }
+};
+
+// Load preferences on mount
+onMounted(async () => {
+  await loadPreferences();
+  syncWithPreferences();
+  await loadOllamaModels();
 });
 
 // Computed: Is privacy warning needed?
 const needsPrivacyWarning = computed(() => {
   return !preferences.value?.hasAcknowledgedOnlineWarning;
 });
+
+// Handle local model change
+const handleLocalModelChange = async () => {
+  if (selectedProvider.value === 'local') {
+    await updatePreferences({
+      localModel: selectedLocalModel.value,
+    });
+    syncWithPreferences();
+  }
+};
 
 // Handle provider change
 const handleProviderChange = async (value) => {
@@ -78,6 +128,8 @@ const handleProviderChange = async (value) => {
   if (value === 'local') {
     // Switch to local AI immediately
     await switchToLocalAI();
+    // Sync state after successful switch
+    syncWithPreferences();
   } else if (value === 'online') {
     // Check if privacy warning is needed
     if (needsPrivacyWarning.value) {
@@ -92,6 +144,8 @@ const handleProviderChange = async (value) => {
         selectedOnlineModel.value,
         true
       );
+      // Sync state after successful switch
+      syncWithPreferences();
     }
   }
 };
@@ -117,6 +171,8 @@ const acknowledgePrivacyWarning = async () => {
       true
     );
     showPrivacyWarning.value = false;
+    // Sync state after successful switch
+    syncWithPreferences();
   } catch (err) {
     console.error('Failed to switch to online AI:', err);
   }
@@ -124,8 +180,9 @@ const acknowledgePrivacyWarning = async () => {
 
 // Cancel privacy warning (revert to local)
 const cancelPrivacyWarning = () => {
-  selectedProvider.value = 'local';
   showPrivacyWarning.value = false;
+  // Revert to current preference (which should be 'local')
+  syncWithPreferences();
 };
 
 // Update online model selection
@@ -136,6 +193,8 @@ const handleOnlineModelChange = async () => {
       selectedOnlineModel.value,
       true
     );
+    // Sync state after successful switch
+    syncWithPreferences();
   }
 };
 </script>
@@ -167,21 +226,6 @@ const handleOnlineModelChange = async () => {
         <p class="section-description">
           Choose how your reflections are processed by AI. This determines where your personal reflections are analyzed.
         </p>
-        
-        <div class="privacy-explainer" role="region" aria-label="Privacy explanation">
-          <div class="explainer-card">
-            <div class="explainer-icon">🔒</div>
-            <div class="explainer-content">
-              <strong>Local AI (Recommended for Privacy):</strong> Your reflections never leave your device. All processing happens locally on your computer. Requires Ollama to be installed and running.
-            </div>
-          </div>
-          <div class="explainer-card">
-            <div class="explainer-icon">🌐</div>
-            <div class="explainer-content">
-              <strong>Online AI (Requires API Key):</strong> Your reflections are sent over the internet to OpenAI or Anthropic for processing. More capable models, but your personal data leaves your device and is subject to their privacy policies.
-            </div>
-          </div>
-        </div>
 
         <RadioGroupRoot
           v-model="selectedProvider"
@@ -190,36 +234,84 @@ const handleOnlineModelChange = async () => {
           aria-label="AI provider selection"
         >
           <!-- Local AI Option -->
-          <div class="radio-option">
-            <RadioGroupItem value="local" class="radio-item" id="provider-local">
-              <RadioGroupIndicator class="radio-indicator" />
-            </RadioGroupItem>
-            <label for="provider-local" class="radio-label">
-              <span class="radio-title">🔒 Local AI (Ollama)</span>
-              <span class="radio-description">
-                Complete privacy. Your reflections never leave your device. Requires Ollama running locally.
-              </span>
-              <span class="privacy-badge local">100% Private</span>
+          <div class="radio-option-container">
+            <label class="radio-option" for="provider-local">
+              <RadioGroupItem value="local" class="radio-item" id="provider-local">
+                <RadioGroupIndicator class="radio-indicator">
+                  <div class="radio-dot"></div>
+                </RadioGroupIndicator>
+              </RadioGroupItem>
+              <div class="radio-label">
+                <span class="radio-title">🔒 Local AI (Ollama)</span>
+                <span class="radio-description">
+                  Complete privacy. Your reflections never leave your device. Requires Ollama running locally.
+                </span>
+                <span class="privacy-badge local">100% Private</span>
+              </div>
             </label>
+            
+            <!-- Local Model Selection (shown when local is selected) -->
+            <div v-if="selectedProvider === 'local'" class="nested-options">
+          <h3 class="subsection-title">Ollama Model</h3>
+          <p class="model-description">Select which Ollama model to use for reflections. Make sure the model is installed locally.</p>
+          
+          <div v-if="loadingOllamaModels" class="loading-models">
+            <span>Loading available models...</span>
+          </div>
+          
+          <div v-else-if="ollamaModels.length === 0" class="no-models-warning">
+            <p class="warning-text">
+              ⚠️ No Ollama models found. Please install a model first.
+            </p>
+            <p class="model-hint">
+              Install a model with: <code>ollama pull llama2</code>
+            </p>
+            <p class="model-hint">
+              Popular models: llama2, llama3, mistral, codellama, phi
+            </p>
+          </div>
+          
+          <div v-else>
+            <select
+              v-model="selectedLocalModel"
+              @change="handleLocalModelChange"
+              class="model-select"
+              aria-label="Ollama model selection"
+            >
+              <option
+                v-for="model in ollamaModels"
+                :key="model.value"
+                :value="model.value"
+              >
+                {{ model.label }}
+              </option>
+            </select>
+            <p class="model-hint">
+              💡 {{ ollamaModels.length }} model(s) available. To add more: <code>ollama pull &lt;model-name&gt;</code>
+            </p>
+          </div>
+            </div>
           </div>
 
           <!-- Online AI Option -->
-          <div class="radio-option">
-            <RadioGroupItem value="online" class="radio-item" id="provider-online">
-              <RadioGroupIndicator class="radio-indicator" />
-            </RadioGroupItem>
-            <label for="provider-online" class="radio-label">
-              <span class="radio-title">🌐 Online AI</span>
-              <span class="radio-description">
-                More capable models, but your reflection content is sent to external AI services (OpenAI or Anthropic).
-              </span>
-              <span class="privacy-badge online">Data Leaves Device</span>
+          <div class="radio-option-container">
+            <label class="radio-option" for="provider-online">
+              <RadioGroupItem value="online" class="radio-item" id="provider-online">
+                <RadioGroupIndicator class="radio-indicator">
+                  <div class="radio-dot"></div>
+                </RadioGroupIndicator>
+              </RadioGroupItem>
+              <div class="radio-label">
+                <span class="radio-title">🌐 Online AI</span>
+                <span class="radio-description">
+                  More capable models, but your reflection content is sent to external AI services (OpenAI or Anthropic).
+                </span>
+                <span class="privacy-badge online">Data Leaves Device</span>
+              </div>
             </label>
-          </div>
-        </RadioGroupRoot>
 
-        <!-- Online Provider Selection (shown when online is selected) -->
-        <div v-if="selectedProvider === 'online'" class="online-options">
+            <!-- Online Provider Selection (shown when online is selected) -->
+            <div v-if="selectedProvider === 'online'" class="nested-options">
           <h3 class="subsection-title">Choose Online Provider</h3>
           
           <RadioGroupRoot
@@ -228,25 +320,29 @@ const handleOnlineModelChange = async () => {
             class="radio-group"
             aria-label="Online AI provider selection"
           >
-            <div class="radio-option">
+            <label class="radio-option" for="provider-openai">
               <RadioGroupItem value="openai" class="radio-item" id="provider-openai">
-                <RadioGroupIndicator class="radio-indicator" />
+                <RadioGroupIndicator class="radio-indicator">
+                  <div class="radio-dot"></div>
+                </RadioGroupIndicator>
               </RadioGroupItem>
-              <label for="provider-openai" class="radio-label">
+              <div class="radio-label">
                 <span class="radio-title">OpenAI (GPT)</span>
                 <span class="radio-description">ChatGPT models - versatile and reliable</span>
-              </label>
-            </div>
+              </div>
+            </label>
 
-            <div class="radio-option">
+            <label class="radio-option" for="provider-anthropic">
               <RadioGroupItem value="anthropic" class="radio-item" id="provider-anthropic">
-                <RadioGroupIndicator class="radio-indicator" />
+                <RadioGroupIndicator class="radio-indicator">
+                  <div class="radio-dot"></div>
+                </RadioGroupIndicator>
               </RadioGroupItem>
-              <label for="provider-anthropic" class="radio-label">
+              <div class="radio-label">
                 <span class="radio-title">Anthropic (Claude)</span>
                 <span class="radio-description">Claude models - thoughtful and nuanced</span>
-              </label>
-            </div>
+              </div>
+            </label>
           </RadioGroupRoot>
 
           <!-- Model Selection -->
@@ -278,7 +374,9 @@ const handleOnlineModelChange = async () => {
               </optgroup>
             </select>
           </div>
-        </div>
+            </div>
+          </div>
+        </RadioGroupRoot>
       </section>
 
       <!-- Privacy Information -->
@@ -444,6 +542,10 @@ const handleOnlineModelChange = async () => {
   transition: all 0.2s ease;
 }
 
+.radio-option-container {
+  margin-bottom: 0;
+}
+
 .radio-option:hover {
   border-color: var(--color-primary);
   background-color: var(--color-background-hover);
@@ -454,6 +556,29 @@ const handleOnlineModelChange = async () => {
   background-color: var(--color-primary-light);
 }
 
+.nested-options {
+  margin-left: 2.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-left: 3px solid var(--color-primary);
+  background-color: var(--color-background-subtle);
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.nested-options .subsection-title {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.nested-options .radio-option {
+  margin-bottom: 0.5rem;
+}
+
+.nested-options .model-selection {
+  margin-top: 1rem;
+}
+
 .radio-item {
   width: 20px;
   height: 20px;
@@ -462,6 +587,19 @@ const handleOnlineModelChange = async () => {
   background-color: white;
   flex-shrink: 0;
   margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 0 !important;
+  color: transparent !important;
+  overflow: hidden;
+}
+
+/* Hide any text content inside radio button */
+.radio-item::before,
+.radio-item::after {
+  content: none !important;
 }
 
 .radio-item[data-state="checked"] {
@@ -474,10 +612,10 @@ const handleOnlineModelChange = async () => {
   justify-content: center;
   width: 100%;
   height: 100%;
+  font-size: 0;
 }
 
-.radio-indicator::after {
-  content: '';
+.radio-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -521,6 +659,57 @@ const handleOnlineModelChange = async () => {
 .privacy-badge.online {
   background-color: var(--color-warning-light);
   color: var(--color-warning);
+}
+
+/* Local Options */
+.local-options {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.model-description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.loading-models {
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.no-models-warning {
+  padding: 1rem;
+  background-color: var(--color-warning-light);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+}
+
+.no-models-warning .warning-text {
+  color: var(--color-warning);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.model-hint {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.model-hint code {
+  background-color: var(--color-background-secondary);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  color: var(--color-primary);
 }
 
 /* Online Options */

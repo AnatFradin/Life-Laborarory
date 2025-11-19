@@ -65,6 +65,27 @@ router.post('/mirror', validateBody(MirrorRequestSchema), async (req, res, next)
 });
 
 /**
+ * GET /api/ai/models/ollama
+ * Get list of available Ollama models
+ * 
+ * Returns:
+ * - List of installed Ollama models
+ * - Empty array if Ollama is not available
+ */
+router.get('/models/ollama', async (req, res, next) => {
+  try {
+    if (!adapters.ollama) {
+      return res.json({ models: [] });
+    }
+
+    const models = await adapters.ollama.listModels();
+    res.json({ models });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/ai/status
  * Check which AI providers are available
  * 

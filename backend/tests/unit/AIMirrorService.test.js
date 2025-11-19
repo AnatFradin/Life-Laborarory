@@ -1,6 +1,12 @@
 /**
  * Unit tests for AIMirrorService
- * Updated for User Story 4 - multiple AI providers
+ * Updated for User St      const result = await service.generateReflection(userReflection, defaultPreferences);
+
+      expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
+        expect.any(String), // system prompt
+        userReflection,
+        { model: 'llama2' } // model options object
+      ); multiple AI providers
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -62,7 +68,8 @@ describe('AIMirrorService', () => {
 
       expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
         expect.any(String), // system prompt
-        userReflection
+        userReflection,
+        { model: 'llama2' } // model options object
       );
 
       expect(result).toMatchObject({

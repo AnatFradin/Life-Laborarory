@@ -37,12 +37,13 @@ To review using AI
 `github/copilot`
 
 ## Future:
-1. Add Markdown editor, that show as md or as preview.
-2. add Tools to help editing (headings, bold, italic, lists, etc).
-3. Add шкала нейробаланса
-4. add calendar view for reflections
-5. add calendar to see how many reflections were done / how many days were reflected on
-6. add tags to reflections and ability to filter by tags
+1. Create Docker container for easy install.
+2. Add Markdown editor, that show as md or as preview.
+3. add Tools to help editing (headings, bold, italic, lists, etc).
+4. Add шкала нейробаланса
+5. add calendar view for reflections
+6. add calendar to see how many reflections were done / how many days were reflected on
+7. add tags to reflections and ability to filter by tags
 7. Report for Neurobalance trends over time
 7. Ask from user path to data storage. Define default path in user home directory.
 8. Add tab with all known tools (how to manage stress, how to improve focus, etc).
@@ -58,3 +59,10 @@ To review using AI
 15. Add option : Send reminder to reflect every day at user specified time
 16. Summary my week / month / year in reflections
 17. Separate gratefulless, great moment to remember, and lessons learned reflections
+18. Is it possible to run it as application , not as web site? (Electron, Tauri, ...) ?
+19. Option to rephrase reflections using AI to be more positive / constructive
+20. Translate reflections to other languages using AI (hebrew, russin, english)
+21. Export selected reflection. 
+22. Add Export / share button for one specific reflection from History. Share reflection using eMail (as text or as PDF
+)
+23. take list of available local models from ollama.
