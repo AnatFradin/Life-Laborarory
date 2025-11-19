@@ -30,12 +30,12 @@ This is a web application with backend and frontend:
 - [X] T002 Create frontend directory structure per plan.md: frontend/src/{components,views,services,composables,router,styles}/, frontend/tests/{unit,e2e}/
 - [X] T003 [P] Initialize backend: package.json with Node.js 18+, Express, Zod, fs/promises dependencies
 - [X] T004 [P] Initialize frontend: package.json with Vue 3, Vite, Vue Router, Radix Vue, axios dependencies
-- [ ] T005 [P] Configure ESLint and Prettier for both backend and frontend in respective .eslintrc.js files
-- [ ] T006 [P] Create .gitignore with data/, node_modules/, dist/, .env entries
-- [ ] T007 [P] Setup Vitest configuration in backend/vitest.config.js and frontend/vitest.config.js
-- [ ] T008 [P] Setup Playwright configuration in frontend/playwright.config.js for e2e tests
-- [ ] T009 Create data directory structure: data/{reflections,visuals,exports}/, data/preferences.json with default settings
-- [ ] T010 Create README.md at repository root with project overview and setup instructions
+- [X] T005 [P] Configure ESLint and Prettier for both backend and frontend in respective .eslintrc.js files
+- [X] T006 [P] Create .gitignore with data/, node_modules/, dist/, .env entries
+- [X] T007 [P] Setup Vitest configuration in backend/vitest.config.js and frontend/vitest.config.js
+- [X] T008 [P] Setup Playwright configuration in frontend/playwright.config.js for e2e tests
+- [X] T009 Create data directory structure: data/{reflections,visuals,exports}/, data/preferences.json with default settings
+- [X] T010 Create README.md at repository root with project overview and setup instructions
 
 ---
 
