@@ -76,22 +76,22 @@ This is a web application with backend and frontend:
 
 ### Implementation for User Story 1
 
-- [ ] T029 [P] [US1] Create ReflectionService in backend/src/domain/services/ReflectionService.js with createReflection, getReflectionById, getAllReflections methods
-- [ ] T030 [P] [US1] Create AIMirrorService in backend/src/domain/services/AIMirrorService.js with generateReflection method, system prompt v1.0.0, and non-directive response validation
-- [ ] T031 [US1] Create OllamaAdapter in backend/src/adapters/ai/OllamaAdapter.js implementing IAIProvider with fetch calls to http://localhost:11434/api/generate
-- [ ] T032 [US1] Create reflections routes in backend/src/adapters/http/routes/reflections.js with GET /api/reflections, POST /api/reflections, GET /api/reflections/:id endpoints
-- [ ] T033 [P] [US1] Create AI mirror route in backend/src/adapters/http/routes/ai.js with POST /api/ai/mirror endpoint
-- [ ] T034 [US1] Register routes in backend/src/server.js: mount /api/reflections and /api/ai routes
-- [ ] T035 [P] [US1] Create useReflections composable in frontend/src/composables/useReflections.js with reactive state (reflections, loading) and methods (loadReflections, createReflection)
-- [ ] T036 [P] [US1] Create useAIMirror composable in frontend/src/composables/useAIMirror.js with generateMirrorResponse method and loading state
-- [ ] T037 [US1] Create ReflectionEditor component in frontend/src/components/ReflectionEditor.vue with textarea, autosave (debounced), manual save button, AI feedback button, and keyboard shortcuts (Cmd+Enter to save)
-- [ ] T038 [P] [US1] Create AIMirrorPanel component in frontend/src/components/AIMirrorPanel.vue to display AI response with calm, reflective styling
-- [ ] T039 [US1] Create ComposeView in frontend/src/views/ComposeView.vue integrating ReflectionEditor and AIMirrorPanel with calm, uncluttered layout (max 3 choices per FR-001)
-- [ ] T040 [P] [US1] Create ReflectionList component in frontend/src/components/ReflectionList.vue displaying reflections chronologically with human-readable timestamps per FR-004
-- [ ] T041 [US1] Create HistoryView in frontend/src/views/HistoryView.vue using ReflectionList with full keyboard navigation per FR-022
-- [ ] T042 [US1] Add ARIA labels and roles to ReflectionEditor per FR-024 for screen reader compatibility
-- [ ] T043 [US1] Add visible focus indicators to all interactive elements per FR-023
-- [ ] T044 [US1] Implement local-only indicator in ComposeView showing "Local processing only" badge per FR-019
+- [X] T029 [P] [US1] Create ReflectionService in backend/src/domain/services/ReflectionService.js with createReflection, getReflectionById, getAllReflections methods
+- [X] T030 [P] [US1] Create AIMirrorService in backend/src/domain/services/AIMirrorService.js with generateReflection method, system prompt v1.0.0, and non-directive response validation
+- [X] T031 [US1] Create OllamaAdapter in backend/src/adapters/ai/OllamaAdapter.js implementing IAIProvider with fetch calls to http://localhost:11434/api/generate
+- [X] T032 [US1] Create reflections routes in backend/src/adapters/http/routes/reflections.js with GET /api/reflections, POST /api/reflections, GET /api/reflections/:id endpoints
+- [X] T033 [P] [US1] Create AI mirror route in backend/src/adapters/http/routes/ai.js with POST /api/ai/mirror endpoint
+- [X] T034 [US1] Register routes in backend/src/server.js: mount /api/reflections and /api/ai routes
+- [X] T035 [P] [US1] Create useReflections composable in frontend/src/composables/useReflections.js with reactive state (reflections, loading) and methods (loadReflections, createReflection)
+- [X] T036 [P] [US1] Create useAIMirror composable in frontend/src/composables/useAIMirror.js with generateMirrorResponse method and loading state
+- [X] T037 [US1] Create ReflectionEditor component in frontend/src/components/ReflectionEditor.vue with textarea, autosave (debounced), manual save button, AI feedback button, and keyboard shortcuts (Cmd+Enter to save)
+- [X] T038 [P] [US1] Create AIMirrorPanel component in frontend/src/components/AIMirrorPanel.vue to display AI response with calm, reflective styling
+- [X] T039 [US1] Create ComposeView in frontend/src/views/ComposeView.vue integrating ReflectionEditor and AIMirrorPanel with calm, uncluttered layout (max 3 choices per FR-001)
+- [X] T040 [P] [US1] Create ReflectionList component in frontend/src/components/ReflectionList.vue displaying reflections chronologically with human-readable timestamps per FR-004
+- [X] T041 [US1] Create HistoryView in frontend/src/views/HistoryView.vue using ReflectionList with full keyboard navigation per FR-022
+- [X] T042 [US1] Add ARIA labels and roles to ReflectionEditor per FR-024 for screen reader compatibility
+- [X] T043 [US1] Add visible focus indicators to all interactive elements per FR-023
+- [X] T044 [US1] Implement local-only indicator in ComposeView showing "Local processing only" badge per FR-019
 
 **Checkpoint**: User Story 1 complete - users can write reflections, get local AI feedback, view history, all fully accessible
 

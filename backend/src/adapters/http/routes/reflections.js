@@ -1,0 +1,83 @@
+/**
+ * Reflections routes - HTTP endpoints for reflection management
+ * 
+ * GET    /api/reflections     - Get all reflections
+ * POST   /api/reflections     - Create new reflection
+ * GET    /api/reflections/:id - Get specific reflection
+ */
+
+import express from 'express';
+import ReflectionService from '../../../domain/services/ReflectionService.js';
+import LocalFileRepository from '../../storage/LocalFileRepository.js';
+import { validateBody } from '../middleware/validation.js';
+import { ReflectionSchema } from '../../../domain/entities/Reflection.js';
+
+const router = express.Router();
+
+// Initialize service with repository
+const repository = new LocalFileRepository();
+const reflectionService = new ReflectionService(repository);
+
+/**
+ * GET /api/reflections
+ * Get all reflections (sorted by timestamp desc)
+ */
+router.get('/', async (req, res, next) => {
+  try {
+    const reflections = await reflectionService.getAllReflections();
+    res.json({
+      reflections,
+      count: reflections.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/reflections/:id
+ * Get specific reflection by ID
+ */
+router.get('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const reflection = await reflectionService.getReflectionById(id);
+
+    if (!reflection) {
+      const error = new Error('Reflection not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    res.json(reflection);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/reflections
+ * Create new reflection
+ */
+router.post(
+  '/',
+  validateBody(
+    ReflectionSchema.partial({
+      id: true,
+      timestamp: true,
+      aiInteraction: true,
+    })
+  ),
+  async (req, res, next) => {
+    try {
+      const reflectionData = req.body;
+      const created = await reflectionService.createReflection(reflectionData);
+
+      res.status(201).json(created);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+export default router;

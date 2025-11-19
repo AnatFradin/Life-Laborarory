@@ -21,11 +21,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes will be mounted here
-// app.use('/api/reflections', reflectionsRouter);
-// app.use('/api/ai', aiRouter);
-// app.use('/api/export', exportRouter);
-// app.use('/api/preferences', preferencesRouter);
+// Import routes
+import reflectionsRouter from './adapters/http/routes/reflections.js';
+import aiRouter from './adapters/http/routes/ai.js';
+
+// API routes
+app.use('/api/reflections', reflectionsRouter);
+app.use('/api/ai', aiRouter);
 
 // Error handler middleware (must be last)
 app.use(errorHandler);
