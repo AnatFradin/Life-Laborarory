@@ -51,7 +51,7 @@
       :open="showDeleteDialog"
       :reflection-id="reflectionToDelete?.id"
       @delete="handleDelete"
-      @close="closeDeleteDialog"
+      @update:open="showDeleteDialog = $event"
     />
   </div>
 </template>
@@ -96,14 +96,6 @@ const handleDelete = () => {
     showDeleteDialog.value = false;
     reflectionToDelete.value = null;
   }
-};
-
-/**
- * Close delete dialog
- */
-const closeDeleteDialog = () => {
-  showDeleteDialog.value = false;
-  reflectionToDelete.value = null;
 };
 
 // Format timestamp to human-readable

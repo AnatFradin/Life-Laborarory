@@ -161,7 +161,7 @@ const openDeleteAllDialog = () => {
     <ExportDialog
       :open="showExportDialog"
       @export="handleExport"
-      @close="showExportDialog = false"
+      @update:open="showExportDialog = $event"
     />
 
     <!-- Delete All Dialog -->
@@ -169,7 +169,7 @@ const openDeleteAllDialog = () => {
       :open="showDeleteAllDialog"
       :reflection-count="reflectionCount"
       @delete-all="handleDeleteAll"
-      @close="showDeleteAllDialog = false"
+      @update:open="showDeleteAllDialog = $event"
     />
   </div>
 </template>
