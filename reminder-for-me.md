@@ -1,17 +1,5 @@
-This file is private developer file, must not be used by AIv(speckit)!
+This file is private developer file, MUST NOT be used by AI Copilot 
 
-review the plan and other create files. for specs-000-product-vision.
-
-## Development Workflow
-
-**CRITICAL RULES**:
-1. ❌ **NEVER commit without explicit user approval**
-2. ✅ **ALWAYS create unit tests for each task**
-3. ✅ **ALWAYS run tests before requesting approval**
-4. ✅ **ALWAYS create acceptance tests for each user story**
-5. ✅ **Present test results with implementation for review**
-
-See: `docs/development-requirements.md` for full details
 
 ## Running the Application
 
@@ -44,3 +32,16 @@ npm run test:e2e        # E2E tests (Playwright)
 npm run test           # All tests
 npm run test:coverage  # With coverage report
 ```
+
+To review using AI
+`github/copilot`
+
+## Future:
+1. Add Markdown editor, that show as md or as preview.
+2. Add шкала нейробаланса
+3. add calendar view for reflections
+4. add calendar to see how many reflections were done / how many days were reflected on
+5. add tags to reflections and ability to filter by tags
+6. Report for Neurobalance trends over time
+7. Ask from user path to data storage. Define default path in user home directory.
+
