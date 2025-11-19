@@ -3,8 +3,8 @@
     <header class="view-header">
       <h2 tabindex="-1">Compose</h2>
       <div class="privacy-badge" role="status" aria-live="polite">
-        <span class="privacy-icon" aria-hidden="true">🔒</span>
-        <span class="privacy-text text-sm">Local processing only</span>
+        <span class="privacy-icon" aria-hidden="true">{{ privacyStatus.icon }}</span>
+        <span class="privacy-text text-sm">{{ privacyStatus.text }}</span>
       </div>
     </header>
 
@@ -29,14 +29,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import ReflectionEditor from '../components/ReflectionEditor.vue';
 import AIMirrorPanel from '../components/AIMirrorPanel.vue';
 import { useReflections } from '../composables/useReflections.js';
 import { useAIMirror } from '../composables/useAIMirror.js';
+import { usePreferences } from '../composables/usePreferences.js';
 
 const { createReflection, updateReflectionAI } = useReflections();
 const { generateMirrorResponse, generating, error: aiError } = useAIMirror();
+const { preferences, loadPreferences, isUsingLocalAI, isUsingOnlineAI, getPrivacyLevel } = usePreferences();
+
+// Load preferences on mount
+onMounted(async () => {
+  await loadPreferences();
+});
+
+// Computed privacy status for display
+const privacyStatus = computed(() => {
+  if (!preferences.value) return { text: 'Loading...', icon: '⏳' };
+  
+  if (isUsingLocalAI()) {
+    return { text: 'Local processing only', icon: '🔒' };
+  } else if (isUsingOnlineAI()) {
+    const provider = preferences.value.onlineProvider === 'openai' ? 'OpenAI' : 'Anthropic';
+    return { text: `Online AI active (${provider})`, icon: '🌐' };
+  }
+  
+  return { text: 'Local processing only', icon: '🔒' };
+});
 
 const currentContent = ref('');
 const currentReflectionId = ref(null);

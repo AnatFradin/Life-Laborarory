@@ -3,7 +3,19 @@
     <a href="#main-content" class="skip-to-main">Skip to main content</a>
     
     <header class="app-header">
-      <h1 class="app-title">Laboratory of Life</h1>
+      <div class="header-top">
+        <h1 class="app-title">Laboratory of Life</h1>
+        <div class="header-status" role="status" aria-live="polite">
+          <span v-if="isUsingLocalAI" class="status-badge local" title="All processing happens locally on your device">
+            <span class="status-icon" aria-hidden="true">🔒</span>
+            <span class="status-text">Local-only</span>
+          </span>
+          <span v-else-if="isUsingOnlineAI" class="status-badge online" title="AI processing uses external services">
+            <span class="status-icon" aria-hidden="true">🌐</span>
+            <span class="status-text">Online AI Active</span>
+          </span>
+        </div>
+      </div>
       <nav class="app-nav" aria-label="Main navigation">
         <RouterLink to="/" class="nav-link">Compose</RouterLink>
         <RouterLink to="/history" class="nav-link">History</RouterLink>
@@ -27,8 +39,17 @@
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp.vue';
+import { usePreferences } from './composables/usePreferences.js';
+
+const { preferences, loadPreferences, isUsingLocalAI, isUsingOnlineAI } = usePreferences();
+
+// Load preferences on mount
+onMounted(async () => {
+  await loadPreferences();
+});
 </script>
 
 <style scoped>
@@ -46,11 +67,57 @@ import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp.vue';
   border-bottom: 1px solid var(--color-border);
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .app-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--color-text);
-  margin: 0 0 1rem 0;
+  margin: 0;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.status-badge.local {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.status-badge.online {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+
+.status-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.status-text {
+  font-weight: 600;
 }
 
 .app-nav {

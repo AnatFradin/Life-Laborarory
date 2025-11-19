@@ -165,8 +165,23 @@ const handleOnlineModelChange = async () => {
       <section class="setting-section">
         <h2 class="section-title">AI Processing</h2>
         <p class="section-description">
-          Choose between local AI (private, no data leaves your device) or online AI (more capable, but data is sent to external services).
+          Choose how your reflections are processed by AI. This determines where your personal reflections are analyzed.
         </p>
+        
+        <div class="privacy-explainer" role="region" aria-label="Privacy explanation">
+          <div class="explainer-card">
+            <div class="explainer-icon">🔒</div>
+            <div class="explainer-content">
+              <strong>Local AI (Recommended for Privacy):</strong> Your reflections never leave your device. All processing happens locally on your computer. Requires Ollama to be installed and running.
+            </div>
+          </div>
+          <div class="explainer-card">
+            <div class="explainer-icon">🌐</div>
+            <div class="explainer-content">
+              <strong>Online AI (Requires API Key):</strong> Your reflections are sent over the internet to OpenAI or Anthropic for processing. More capable models, but your personal data leaves your device and is subject to their privacy policies.
+            </div>
+          </div>
+        </div>
 
         <RadioGroupRoot
           v-model="selectedProvider"
@@ -534,6 +549,42 @@ const handleOnlineModelChange = async () => {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
   border-color: var(--color-primary);
+}
+
+/* Privacy Explainer */
+.privacy-explainer {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.explainer-card {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: var(--color-background-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.explainer-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.explainer-content {
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.explainer-content strong {
+  color: var(--color-text-primary);
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
 /* Privacy Info */

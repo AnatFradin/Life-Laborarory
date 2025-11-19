@@ -166,16 +166,55 @@ This is a web application with backend and frontend:
 - [X] T077 [US4] Create SettingsView in frontend/src/views/SettingsView.vue with AI model selection using Radix Vue RadioGroup per FR-008
 - [X] T078 [US4] Add privacy warning dialog in SettingsView for first-time online model selection with explicit "data leaves device" message per FR-008
 - [X] T079 [US4] Implement hasAcknowledgedOnlineWarning state machine in UserPreferences: prevent online model use until warning acknowledged per data-model.md
-- [ ] T080 [US4] Add privacy status indicator in App.vue header showing "Local-only" or "Online AI active" per FR-019
-- [ ] T081 [US4] Add model selection persistence: save to backend/data/preferences.json via LocalFileRepository
-- [ ] T082 [US4] Update ComposeView to use current AI provider from preferences when generating mirror responses
-- [ ] T083 [US4] Add clear labels explaining privacy implications in SettingsView per FR-008 acceptance scenario 1
+- [X] T080 [US4] Add privacy status indicator in App.vue header showing "Local-only" or "Online AI active" per FR-019
+- [X] T081 [US4] Add model selection persistence: save to backend/data/preferences.json via LocalFileRepository
+- [X] T082 [US4] Update ComposeView to use current AI provider from preferences when generating mirror responses
+- [X] T083 [US4] Add clear labels explaining privacy implications in SettingsView per FR-008 acceptance scenario 1
 
 **Checkpoint**: User Story 4 complete - users can choose AI provider with clear privacy controls
 
 ---
 
-## Phase 7: User Story 2 - Multiple Expression Modes (Priority: P2)
+## Phase 7: User Story 6 - Coach Personas with External ChatGPT (Priority: P2)
+
+**Goal**: Users with existing ChatGPT Plus subscriptions can leverage predefined coach personas by opening ChatGPT with pre-filled prompts, then paste back AI response summaries. This provides cost-effective AI coaching without API fees.
+
+**Rationale**: Many users already pay for ChatGPT Plus ($20/mo) and don't want to pay additional API fees. This feature lets them use their existing subscription while maintaining the app's reflection workflow. Users can choose from predefined coaching styles (Stoic, Franklin, Compassionate, etc.) that format their reflection with appropriate context before sending to ChatGPT.
+
+**Independent Test**: Select a coach persona (e.g., "Stoic Coach"), click "Talk in ChatGPT", verify new tab opens with pre-filled prompt containing reflection + persona system prompt, paste AI response back into app, verify it saves as part of reflection with persona metadata
+
+### Implementation for User Story 6
+
+- [ ] T111 [P] [US6] Create CoachPersona entity in backend/src/domain/entities/CoachPersona.js with Zod schema (id, name, style, description, systemPrompt, icon, color, tags)
+- [ ] T112 [P] [US6] Create predefined personas in backend/src/domain/entities/predefined-personas.js with 6 personas:
+  - Stoic Coach (Marcus Aurelius-inspired, focus on control/acceptance)
+  - Benjamin Franklin (pragmatic wisdom, virtue tracking)
+  - Compassionate Listener (Carl Rogers-inspired, unconditional positive regard)
+  - Socratic Questioner (inquiry-based, no answers given)
+  - Growth Mindset Coach (Carol Dweck-inspired, learning from challenges)
+  - Mindfulness Guide (present-moment awareness, non-judgment)
+- [ ] T113 [US6] Add externalAISession field to Reflection entity in backend/src/domain/entities/Reflection.js: optional object with {personaId, personaName, sessionSummary, timestamp, chatGPTUrl}
+- [ ] T114 [US6] Create ChatGPTLinkGenerator utility in backend/src/domain/services/ChatGPTLinkGenerator.js: generates https://chat.openai.com/?q={encodedPrompt} URLs with reflection text + persona system prompt formatted appropriately
+- [ ] T115 [US6] Create personas route in backend/src/adapters/http/routes/personas.js with GET /api/personas (list all predefined), GET /api/personas/:id (single persona details), POST /api/personas/generate-link (takes reflectionText + personaId, returns ChatGPT URL)
+- [ ] T116 [US6] Register personas route in backend/src/server.js: mount /api/personas
+- [ ] T117 [P] [US6] Create usePersonas composable in frontend/src/composables/usePersonas.js with reactive state (personas, selectedPersona, loading) and methods (loadPersonas, selectPersona, generateChatGPTLink)
+- [ ] T118 [US6] Create PersonaCard component in frontend/src/components/PersonaCard.vue: displays persona with icon emoji, name, style description, color accent border, selectable state, keyboard accessible (Space/Enter to select)
+- [ ] T119 [US6] Add "Coach Personas" section to SettingsView in frontend/src/views/SettingsView.vue: grid of PersonaCards (2 columns), shows currently selected persona with checkmark, calm spacing per FR-001
+- [ ] T120 [US6] Add "Talk to [Persona Name] in ChatGPT" button to ComposeView in frontend/src/views/ComposeView.vue: appears when reflection has content, opens new tab with generated ChatGPT link including reflection + persona prompt
+- [ ] T121 [P] [US6] Create ExternalAIDialog component in frontend/src/components/ExternalAIDialog.vue using Radix Vue Dialog: explains external AI flow ("Your reflection will open in ChatGPT..."), has textarea labeled "Paste AI Response Summary" for user to copy back conversation insights, Save/Cancel buttons, keyboard accessible
+- [ ] T122 [US6] Update useReflections composable in frontend/src/composables/useReflections.js: add saveExternalAIResponse(reflectionId, personaId, summary) method to attach pasted summary + metadata to reflection
+- [ ] T123 [US6] Update ReflectionList component in frontend/src/components/ReflectionList.vue: show small persona icon badge (emoji) for reflections with externalAISession, add tooltip with persona name on hover
+- [ ] T124 [US6] Add persona selection persistence in backend/src/domain/entities/UserPreferences.js: add selectedPersonaId field (string, defaults to 'stoic-coach'), validate against known persona IDs
+- [ ] T125 [US6] Add privacy/cost info to SettingsView coach personas section: clear explanation that ChatGPT link sends data to OpenAI using user's existing subscription, no API fees charged by app, data handled per ChatGPT's privacy policy (not app's local-first model)
+- [ ] T126 [US6] Ensure all persona interactions are keyboard accessible per FR-022: PersonaCard selectable with Tab + Space/Enter, ExternalAIDialog has focus trap, "Talk in ChatGPT" button keyboard accessible with visible focus indicator
+- [ ] T127 [US6] Add aria-labels to PersonaCard for screen readers: announce persona name, style, and selection state per FR-024
+- [ ] T128 [US6] Update ReflectionService in backend/src/domain/services/ReflectionService.js: add updateExternalAISession(reflectionId, sessionData) method to attach external AI metadata to existing reflection
+
+**Checkpoint**: User Story 6 complete - users can leverage ChatGPT Plus with predefined coaching personas, no API fees required
+
+---
+
+## Phase 8: User Story 2 - Multiple Expression Modes (Priority: P2)
 
 **Goal**: Users can express themselves through text or visual artifacts (imported photos, drawings, sketches) with equal treatment
 
@@ -252,6 +291,11 @@ This is a web application with backend and frontend:
 - **US4 (P2)**: AI provider choice
   - Depends on: US1 (extends AIMirrorService with multiple providers)
   - Independent test: Can test provider switching without US2 or US5
+
+- **US6 (P2)**: Coach personas with external ChatGPT
+  - Depends on: US1 (uses reflection content to generate ChatGPT prompts)
+  - Independent test: Can test persona selection and ChatGPT link generation without US2, US4, or US5
+  - Benefits: Leverages existing ChatGPT Plus subscriptions, no API costs
   
 - **US2 (P2)**: Visual mode
   - Depends on: US1 (extends reflection creation with visual mode)
@@ -352,11 +396,12 @@ Task T040: "Create ReflectionList component"
 
 1. **Foundation** (T001-T028): Setup + infrastructure → ~2-3 weeks
 2. **MVP** (T029-T070): US1 + US3 + US5 → ~4-6 weeks → **DELIVERABLE #1**
-3. **Enhanced** (T071-T083): Add US4 (AI provider choice) → ~1-2 weeks → **DELIVERABLE #2**
-4. **Complete** (T084-T096): Add US2 (visual mode) → ~2-3 weeks → **DELIVERABLE #3**
-5. **Polish** (T097-T110): Cross-cutting improvements → ~1 week → **DELIVERABLE #4**
+3. **Enhanced AI** (T071-T083): Add US4 (AI provider choice) → ~1-2 weeks → **DELIVERABLE #2**
+4. **Coach Personas** (T111-T128): Add US6 (external ChatGPT + personas) → ~1-2 weeks → **DELIVERABLE #3**
+5. **Visual Mode** (T084-T096): Add US2 (visual reflections) → ~2-3 weeks → **DELIVERABLE #4**
+6. **Polish** (T097-T110): Cross-cutting improvements → ~1 week → **DELIVERABLE #5**
 
-Each deliverable adds value without breaking previous features.
+Each deliverable adds value without breaking previous features. US6 prioritized before US2 because it provides immediate value for users with ChatGPT Plus subscriptions (cost-effective AI coaching).
 
 ### Parallel Team Strategy
 
