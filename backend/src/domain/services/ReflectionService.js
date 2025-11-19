@@ -104,6 +104,34 @@ class ReflectionService {
   }
 
   /**
+   * Update external AI session for a reflection
+   * @param {string} reflectionId - Reflection ID
+   * @param {Object} sessionData - External AI session data {personaId, personaName, sessionSummary, timestamp, chatGPTUrl}
+   * @returns {Promise<Object>} Updated reflection
+   */
+  async updateExternalAISession(reflectionId, sessionData) {
+    const reflection = await this.repository.findById(reflectionId);
+    if (!reflection) {
+      const error = new Error('Reflection not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Add external AI session data
+    reflection.externalAISession = {
+      personaId: sessionData.personaId,
+      personaName: sessionData.personaName,
+      sessionSummary: sessionData.sessionSummary || '',
+      timestamp: sessionData.timestamp || new Date().toISOString(),
+      chatGPTUrl: sessionData.chatGPTUrl || undefined,
+    };
+
+    // Validate and save
+    const validated = validateReflection(reflection);
+    return await this.repository.save(validated);
+  }
+
+  /**
    * Delete a reflection by ID
    * @param {string} id - Reflection ID
    * @returns {Promise<boolean>} True if deleted, false if not found

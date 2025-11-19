@@ -185,30 +185,30 @@ This is a web application with backend and frontend:
 
 ### Implementation for User Story 6
 
-- [ ] T111 [P] [US6] Create CoachPersona entity in backend/src/domain/entities/CoachPersona.js with Zod schema (id, name, style, description, systemPrompt, icon, color, tags)
-- [ ] T112 [P] [US6] Create predefined personas in backend/src/domain/entities/predefined-personas.js with 6 personas:
+- [X] T111 [P] [US6] Create CoachPersona entity in backend/src/domain/entities/CoachPersona.js with Zod schema (id, name, style, description, systemPrompt, icon, color, tags)
+- [X] T112 [P] [US6] Create predefined personas in backend/src/domain/entities/predefined-personas.js with 6 personas:
   - Stoic Coach (Marcus Aurelius-inspired, focus on control/acceptance)
   - Benjamin Franklin (pragmatic wisdom, virtue tracking)
   - Compassionate Listener (Carl Rogers-inspired, unconditional positive regard)
   - Socratic Questioner (inquiry-based, no answers given)
   - Growth Mindset Coach (Carol Dweck-inspired, learning from challenges)
   - Mindfulness Guide (present-moment awareness, non-judgment)
-- [ ] T113 [US6] Add externalAISession field to Reflection entity in backend/src/domain/entities/Reflection.js: optional object with {personaId, personaName, sessionSummary, timestamp, chatGPTUrl}
-- [ ] T114 [US6] Create ChatGPTLinkGenerator utility in backend/src/domain/services/ChatGPTLinkGenerator.js: generates https://chat.openai.com/?q={encodedPrompt} URLs with reflection text + persona system prompt formatted appropriately
-- [ ] T115 [US6] Create personas route in backend/src/adapters/http/routes/personas.js with GET /api/personas (list all predefined), GET /api/personas/:id (single persona details), POST /api/personas/generate-link (takes reflectionText + personaId, returns ChatGPT URL)
-- [ ] T116 [US6] Register personas route in backend/src/server.js: mount /api/personas
-- [ ] T117 [P] [US6] Create usePersonas composable in frontend/src/composables/usePersonas.js with reactive state (personas, selectedPersona, loading) and methods (loadPersonas, selectPersona, generateChatGPTLink)
-- [ ] T118 [US6] Create PersonaCard component in frontend/src/components/PersonaCard.vue: displays persona with icon emoji, name, style description, color accent border, selectable state, keyboard accessible (Space/Enter to select)
-- [ ] T119 [US6] Add "Coach Personas" section to SettingsView in frontend/src/views/SettingsView.vue: grid of PersonaCards (2 columns), shows currently selected persona with checkmark, calm spacing per FR-001
+- [X] T113 [US6] Add externalAISession field to Reflection entity in backend/src/domain/entities/Reflection.js: optional object with {personaId, personaName, sessionSummary, timestamp, chatGPTUrl}
+- [X] T114 [US6] Create ChatGPTLinkGenerator utility in backend/src/domain/services/ChatGPTLinkGenerator.js: generates https://chat.openai.com/?q={encodedPrompt} URLs with reflection text + persona system prompt formatted appropriately
+- [X] T115 [US6] Create personas route in backend/src/adapters/http/routes/personas.js with GET /api/personas (list all predefined), GET /api/personas/:id (single persona details), POST /api/personas/generate-link (takes reflectionText + personaId, returns ChatGPT URL)
+- [X] T116 [US6] Register personas route in backend/src/server.js: mount /api/personas
+- [X] T117 [P] [US6] Create usePersonas composable in frontend/src/composables/usePersonas.js with reactive state (personas, selectedPersona, loading) and methods (loadPersonas, selectPersona, generateChatGPTLink)
+- [X] T118 [US6] Create PersonaCard component in frontend/src/components/PersonaCard.vue: displays persona with icon emoji, name, style description, color accent border, selectable state, keyboard accessible (Space/Enter to select)
+- [X] T119 [US6] Create CoachView in frontend/src/views/CoachView.vue: dedicated AI Coach tab with grid of PersonaCards (2 columns), shows currently selected persona with checkmark, calm spacing per FR-001, includes how-it-works section and privacy information
 - [ ] T120 [US6] Add "Talk to [Persona Name] in ChatGPT" button to ComposeView in frontend/src/views/ComposeView.vue: appears when reflection has content, opens new tab with generated ChatGPT link including reflection + persona prompt
 - [ ] T121 [P] [US6] Create ExternalAIDialog component in frontend/src/components/ExternalAIDialog.vue using Radix Vue Dialog: explains external AI flow ("Your reflection will open in ChatGPT..."), has textarea labeled "Paste AI Response Summary" for user to copy back conversation insights, Save/Cancel buttons, keyboard accessible
 - [ ] T122 [US6] Update useReflections composable in frontend/src/composables/useReflections.js: add saveExternalAIResponse(reflectionId, personaId, summary) method to attach pasted summary + metadata to reflection
 - [ ] T123 [US6] Update ReflectionList component in frontend/src/components/ReflectionList.vue: show small persona icon badge (emoji) for reflections with externalAISession, add tooltip with persona name on hover
-- [ ] T124 [US6] Add persona selection persistence in backend/src/domain/entities/UserPreferences.js: add selectedPersonaId field (string, defaults to 'stoic-coach'), validate against known persona IDs
-- [ ] T125 [US6] Add privacy/cost info to SettingsView coach personas section: clear explanation that ChatGPT link sends data to OpenAI using user's existing subscription, no API fees charged by app, data handled per ChatGPT's privacy policy (not app's local-first model)
-- [ ] T126 [US6] Ensure all persona interactions are keyboard accessible per FR-022: PersonaCard selectable with Tab + Space/Enter, ExternalAIDialog has focus trap, "Talk in ChatGPT" button keyboard accessible with visible focus indicator
-- [ ] T127 [US6] Add aria-labels to PersonaCard for screen readers: announce persona name, style, and selection state per FR-024
-- [ ] T128 [US6] Update ReflectionService in backend/src/domain/services/ReflectionService.js: add updateExternalAISession(reflectionId, sessionData) method to attach external AI metadata to existing reflection
+- [X] T124 [US6] Add persona selection persistence in backend/src/domain/entities/UserPreferences.js: add selectedPersonaId field (string, defaults to 'stoic-coach'), validate against known persona IDs
+- [X] T125 [US6] Add privacy/cost info to CoachView: clear explanation that ChatGPT link sends data to OpenAI using user's existing subscription, no API fees charged by app, data handled per ChatGPT's privacy policy (not app's local-first model)
+- [X] T126 [US6] Ensure all persona interactions are keyboard accessible per FR-022: PersonaCard selectable with Tab + Space/Enter, ExternalAIDialog has focus trap, "Talk in ChatGPT" button keyboard accessible with visible focus indicator
+- [X] T127 [US6] Add aria-labels to PersonaCard for screen readers: announce persona name, style, and selection state per FR-024
+- [X] T128 [US6] Update ReflectionService in backend/src/domain/services/ReflectionService.js: add updateExternalAISession(reflectionId, sessionData) method to attach external AI metadata to existing reflection
 
 **Checkpoint**: User Story 6 complete - users can leverage ChatGPT Plus with predefined coaching personas, no API fees required
 

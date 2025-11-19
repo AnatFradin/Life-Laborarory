@@ -18,6 +18,7 @@ export const UserPreferencesSchema = z
     onlineModel: z.string().nullable(),
     onlineProvider: z.enum(['openai', 'anthropic']).nullable(),
     hasAcknowledgedOnlineWarning: z.boolean(),
+    selectedPersonaId: z.string().default('stoic-coach'),
     language: z
       .string()
       .length(2, 'Language must be ISO 639-1 code (2 characters)')
@@ -50,6 +51,7 @@ export const DEFAULT_PREFERENCES = {
   onlineModel: null,
   onlineProvider: null,
   hasAcknowledgedOnlineWarning: false,
+  selectedPersonaId: 'stoic-coach',
   language: 'en',
   theme: 'calm-light',
 };

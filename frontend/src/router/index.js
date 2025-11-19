@@ -18,6 +18,14 @@ const routes = [
     },
   },
   {
+    path: '/coach',
+    name: 'coach',
+    component: () => import('../views/CoachView.vue'),
+    meta: {
+      title: 'AI Coach - Laboratory of Life',
+    },
+  },
+  {
     path: '/settings',
     name: 'settings',
     component: () => import('../views/SettingsView.vue'),

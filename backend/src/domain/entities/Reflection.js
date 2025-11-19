@@ -36,6 +36,18 @@ export const AIInteractionSchema = z.object({
 });
 
 /**
+ * ExternalAISession Schema
+ * Metadata about an external ChatGPT conversation linked to this reflection
+ */
+export const ExternalAISessionSchema = z.object({
+  personaId: z.string().min(1, 'Persona ID is required'),
+  personaName: z.string().min(1, 'Persona name is required'),
+  sessionSummary: z.string().optional(),
+  timestamp: z.string().datetime('Invalid external AI session timestamp'),
+  chatGPTUrl: z.string().url('Invalid ChatGPT URL').optional(),
+});
+
+/**
  * Reflection Schema
  * Core entity for a single unit of self-expression
  */
@@ -49,6 +61,7 @@ export const ReflectionSchema = z
     content: z.string().optional(),
     visualAttachment: VisualAttachmentSchema.optional(),
     aiInteraction: AIInteractionSchema.optional(),
+    externalAISession: ExternalAISessionSchema.optional(),
     metadata: z.record(z.unknown()).optional(),
   })
   .refine(

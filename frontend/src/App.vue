@@ -19,6 +19,7 @@
       <nav class="app-nav" aria-label="Main navigation">
         <RouterLink to="/" class="nav-link">Compose</RouterLink>
         <RouterLink to="/history" class="nav-link">History</RouterLink>
+        <RouterLink to="/coach" class="nav-link">AI Coach</RouterLink>
         <RouterLink to="/settings" class="nav-link">Settings</RouterLink>
         <RouterLink to="/export" class="nav-link">Export</RouterLink>
       </nav>

@@ -26,12 +26,14 @@ import reflectionsRouter from './adapters/http/routes/reflections.js';
 import aiRouter from './adapters/http/routes/ai.js';
 import createExportRouter from './adapters/http/routes/export.js';
 import preferencesRouter from './adapters/http/routes/preferences.js';
+import personasRouter from './adapters/http/routes/personas.js';
 
 // API routes
 app.use('/api/reflections', reflectionsRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/export', createExportRouter());
 app.use('/api/preferences', preferencesRouter);
+app.use('/api/personas', personasRouter);
 
 // Error handler middleware (must be last)
 app.use(errorHandler);
