@@ -2,36 +2,61 @@
  * AI routes - HTTP endpoints for AI mirror service
  * 
  * POST /api/ai/mirror - Generate AI mirror response
+ * 
+ * Per User Story 4 (T073):
+ * - Supports multiple AI providers (Ollama, OpenAI, Anthropic)
+ * - Selects provider based on user preferences
+ * - Enforces privacy validation
  */
 
 import express from 'express';
 import { z } from 'zod';
 import AIMirrorService from '../../../domain/services/AIMirrorService.js';
 import OllamaAdapter from '../../ai/OllamaAdapter.js';
+import { OpenAIAdapter } from '../../ai/OpenAIAdapter.js';
+import { AnthropicAdapter } from '../../ai/AnthropicAdapter.js';
+import { LocalPreferencesRepository } from '../../storage/LocalPreferencesRepository.js';
 import { validateBody } from '../middleware/validation.js';
+import config from '../../../config/index.js';
 
 const router = express.Router();
 
-// Initialize AI service with Ollama adapter
-const ollamaAdapter = new OllamaAdapter();
-const aiMirrorService = new AIMirrorService(ollamaAdapter);
+// Initialize preferences repository
+const preferencesRepo = new LocalPreferencesRepository(config.preferencesFile());
+
+// Initialize all available AI adapters
+const adapters = {
+  ollama: new OllamaAdapter(),
+  openai: config.openaiApiKey ? new OpenAIAdapter({ apiKey: config.openaiApiKey }) : null,
+  anthropic: config.anthropicApiKey ? new AnthropicAdapter({ apiKey: config.anthropicApiKey }) : null,
+};
+
+// Initialize AI mirror service with all adapters
+const aiMirrorService = new AIMirrorService(adapters);
 
 // Request validation schema
 const MirrorRequestSchema = z.object({
   prompt: z.string().min(1, 'Reflection text is required'),
-  model: z.string().optional().default('llama2'),
 });
 
 /**
  * POST /api/ai/mirror
  * Generate AI mirror response for a reflection
+ * 
+ * Per User Story 4:
+ * - Loads current user preferences
+ * - Selects AI provider based on preferences
+ * - Returns AI interaction with privacy-aware response
  */
 router.post('/mirror', validateBody(MirrorRequestSchema), async (req, res, next) => {
   try {
-    const { prompt, model } = req.body;
+    const { prompt } = req.body;
 
-    // Generate mirror response
-    const aiInteraction = await aiMirrorService.generateReflection(prompt, { model });
+    // Load current preferences
+    const preferences = await preferencesRepo.getPreferences();
+
+    // Generate mirror response using preferred provider
+    const aiInteraction = await aiMirrorService.generateReflection(prompt, preferences);
 
     res.json(aiInteraction);
   } catch (error) {
@@ -41,17 +66,66 @@ router.post('/mirror', validateBody(MirrorRequestSchema), async (req, res, next)
 
 /**
  * GET /api/ai/status
- * Check if AI provider is available
+ * Check which AI providers are available
+ * 
+ * Per User Story 4:
+ * - Returns status for all configured providers
+ * - Shows available models for each provider
  */
 router.get('/status', async (req, res, next) => {
   try {
-    const isAvailable = await ollamaAdapter.isAvailable();
-    const models = isAvailable ? await ollamaAdapter.listModels() : [];
+    const status = {
+      ollama: null,
+      openai: null,
+      anthropic: null,
+    };
+
+    // Check Ollama
+    if (adapters.ollama) {
+      const isAvailable = await adapters.ollama.isAvailable();
+      status.ollama = {
+        available: isAvailable,
+        models: isAvailable ? await adapters.ollama.listModels() : [],
+      };
+    }
+
+    // Check OpenAI
+    if (adapters.openai) {
+      const isAvailable = await adapters.openai.isAvailable();
+      status.openai = {
+        available: isAvailable,
+        configured: true,
+      };
+    } else {
+      status.openai = {
+        available: false,
+        configured: false,
+        message: 'API key not configured',
+      };
+    }
+
+    // Check Anthropic
+    if (adapters.anthropic) {
+      const isAvailable = await adapters.anthropic.isAvailable();
+      status.anthropic = {
+        available: isAvailable,
+        configured: true,
+      };
+    } else {
+      status.anthropic = {
+        available: false,
+        configured: false,
+        message: 'API key not configured',
+      };
+    }
+
+    // Load current preferences
+    const preferences = await preferencesRepo.getPreferences();
 
     res.json({
-      available: isAvailable,
-      provider: ollamaAdapter.getProviderName(),
-      models,
+      providers: status,
+      currentProvider: preferences.aiProvider,
+      currentModel: preferences.aiProvider === 'local' ? preferences.localModel : preferences.onlineModel,
     });
   } catch (error) {
     next(error);

@@ -3,23 +3,91 @@
  * 
  * Generates reflective, non-directive AI responses using the configured provider
  * Uses system prompt v1.0.0 for consistent, gentle mirroring
+ * 
+ * Per User Story 4 (T073):
+ * - Supports multiple AI providers (Ollama, OpenAI, Anthropic)
+ * - Routes requests based on UserPreferences
+ * - Enforces privacy validation (requires hasAcknowledgedOnlineWarning for online providers)
  */
 
 import systemPrompt from '../../adapters/ai/prompts/system-prompt-v1.js';
+import { OllamaAdapter } from '../../adapters/ai/OllamaAdapter.js';
+import { OpenAIAdapter } from '../../adapters/ai/OpenAIAdapter.js';
+import { AnthropicAdapter } from '../../adapters/ai/AnthropicAdapter.js';
 
 class AIMirrorService {
-  constructor(aiProvider) {
-    this.aiProvider = aiProvider;
+  /**
+   * @param {Object} adapters - Available AI adapters
+   * @param {OllamaAdapter} adapters.ollama - Local Ollama adapter
+   * @param {OpenAIAdapter} [adapters.openai] - Optional OpenAI adapter
+   * @param {AnthropicAdapter} [adapters.anthropic] - Optional Anthropic adapter
+   */
+  constructor(adapters = {}) {
+    this.adapters = {
+      ollama: adapters.ollama || null,
+      openai: adapters.openai || null,
+      anthropic: adapters.anthropic || null,
+    };
+  }
+
+  /**
+   * Select AI provider based on user preferences
+   * @param {Object} preferences - UserPreferences entity
+   * @returns {Object} Selected AI adapter
+   * @throws {Error} If preferences are invalid or provider unavailable
+   */
+  selectProvider(preferences) {
+    const { aiProvider, onlineProvider, hasAcknowledgedOnlineWarning } = preferences;
+
+    // Local provider (default)
+    if (aiProvider === 'local') {
+      if (!this.adapters.ollama) {
+        throw new Error(
+          'Local AI (Ollama) is not available. Please ensure Ollama is running on your device.'
+        );
+      }
+      return this.adapters.ollama;
+    }
+
+    // Online provider - requires privacy acknowledgment
+    if (aiProvider === 'online') {
+      if (!hasAcknowledgedOnlineWarning) {
+        throw new Error(
+          'Cannot use online AI without acknowledging privacy implications. Please review settings.'
+        );
+      }
+
+      if (onlineProvider === 'openai') {
+        if (!this.adapters.openai) {
+          throw new Error(
+            'OpenAI is not configured. Please add your API key in settings or switch to local AI.'
+          );
+        }
+        return this.adapters.openai;
+      }
+
+      if (onlineProvider === 'anthropic') {
+        if (!this.adapters.anthropic) {
+          throw new Error(
+            'Anthropic is not configured. Please add your API key in settings or switch to local AI.'
+          );
+        }
+        return this.adapters.anthropic;
+      }
+
+      throw new Error('Invalid online provider selected');
+    }
+
+    throw new Error('Invalid AI provider configuration');
   }
 
   /**
    * Generate a reflective mirror response for user's reflection
    * @param {string} userReflection - User's reflection text
-   * @param {Object} options - Generation options
-   * @param {string} options.model - AI model to use
-   * @returns {Promise<Object>} AI interaction object
+   * @param {Object} preferences - UserPreferences entity
+   * @returns {Promise<Object>} AIInteraction entity data
    */
-  async generateReflection(userReflection, options = {}) {
+  async generateReflection(userReflection, preferences) {
     // Validate input
     if (!userReflection || typeof userReflection !== 'string' || userReflection.trim().length === 0) {
       const error = new Error('Reflection text is required');
@@ -27,49 +95,19 @@ class AIMirrorService {
       throw error;
     }
 
-    // Check if AI provider is available
-    const isAvailable = await this.aiProvider.isAvailable();
-    if (!isAvailable) {
-      const error = new Error('AI provider is not available');
-      error.statusCode = 503;
-      throw error;
-    }
+    // Select provider based on preferences
+    const provider = this.selectProvider(preferences);
 
-    // Prepare prompt
-    const prompt = this._buildPrompt(userReflection);
-
-    // Generate response
-    const response = await this.aiProvider.generateResponse(prompt, {
-      model: options.model,
-      systemPrompt: systemPrompt.prompt,
-    });
+    // Generate response using selected provider
+    const aiInteraction = await provider.generateResponse(systemPrompt.prompt, userReflection);
 
     // Validate response quality (non-directive check)
-    const isValid = this._validateResponse(response);
+    const isValid = this._validateResponse(aiInteraction.response);
     if (!isValid) {
       console.warn('AI response failed non-directive validation, but returning anyway');
     }
 
-    // Build AI interaction object
-    const aiInteraction = {
-      model: options.model || 'unknown',
-      provider: this.aiProvider.getProviderName(),
-      prompt: userReflection,
-      response: response,
-      timestamp: new Date().toISOString(),
-      systemPromptVersion: systemPrompt.version,
-    };
-
     return aiInteraction;
-  }
-
-  /**
-   * Build the prompt for AI mirror response
-   * @param {string} userReflection - User's reflection
-   * @returns {string} Complete prompt
-   */
-  _buildPrompt(userReflection) {
-    return `Here is a reflection from someone:\n\n"${userReflection}"\n\nPlease mirror back what you notice, without giving advice or direction.`;
   }
 
   /**
@@ -100,14 +138,6 @@ class AIMirrorService {
     }
 
     return true;
-  }
-
-  /**
-   * Change AI provider
-   * @param {Object} newProvider - New AI provider instance
-   */
-  setProvider(newProvider) {
-    this.aiProvider = newProvider;
   }
 }
 

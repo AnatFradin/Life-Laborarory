@@ -14,6 +14,10 @@ const config = {
   // Ollama configuration
   ollamaUrl: process.env.OLLAMA_URL || 'http://localhost:11434',
 
+  // Online AI providers configuration (User Story 4)
+  openaiApiKey: process.env.OPENAI_API_KEY || null,
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY || null,
+
   // Environment
   nodeEnv: process.env.NODE_ENV || 'development',
 

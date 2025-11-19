@@ -25,11 +25,13 @@ app.get('/health', (req, res) => {
 import reflectionsRouter from './adapters/http/routes/reflections.js';
 import aiRouter from './adapters/http/routes/ai.js';
 import createExportRouter from './adapters/http/routes/export.js';
+import preferencesRouter from './adapters/http/routes/preferences.js';
 
 // API routes
 app.use('/api/reflections', reflectionsRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/export', createExportRouter());
+app.use('/api/preferences', preferencesRouter);
 
 // Error handler middleware (must be last)
 app.use(errorHandler);
