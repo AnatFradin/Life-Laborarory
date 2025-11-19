@@ -1,9 +1,11 @@
 /**
  * Reflections routes - HTTP endpoints for reflection management
  * 
- * GET    /api/reflections     - Get all reflections
- * POST   /api/reflections     - Create new reflection
- * GET    /api/reflections/:id - Get specific reflection
+ * GET    /api/reflections            - Get all reflections
+ * POST   /api/reflections            - Create new reflection
+ * GET    /api/reflections/:id        - Get specific reflection
+ * DELETE /api/reflections/:id        - Delete specific reflection
+ * POST   /api/reflections/delete-all - Delete all reflections (requires confirmation)
  */
 
 import express from 'express';
@@ -75,5 +77,60 @@ router.post(
     }
   }
 );
+
+/**
+ * DELETE /api/reflections/:id
+ * Delete a specific reflection
+ */
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const deleted = await reflectionService.deleteReflection(id);
+    
+    if (!deleted) {
+      const error = new Error('Reflection not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    
+    res.json({
+      message: 'Reflection deleted successfully',
+      id,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/reflections/delete-all
+ * Delete all reflections (requires "DELETE_ALL" confirmation string per FR-017)
+ * 
+ * Request body:
+ * {
+ *   confirmation: "DELETE_ALL"
+ * }
+ */
+router.post('/delete-all', async (req, res, next) => {
+  try {
+    const { confirmation } = req.body;
+    
+    // Require exact confirmation string per FR-017
+    if (confirmation !== 'DELETE_ALL') {
+      const error = new Error('To delete all reflections, you must send confirmation: "DELETE_ALL"');
+      error.statusCode = 400;
+      throw error;
+    }
+    
+    const deletedCount = await reflectionService.deleteAllReflections();
+    
+    res.json({
+      message: `All reflections deleted successfully`,
+      deletedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

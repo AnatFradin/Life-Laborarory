@@ -109,8 +109,8 @@ This is a web application with backend and frontend:
 - [X] T046 [US3] Create MarkdownExporter adapter in backend/src/adapters/export/MarkdownExporter.js implementing IExporter with support for single-file (base64 images) and folder (separate images) formats per data-model.md
 - [X] T047 [US3] Add deleteReflection and deleteAllReflections methods to ReflectionService in backend/src/domain/services/ReflectionService.js with permanent deletion
 - [X] T048 [US3] Create export route in backend/src/adapters/http/routes/export.js with POST /api/export endpoint accepting exportFormat parameter
-- [ ] T049 [P] [US3] Add DELETE /api/reflections/:id endpoint to backend/src/adapters/http/routes/reflections.js with single confirmation
-- [ ] T050 [P] [US3] Add POST /api/reflections/delete-all endpoint to backend/src/adapters/http/routes/reflections.js requiring "DELETE_ALL" confirmation string per FR-017
+- [X] T049 [P] [US3] Add DELETE /api/reflections/:id endpoint to backend/src/adapters/http/routes/reflections.js with single confirmation
+- [X] T050 [P] [US3] Add POST /api/reflections/delete-all endpoint to backend/src/adapters/http/routes/reflections.js requiring "DELETE_ALL" confirmation string per FR-017
 - [X] T051 [US3] Register export route in backend/src/server.js: mount /api/export
 - [ ] T052 [P] [US3] Create ExportDialog component in frontend/src/components/ExportDialog.vue using Radix Vue Dialog with format choice (single-file vs folder, folder default) and accessible confirmation
 - [ ] T053 [P] [US3] Create DeleteDialog component in frontend/src/components/DeleteDialog.vue using Radix Vue Dialog for single-entry deletion with confirmation

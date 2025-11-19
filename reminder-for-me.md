@@ -44,4 +44,9 @@ To review using AI
 5. add tags to reflections and ability to filter by tags
 6. Report for Neurobalance trends over time
 7. Ask from user path to data storage. Define default path in user home directory.
+8. Add tab with all known tools (how to manage stress, how to improve focus, etc).
+    - Lengold collection (inlcluding media fles - play them, files, presentations, ...)
+    - Quotes collection
+    - ...
+9. 
 

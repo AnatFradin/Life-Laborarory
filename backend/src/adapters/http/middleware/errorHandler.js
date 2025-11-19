@@ -89,7 +89,8 @@ const errorHandler = (err, req, res, next) => {
       });
     }
     
-    userMessage = 'Some information wasn\'t quite right.';
+    // Use custom message if provided, otherwise use default
+    userMessage = err.message || 'Some information wasn\'t quite right.';
     suggestions = ['Please check your input and try again'];
   }
   // File size errors
@@ -104,7 +105,8 @@ const errorHandler = (err, req, res, next) => {
   // Not found errors
   else if (err.statusCode === 404) {
     statusCode = 404;
-    userMessage = 'We couldn\'t find what you were looking for.';
+    // Use custom message if provided, otherwise use default
+    userMessage = err.message || 'We couldn\'t find what you were looking for.';
     suggestions = ['It may have been deleted', 'Check the History view for your reflections'];
   }
   // Online AI provider errors
