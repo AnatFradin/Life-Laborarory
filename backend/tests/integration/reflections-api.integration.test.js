@@ -7,7 +7,8 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdir, rm, readFile } from 'node:fs/promises';
+import { Buffer } from 'node:buffer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,14 +16,16 @@ const __dirname = dirname(__filename);
 // Test data directory
 const TEST_DATA_DIR = join(__dirname, '../.test-data');
 const TEST_REFLECTIONS_DIR = join(TEST_DATA_DIR, 'reflections');
+const TEST_VISUALS_DIR = join(TEST_DATA_DIR, 'visuals');
 
 describe('Reflections API Integration Tests', () => {
   beforeAll(async () => {
     // Set test data directory for this test suite
     process.env.DATA_DIR = TEST_DATA_DIR;
     
-    // Create test data directory
+    // Create test data directories
     await mkdir(TEST_REFLECTIONS_DIR, { recursive: true });
+    await mkdir(TEST_VISUALS_DIR, { recursive: true });
     
     // Import app AFTER setting env var
     const { default: testApp } = await import('../../src/server.js');
@@ -38,9 +41,11 @@ describe('Reflections API Integration Tests', () => {
   });
 
   beforeEach(async () => {
-    // Clean reflections before each test
+    // Clean reflections and visuals before each test
     await rm(TEST_REFLECTIONS_DIR, { recursive: true, force: true });
     await mkdir(TEST_REFLECTIONS_DIR, { recursive: true });
+    await rm(TEST_VISUALS_DIR, { recursive: true, force: true });
+    await mkdir(TEST_VISUALS_DIR, { recursive: true });
   });
 
   describe('POST /api/reflections', () => {
@@ -308,6 +313,177 @@ describe('Reflections API Integration Tests', () => {
 
       expect(response.body).toHaveProperty('error');
       expect(response.body.message).toContain('DELETE_ALL');
+    });
+  });
+
+  describe('POST /api/reflections (visual mode - image upload)', () => {
+    // Helper function to create a minimal valid PNG image buffer
+    function createTestPngBuffer() {
+      // Minimal 1x1 PNG (transparent pixel)
+      return Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
+        0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+        0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+        0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, // IDAT chunk
+        0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+        0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, // IEND chunk
+        0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+        0x42, 0x60, 0x82,
+      ]);
+    }
+
+    it('should create a visual reflection with image upload', async () => {
+      const imageBuffer = createTestPngBuffer();
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .attach('image', imageBuffer, {
+          filename: 'test-image.png',
+          contentType: 'image/png',
+        })
+        .expect('Content-Type', /json/)
+        .expect(201);
+
+      expect(response.body).toMatchObject({
+        id: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+        mode: 'visual',
+        visualAttachment: {
+          originalFilename: 'test-image.png',
+          storedPath: expect.stringMatching(/^visuals\/\d{4}-\d{2}\/[a-f0-9-]+\.png$/),
+          mimeType: 'image/png',
+          sizeBytes: expect.any(Number),
+          importTimestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+        },
+      });
+    });
+
+    it('should accept JPEG images', async () => {
+      // Minimal JPEG header
+      const jpegBuffer = Buffer.from([
+        0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46,
+        0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01,
+        0x00, 0x01, 0x00, 0x00, 0xff, 0xd9,
+      ]);
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .attach('image', jpegBuffer, {
+          filename: 'test.jpg',
+          contentType: 'image/jpeg',
+        })
+        .expect(201);
+
+      expect(response.body.visualAttachment.mimeType).toBe('image/jpeg');
+      expect(response.body.visualAttachment.storedPath).toMatch(/\.jpg$/);
+    });
+
+    it('should accept WebP images', async () => {
+      // Minimal WebP RIFF header
+      const webpBuffer = Buffer.from([
+        0x52, 0x49, 0x46, 0x46, 0x1a, 0x00, 0x00, 0x00,
+        0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20,
+        0x0e, 0x00, 0x00, 0x00, 0x30, 0x01, 0x00, 0x9d,
+        0x01, 0x2a, 0x01, 0x00, 0x01, 0x00,
+      ]);
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .attach('image', webpBuffer, {
+          filename: 'test.webp',
+          contentType: 'image/webp',
+        })
+        .expect(201);
+
+      expect(response.body.visualAttachment.mimeType).toBe('image/webp');
+      expect(response.body.visualAttachment.storedPath).toMatch(/\.webp$/);
+    });
+
+    it('should store dimensions when provided', async () => {
+      const imageBuffer = createTestPngBuffer();
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .field('width', '1920')
+        .field('height', '1080')
+        .attach('image', imageBuffer, {
+          filename: 'high-res.png',
+          contentType: 'image/png',
+        })
+        .expect(201);
+
+      expect(response.body.visualAttachment.dimensions).toEqual({
+        width: 1920,
+        height: 1080,
+      });
+    });
+
+    it('should reject visual mode without image file', async () => {
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.message).toContain('Image file is required');
+    });
+
+    it('should reject unsupported image types', async () => {
+      const bmpBuffer = Buffer.from([0x42, 0x4d]); // BMP header
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .attach('image', bmpBuffer, {
+          filename: 'test.bmp',
+          contentType: 'image/bmp',
+        })
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.message).toContain('Invalid image type');
+    });
+
+    it('should reject files exceeding 10MB limit', async () => {
+      // Create a buffer larger than 10MB
+      const largeBuffer = Buffer.alloc(11 * 1024 * 1024);
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .attach('image', largeBuffer, {
+          filename: 'large.png',
+          contentType: 'image/png',
+        })
+        .expect(413); // Payload Too Large
+
+      // Multer returns 413 for file size limit exceeded
+    });
+
+    it('should actually save the image file to disk', async () => {
+      const imageBuffer = createTestPngBuffer();
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .attach('image', imageBuffer, {
+          filename: 'persistent-test.png',
+          contentType: 'image/png',
+        })
+        .expect(201);
+
+      const storedPath = response.body.visualAttachment.storedPath;
+      const fullPath = join(TEST_DATA_DIR, storedPath);
+
+      // Verify file exists on disk
+      const savedBuffer = await readFile(fullPath);
+      expect(savedBuffer).toBeTruthy();
+      expect(savedBuffer.length).toBeGreaterThan(0);
     });
   });
 });
