@@ -5,57 +5,71 @@
     </div>
 
     <div v-else class="reflections-container" role="list" aria-label="Reflections">
-      <article
-        v-for="(reflection, index) in reflections"
-        :key="reflection.id"
-        :ref="el => setCardRef(el, index)"
-        class="reflection-card"
-        role="listitem"
-        :tabindex="index === focusedIndex ? 0 : -1"
-        :aria-label="`Reflection from ${formatTimestamp(reflection.timestamp)}`"
-        @click="$emit('select', reflection)"
-        @keydown="handleKeyDown($event, index, reflection)"
-      >
-        <div class="reflection-header">
-          <div class="reflection-meta">
-            <time class="reflection-time text-tertiary text-sm" :datetime="reflection.timestamp">
-              {{ formatTimestamp(reflection.timestamp) }}
-            </time>
-            <span v-if="reflection.mode" class="reflection-mode text-tertiary text-xs">
-              {{ reflection.mode }}
+      <template v-for="(reflection, index) in reflections" :key="reflection.id">
+        <!-- Visual Reflection Card -->
+        <VisualReflectionCard
+          v-if="reflection.mode === 'visual'"
+          :ref="el => setCardRef(el, index)"
+          :reflection="reflection"
+          role="listitem"
+          :tabindex="index === focusedIndex ? 0 : -1"
+          @click="$emit('select', reflection)"
+          @keydown="handleKeyDown($event, index, reflection)"
+          @delete="openDeleteDialog(reflection, $event)"
+        />
+
+        <!-- Text Reflection Card -->
+        <article
+          v-else
+          :ref="el => setCardRef(el, index)"
+          class="reflection-card"
+          role="listitem"
+          :tabindex="index === focusedIndex ? 0 : -1"
+          :aria-label="`Reflection from ${formatTimestamp(reflection.timestamp)}`"
+          @click="$emit('select', reflection)"
+          @keydown="handleKeyDown($event, index, reflection)"
+        >
+          <div class="reflection-header">
+            <div class="reflection-meta">
+              <time class="reflection-time text-tertiary text-sm" :datetime="reflection.timestamp">
+                {{ formatTimestamp(reflection.timestamp) }}
+              </time>
+              <span v-if="reflection.mode" class="reflection-mode text-tertiary text-xs">
+                {{ reflection.mode }}
+              </span>
+            </div>
+            <button
+              class="delete-button"
+              @click="openDeleteDialog(reflection, $event)"
+              @keydown.enter.stop="openDeleteDialog(reflection, $event)"
+              aria-label="Delete this reflection"
+              title="Delete"
+            >
+              <span aria-hidden="true">🗑️</span>
+            </button>
+          </div>
+
+          <div class="reflection-content">
+            <p class="reflection-text">{{ getPreview(reflection) }}</p>
+          </div>
+
+          <div v-if="reflection.aiInteraction || reflection.externalAISession" class="reflection-footer">
+            <span v-if="reflection.aiInteraction" class="ai-badge">
+              <span aria-hidden="true">💭</span>
+              <span class="sr-only">Has AI reflection</span>
+            </span>
+            <span 
+              v-if="reflection.externalAISession" 
+              class="persona-badge" 
+              :title="`External AI session with ${reflection.externalAISession.personaName}`"
+              :aria-label="`External AI session with ${reflection.externalAISession.personaName}`"
+            >
+              <span aria-hidden="true">{{ getPersonaIcon(reflection.externalAISession.personaId) }}</span>
+              <span class="persona-name">{{ reflection.externalAISession.personaName }}</span>
             </span>
           </div>
-          <button
-            class="delete-button"
-            @click="openDeleteDialog(reflection, $event)"
-            @keydown.enter.stop="openDeleteDialog(reflection, $event)"
-            aria-label="Delete this reflection"
-            title="Delete"
-          >
-            <span aria-hidden="true">🗑️</span>
-          </button>
-        </div>
-
-        <div class="reflection-content">
-          <p class="reflection-text">{{ getPreview(reflection) }}</p>
-        </div>
-
-        <div v-if="reflection.aiInteraction || reflection.externalAISession" class="reflection-footer">
-          <span v-if="reflection.aiInteraction" class="ai-badge">
-            <span aria-hidden="true">💭</span>
-            <span class="sr-only">Has AI reflection</span>
-          </span>
-          <span 
-            v-if="reflection.externalAISession" 
-            class="persona-badge" 
-            :title="`External AI session with ${reflection.externalAISession.personaName}`"
-            :aria-label="`External AI session with ${reflection.externalAISession.personaName}`"
-          >
-            <span aria-hidden="true">{{ getPersonaIcon(reflection.externalAISession.personaId) }}</span>
-            <span class="persona-name">{{ reflection.externalAISession.personaName }}</span>
-          </span>
-        </div>
-      </article>
+        </article>
+      </template>
     </div>
 
     <!-- Delete Dialog -->
@@ -71,6 +85,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import DeleteDialog from './DeleteDialog.vue';
+import VisualReflectionCard from './VisualReflectionCard.vue';
 
 const props = defineProps({
   reflections: {
