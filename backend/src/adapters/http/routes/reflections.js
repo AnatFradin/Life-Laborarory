@@ -97,10 +97,10 @@ router.post(
         }
 
         // Validate MIME type
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
         if (!allowedTypes.includes(req.file.mimetype)) {
           const error = new Error(
-            `Invalid image type. Allowed types: ${allowedTypes.join(', ')}`
+            `Invalid file type. Allowed types: ${allowedTypes.join(', ')}`
           );
           error.statusCode = 400;
           throw error;

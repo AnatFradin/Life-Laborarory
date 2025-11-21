@@ -90,7 +90,7 @@ describe('ImageImport', () => {
     it('should have hidden file input with correct accept attribute', () => {
       const fileInput = wrapper.find('.file-input');
       expect(fileInput.exists()).toBe(true);
-      expect(fileInput.attributes('accept')).toBe('image/jpeg,image/png,image/gif,image/webp');
+      expect(fileInput.attributes('accept')).toBe('image/jpeg,image/png,image/gif,image/webp,application/pdf');
     });
   });
 
@@ -196,7 +196,7 @@ describe('ImageImport', () => {
 
   describe('File Validation', () => {
     it('should reject invalid file type', async () => {
-      const file = createMockFile('document.pdf', 'application/pdf');
+      const file = createMockFile('document.txt', 'text/plain');
       const fileInput = wrapper.find('.file-input');
 
       Object.defineProperty(fileInput.element, 'files', {
@@ -240,6 +240,7 @@ describe('ImageImport', () => {
         { name: 'test.png', type: 'image/png' },
         { name: 'test.gif', type: 'image/gif' },
         { name: 'test.webp', type: 'image/webp' },
+        { name: 'document.pdf', type: 'application/pdf' },
       ];
 
       for (const { name, type } of types) {

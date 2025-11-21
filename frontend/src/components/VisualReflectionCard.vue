@@ -28,7 +28,14 @@
     </div>
 
     <div class="visual-content">
+      <!-- PDF Preview -->
+      <div v-if="isPDF" class="pdf-preview-card">
+        <span class="pdf-icon" aria-hidden="true">📄</span>
+        <span class="pdf-label text-sm text-tertiary">PDF Document</span>
+      </div>
+      <!-- Image Preview -->
       <img
+        v-else
         :src="imageUrl"
         :alt="reflection.visualAttachment.originalFilename"
         class="visual-image"
@@ -80,6 +87,13 @@ const props = defineProps({
 const emit = defineEmits(['select', 'delete', 'keydown']);
 
 const imageError = ref(false);
+
+/**
+ * Check if the attachment is a PDF
+ */
+const isPDF = computed(() => {
+  return props.reflection.visualAttachment?.mimeType === 'application/pdf';
+});
 
 /**
  * Compute the full image URL
@@ -225,6 +239,27 @@ const getPersonaIcon = (personaId) => {
 
 .visual-content {
   margin-bottom: var(--space-sm);
+}
+
+.pdf-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  min-height: 200px;
+  gap: var(--space-sm);
+}
+
+.pdf-icon {
+  font-size: 3rem;
+  opacity: 0.8;
+}
+
+.pdf-label {
+  font-weight: 500;
 }
 
 .visual-image {

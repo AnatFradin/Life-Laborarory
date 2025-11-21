@@ -114,11 +114,22 @@ describe('VisualAttachment Entity', () => {
     it('should reject unsupported MIME type', () => {
       const invalid = { ...validAttachment, mimeType: 'image/bmp' };
       
-      expect(() => createVisualAttachment(invalid)).toThrow(/Unsupported image format/);
+      expect(() => createVisualAttachment(invalid)).toThrow(/Unsupported file format/);
     });
 
-    it('should reject non-image MIME type', () => {
-      const invalid = { ...validAttachment, mimeType: 'application/pdf' };
+    it('should accept PDF MIME type', () => {
+      const pdfAttachment = { 
+        ...validAttachment, 
+        mimeType: 'application/pdf',
+        storedPath: 'visuals/2025-11/abc123-def456-789.pdf',
+        dimensions: undefined, // PDFs don't have dimensions
+      };
+      
+      expect(() => createVisualAttachment(pdfAttachment)).not.toThrow();
+    });
+
+    it('should reject non-supported MIME type', () => {
+      const invalid = { ...validAttachment, mimeType: 'application/msword' };
       
       expect(() => createVisualAttachment(invalid)).toThrow();
     });

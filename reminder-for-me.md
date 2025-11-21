@@ -70,4 +70,7 @@ To review using AI
 [ ] take list of available local models from ollama.
 [ ] Add integration with ollama to communicate with local AI models.
 [ ] Add my background story and ask if I want to copy/paste is with each AI interaction.
+[ ] Add option to have visual and text reflections in the same reflection.
+[ ] in the history, no need to show big preview or reflection text. Just show icon that it is visual or text, and first line of text.
+
 §

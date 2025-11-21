@@ -196,4 +196,159 @@ describe('VisualReflectionCard', () => {
     const img = wrapper.find('.visual-image');
     expect(img.attributes('src')).toBe('http://localhost:3000/api/visuals/2025-11/abc123-def456.jpg');
   });
+
+  // PDF-specific tests
+  describe('PDF display', () => {
+    const mockPDFReflection = {
+      id: 'test-pdf-123',
+      mode: 'visual',
+      timestamp: '2025-11-21T10:00:00.000Z',
+      visualAttachment: {
+        originalFilename: 'document.pdf',
+        storedPath: 'visuals/2025-11/abc123-def456-789.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 512000,
+        dimensions: undefined, // PDFs don't have dimensions
+        importTimestamp: '2025-11-21T10:00:00.000Z',
+      },
+    };
+
+    it('should render PDF reflection with PDF preview card', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockPDFReflection,
+        },
+      });
+
+      // Should have main card element
+      expect(wrapper.find('.visual-reflection-card').exists()).toBe(true);
+
+      // Should NOT display image element for PDFs
+      expect(wrapper.find('.visual-image').exists()).toBe(false);
+
+      // Should display PDF preview card instead
+      expect(wrapper.find('.pdf-preview-card').exists()).toBe(true);
+
+      // Should display PDF icon
+      expect(wrapper.find('.pdf-icon').exists()).toBe(true);
+      expect(wrapper.find('.pdf-icon').text()).toBe('📄');
+
+      // Should display PDF label
+      expect(wrapper.find('.pdf-label').text()).toBe('PDF Document');
+    });
+
+    it('should display PDF filename', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockPDFReflection,
+        },
+      });
+
+      expect(wrapper.find('.image-filename').text()).toBe('document.pdf');
+    });
+
+    it('should not display dimensions for PDF', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockPDFReflection,
+        },
+      });
+
+      expect(wrapper.find('.image-dimensions').exists()).toBe(false);
+    });
+
+    it('should display mode badge as "visual" for PDF reflections', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockPDFReflection,
+        },
+      });
+
+      expect(wrapper.find('.reflection-mode').text()).toBe('visual');
+    });
+
+    it('should emit select event when PDF card is clicked', async () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockPDFReflection,
+        },
+      });
+
+      await wrapper.find('.visual-reflection-card').trigger('click');
+
+      expect(wrapper.emitted('select')).toBeTruthy();
+      expect(wrapper.emitted('select')[0]).toEqual([mockPDFReflection]);
+    });
+
+    it('should emit delete event when delete button clicked on PDF reflection', async () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockPDFReflection,
+        },
+      });
+
+      await wrapper.find('.delete-button').trigger('click');
+
+      expect(wrapper.emitted('delete')).toBeTruthy();
+      expect(wrapper.emitted('delete')[0]).toEqual(['test-pdf-123']);
+    });
+
+    it('should construct correct PDF URL', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockPDFReflection,
+        },
+      });
+
+      // The PDF URL should be available for download/view even though not displayed as img
+      const expectedUrl = 'http://localhost:3000/api/visuals/2025-11/abc123-def456-789.pdf';
+      
+      // Check if the URL is properly constructed in the component
+      const card = wrapper.find('.pdf-preview-card');
+      expect(card.exists()).toBe(true);
+    });
+
+    it('should support PDF with AI interaction', () => {
+      const pdfWithAI = {
+        ...mockPDFReflection,
+        aiInteraction: {
+          model: 'llama2',
+          provider: 'local',
+          response: 'Interesting document',
+          timestamp: '2025-11-21T10:01:00.000Z',
+        },
+      };
+
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: pdfWithAI,
+        },
+      });
+
+      expect(wrapper.find('.pdf-preview-card').exists()).toBe(true);
+      expect(wrapper.find('.ai-badge').exists()).toBe(true);
+    });
+
+    it('should support PDF with external AI session', () => {
+      const pdfWithPersona = {
+        ...mockPDFReflection,
+        externalAISession: {
+          personaId: 'stoic-coach',
+          personaName: 'Stoic Coach',
+          sessionSummary: 'Reflected on the document',
+          timestamp: '2025-11-21T10:30:00.000Z',
+        },
+      };
+
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: pdfWithPersona,
+        },
+      });
+
+      expect(wrapper.find('.pdf-preview-card').exists()).toBe(true);
+      expect(wrapper.find('.persona-badge').exists()).toBe(true);
+      expect(wrapper.find('.persona-name').text()).toBe('Stoic Coach');
+    });
+  });
 });

@@ -446,7 +446,7 @@ describe('Reflections API Integration Tests', () => {
         .expect(400);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.message).toContain('Invalid image type');
+      expect(response.body.message).toContain('Invalid file type');
     });
 
     it('should reject files exceeding 10MB limit', async () => {

@@ -17,24 +17,31 @@
       <input
         ref="fileInput"
         type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
+        accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
         @change="handleFileSelect"
         class="file-input"
-        aria-label="Select image file"
+        aria-label="Select image or PDF file"
       />
 
       <div v-if="!previewUrl" class="drop-zone-content">
-        <span class="upload-icon" aria-hidden="true">📷</span>
+        <span class="upload-icon" aria-hidden="true">�</span>
         <p class="upload-text">
-          <strong>Click to select</strong> or drag and drop an image
+          <strong>Click to select</strong> or drag and drop a file
         </p>
         <p class="upload-hint text-tertiary text-sm">
-          Supports: JPEG, PNG, GIF, WebP (max 10MB)
+          Supports: JPEG, PNG, GIF, WebP, PDF (max 10MB)
         </p>
       </div>
 
       <div v-else class="preview-container">
+        <!-- PDF Preview -->
+        <div v-if="isPDF" class="pdf-preview">
+          <span class="pdf-icon" aria-hidden="true">📄</span>
+          <p class="pdf-name">{{ fileName }}</p>
+        </div>
+        <!-- Image Preview -->
         <img
+          v-else
           :src="previewUrl"
           :alt="fileName"
           class="preview-image"
@@ -101,9 +108,10 @@ const fileName = ref('');
 const fileSize = ref(0);
 const imageDimensions = ref(null);
 const errorMessage = ref('');
+const isPDF = ref(false);
 
 // Allowed MIME types
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
 
 /**
  * Trigger the hidden file input
@@ -168,7 +176,7 @@ const processFile = (file) => {
 
   // Validate file type
   if (!ALLOWED_TYPES.includes(file.type)) {
-    errorMessage.value = 'Invalid file type. Please select a JPEG, PNG, GIF, or WebP image.';
+    errorMessage.value = 'Invalid file type. Please select a JPEG, PNG, GIF, WebP image, or PDF.';
     return;
   }
 
@@ -178,6 +186,9 @@ const processFile = (file) => {
     return;
   }
 
+  // Check if it's a PDF
+  isPDF.value = file.type === 'application/pdf';
+
   // Create preview URL
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value);
@@ -186,8 +197,14 @@ const processFile = (file) => {
   fileName.value = file.name;
   fileSize.value = file.size;
 
-  // Load image to get dimensions
-  loadImageDimensions(file);
+  // Load image dimensions (only for images, not PDFs)
+  if (!isPDF.value) {
+    loadImageDimensions(file);
+  } else {
+    // For PDFs, clear dimensions and emit null
+    imageDimensions.value = null;
+    emit('dimensions-loaded', null);
+  }
 
   // Emit the file
   emit('update:modelValue', file);
@@ -210,7 +227,7 @@ const loadImageDimensions = (file) => {
 };
 
 /**
- * Clear the selected image
+ * Clear the selected file
  */
 const clearImage = () => {
   if (previewUrl.value) {
@@ -222,6 +239,7 @@ const clearImage = () => {
   fileSize.value = 0;
   imageDimensions.value = null;
   errorMessage.value = '';
+  isPDF.value = false;
   
   if (fileInput.value) {
     fileInput.value.value = '';
@@ -255,6 +273,7 @@ watch(() => props.modelValue, (newValue) => {
     fileSize.value = 0;
     imageDimensions.value = null;
     errorMessage.value = '';
+    isPDF.value = false;
     if (fileInput.value) {
       fileInput.value.value = '';
     }
@@ -341,6 +360,33 @@ watch(() => props.modelValue, (newValue) => {
   min-height: 300px;
   border-radius: var(--radius-lg);
   overflow: hidden;
+}
+
+.pdf-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.pdf-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-md);
+  opacity: 0.8;
+}
+
+.pdf-name {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: 500;
+  text-align: center;
+  padding: 0 var(--space-md);
+  word-break: break-word;
 }
 
 .preview-image {

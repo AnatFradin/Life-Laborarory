@@ -22,10 +22,10 @@ export const VisualAttachmentSchema = z.object({
   
   storedPath: z.string()
     .min(1, 'Stored path is required')
-    .regex(/^visuals\/\d{4}-\d{2}\/[a-f0-9-]+\.(jpg|jpeg|png|gif|webp)$/i, 'Invalid stored path format'),
+    .regex(/^visuals\/\d{4}-\d{2}\/[a-f0-9-]+\.(jpg|jpeg|png|gif|webp|pdf)$/i, 'Invalid stored path format'),
   
-  mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif', 'image/webp'], {
-    errorMap: () => ({ message: 'Unsupported image format. Supported: JPEG, PNG, GIF, WebP' }),
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'], {
+    errorMap: () => ({ message: 'Unsupported file format. Supported: JPEG, PNG, GIF, WebP, PDF' }),
   }),
   
   sizeBytes: z.number()
