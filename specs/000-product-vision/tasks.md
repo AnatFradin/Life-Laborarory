@@ -231,9 +231,9 @@ This is a web application with backend and frontend:
 - [X] T090 [P] [US2] Create VisualReflectionCard component in frontend/src/components/VisualReflectionCard.vue to display imported images with metadata
 - [X] T091 [P] [US2] Create ImageImport component in frontend/src/components/ImageImport.vue with file input, drag-and-drop, preview, accessible labels per FR-024
 - [X] T092 [US2] Add mode selection to ComposeView in frontend/src/views/ComposeView.vue: toggle between text and visual with max 3 choices per FR-001
-- [ ] T093 [US2] Update ReflectionList component in frontend/src/components/ReflectionList.vue to render VisualReflectionCard for mode='visual' reflections
+- [X] T093 [US2] Update ReflectionList component in frontend/src/components/ReflectionList.vue to render VisualReflectionCard for mode='visual' reflections
 - [X] T094 [US2] Add keyboard navigation to ImageImport (Space/Enter to trigger file dialog) per FR-022
-- [ ] T095 [US2] Update useReflections composable to handle image upload with FormData in frontend/src/composables/useReflections.js
+- [X] T095 [US2] Update useReflections composable to handle image upload with FormData in frontend/src/composables/useReflections.js
 - [ ] T096 [US2] Ensure visual reflections receive equal design attention: same calm styling, timestamps, accessibility as text mode per FR-003 and SC-014
 
 **Checkpoint**: User Story 2 complete - users can create text and visual reflections with equal ease
