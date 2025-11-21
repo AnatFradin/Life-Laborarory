@@ -222,9 +222,9 @@ This is a web application with backend and frontend:
 
 ### Implementation for User Story 2
 
-- [ ] T084 [P] [US2] Create VisualAttachment entity in backend/src/domain/entities/VisualAttachment.js with Zod schema (originalFilename, storedPath, mimeType, sizeBytes, dimensions, importTimestamp) per data-model.md
-- [ ] T085 [US2] Add visual mode support to Reflection entity in backend/src/domain/entities/Reflection.js: conditional validation for mode='visual' requires visualAttachment
-- [ ] T086 [US2] Add importVisual method to ReflectionService in backend/src/domain/services/ReflectionService.js: copy image to data/visuals/YYYY-MM/ and create reflection with visualAttachment
+- [X] T084 [P] [US2] Create VisualAttachment entity in backend/src/domain/entities/VisualAttachment.js with Zod schema (originalFilename, storedPath, mimeType, sizeBytes, dimensions, importTimestamp) per data-model.md
+- [X] T085 [US2] Add visual mode support to Reflection entity in backend/src/domain/entities/Reflection.js: conditional validation for mode='visual' requires visualAttachment
+- [X] T086 [US2] Add importVisual method to ReflectionService in backend/src/domain/services/ReflectionService.js: copy image to data/visuals/YYYY-MM/ and create reflection with visualAttachment
 - [ ] T087 [US2] Add POST /api/reflections endpoint support for multipart/form-data (image upload) in backend/src/adapters/http/routes/reflections.js
 - [ ] T088 [P] [US2] Add image validation in backend/src/adapters/http/middleware/validation.js: check MIME type (jpeg, png, gif, webp), max size 10MB per data-model.md
 - [ ] T089 [US2] Update MarkdownExporter in backend/src/adapters/export/MarkdownExporter.js to handle visual attachments per exportFormat choice (single-file base64 or folder with images)
