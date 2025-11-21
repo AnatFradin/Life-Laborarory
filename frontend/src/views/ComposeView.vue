@@ -38,16 +38,15 @@
         </button>
       </div>
 
-      <div v-if="showExternalDialog" class="external-ai-dialog" role="dialog" aria-modal="true" aria-label="Paste AI response">
-        <h3>Paste AI Response Summary</h3>
-        <textarea v-model="externalSummary" rows="8" placeholder="Paste the AI response summary here..."></textarea>
-        <div class="dialog-actions">
-          <button @click="handleSaveExternalSummary">Save</button>
-          <button @click="() => (showExternalDialog = false)">Cancel</button>
-        </div>
-      </div>
-
     </div>
+
+    <!-- External AI Dialog -->
+    <ExternalAIDialog
+      :open="showExternalDialog"
+      v-model="externalSummary"
+      @update:open="showExternalDialog = $event"
+      @save="handleSaveExternalSummary"
+    />
   </div>
 </template>
 
@@ -55,6 +54,7 @@
 import { ref, computed, onMounted } from 'vue';
 import ReflectionEditor from '../components/ReflectionEditor.vue';
 import AIMirrorPanel from '../components/AIMirrorPanel.vue';
+import ExternalAIDialog from '../components/ExternalAIDialog.vue';
 import { useReflections } from '../composables/useReflections.js';
 import { useAIMirror } from '../composables/useAIMirror.js';
 import { usePreferences } from '../composables/usePreferences.js';
@@ -265,17 +265,5 @@ const handleSaveExternalSummary = async () => {
 .talk-chatgpt-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-.external-ai-dialog {
-  margin-top: var(--space-md);
-  padding: var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-surface);
-}
-.dialog-actions {
-  display: flex;
-  gap: var(--space-sm);
-  margin-top: var(--space-sm);
 }
 </style>

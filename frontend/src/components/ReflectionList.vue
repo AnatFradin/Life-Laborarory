@@ -41,12 +41,18 @@
         </div>
 
         <div v-if="reflection.aiInteraction || reflection.externalAISession" class="reflection-footer">
-          <span class="ai-badge">
+          <span v-if="reflection.aiInteraction" class="ai-badge">
             <span aria-hidden="true">💭</span>
             <span class="sr-only">Has AI reflection</span>
           </span>
-          <span v-if="reflection.externalAISession" class="persona-badge" :title="reflection.externalAISession.personaName" aria-hidden="true">
-            {{ getPersonaIcon(reflection.externalAISession.personaId) }}
+          <span 
+            v-if="reflection.externalAISession" 
+            class="persona-badge" 
+            :title="`External AI session with ${reflection.externalAISession.personaName}`"
+            :aria-label="`External AI session with ${reflection.externalAISession.personaName}`"
+          >
+            <span aria-hidden="true">{{ getPersonaIcon(reflection.externalAISession.personaId) }}</span>
+            <span class="persona-name">{{ reflection.externalAISession.personaName }}</span>
           </span>
         </div>
       </article>
@@ -333,8 +339,22 @@ const getPersonaIcon = (personaId) => {
 }
 
 .persona-badge {
-  font-size: 1.25rem;
-  line-height: 1;
-  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--color-primary);
+  margin-left: var(--space-sm);
+}
+
+.persona-badge span[aria-hidden] {
+  font-size: 1rem;
+}
+
+.persona-name {
+  font-weight: 500;
 }
 </style>
