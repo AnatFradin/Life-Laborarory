@@ -5,7 +5,10 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { validateReflection } from '../entities/Reflection.js';
+import { createVisualAttachment } from '../entities/VisualAttachment.js';
 
 class ReflectionService {
   constructor(reflectionRepository) {
@@ -146,6 +149,76 @@ class ReflectionService {
    */
   async deleteAllReflections() {
     return await this.repository.deleteAll();
+  }
+
+  /**
+   * Import a visual reflection (image)
+   * @param {Object} imageData - Image file data
+   * @param {Buffer} imageData.buffer - Image file buffer
+   * @param {string} imageData.originalFilename - Original filename
+   * @param {string} imageData.mimeType - MIME type (image/jpeg, image/png, etc.)
+   * @param {number} imageData.sizeBytes - File size in bytes
+   * @param {Object} imageData.dimensions - Optional {width, height}
+   * @param {string} dataDir - Base data directory path
+   * @returns {Promise<Object>} Created visual reflection
+   */
+  async importVisual(imageData, dataDir) {
+    const { buffer, originalFilename, mimeType, sizeBytes, dimensions } = imageData;
+
+    // Generate unique ID and timestamp
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    
+    // Determine file extension based on MIME type
+    const extMap = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/gif': 'gif',
+      'image/webp': 'webp',
+    };
+    const ext = extMap[mimeType] || 'jpg';
+
+    // Create month-based directory structure (e.g., data/visuals/2025-11/)
+    const date = new Date(timestamp);
+    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const visualsDir = path.join(dataDir, 'visuals', yearMonth);
+    
+    // Ensure directory exists
+    await fs.mkdir(visualsDir, { recursive: true });
+
+    // Generate filename: UUID + original extension
+    const filename = `${id}.${ext}`;
+    const filePath = path.join(visualsDir, filename);
+    
+    // Write file to disk
+    await fs.writeFile(filePath, buffer);
+
+    // Create stored path relative to data directory
+    const storedPath = `visuals/${yearMonth}/${filename}`;
+
+    // Create VisualAttachment entity
+    const visualAttachment = createVisualAttachment({
+      originalFilename,
+      storedPath,
+      mimeType,
+      sizeBytes,
+      dimensions,
+      importTimestamp: timestamp,
+    });
+
+    // Create reflection with visual mode
+    const reflectionData = {
+      id,
+      timestamp,
+      mode: 'visual',
+      visualAttachment,
+    };
+
+    // Validate and save reflection
+    const validatedReflection = validateReflection(reflectionData);
+    const savedReflection = await this.repository.save(validatedReflection);
+
+    return savedReflection;
   }
 }
 
