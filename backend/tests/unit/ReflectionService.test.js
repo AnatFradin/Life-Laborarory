@@ -297,4 +297,150 @@ describe('ReflectionService', () => {
       await expect(service.deleteAllReflections()).rejects.toThrow('Delete all failed');
     });
   });
+
+  describe('importVisual', () => {
+    it('should import visual reflection and save image file', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'my-photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+        dimensions: { width: 1920, height: 1080 },
+      };
+
+      const dataDir = '/tmp/test-data';
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, dataDir);
+
+      expect(mockRepository.save).toHaveBeenCalledOnce();
+      expect(result.mode).toBe('visual');
+      expect(result.visualAttachment).toBeDefined();
+      expect(result.visualAttachment.originalFilename).toBe('my-photo.jpg');
+      expect(result.visualAttachment.storedPath).toMatch(/^visuals\/\d{4}-\d{2}\/.+\.jpg$/);
+    });
+
+    it('should generate correct file extension for PNG', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-png-data'),
+        originalFilename: 'screenshot.png',
+        mimeType: 'image/png',
+        sizeBytes: 2048,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.visualAttachment.storedPath).toMatch(/\.png$/);
+    });
+
+    it('should generate correct file extension for GIF', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-gif-data'),
+        originalFilename: 'animation.gif',
+        mimeType: 'image/gif',
+        sizeBytes: 512,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.visualAttachment.storedPath).toMatch(/\.gif$/);
+    });
+
+    it('should generate correct file extension for WebP', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-webp-data'),
+        originalFilename: 'modern.webp',
+        mimeType: 'image/webp',
+        sizeBytes: 768,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.visualAttachment.storedPath).toMatch(/\.webp$/);
+    });
+
+    it('should include dimensions when provided', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+        dimensions: { width: 3840, height: 2160 },
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.visualAttachment.dimensions).toEqual({
+        width: 3840,
+        height: 2160,
+      });
+    });
+
+    it('should work without dimensions', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.mode).toBe('visual');
+      expect(result.visualAttachment).toBeDefined();
+    });
+
+    it('should generate unique IDs for each import', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+      };
+
+      const savedReflections = [];
+      mockRepository.save.mockImplementation(async (reflection) => {
+        savedReflections.push(reflection);
+        return reflection;
+      });
+
+      await service.importVisual(imageData, '/tmp/data');
+      await service.importVisual(imageData, '/tmp/data');
+
+      expect(savedReflections).toHaveLength(2);
+      expect(savedReflections[0].id).not.toBe(savedReflections[1].id);
+      expect(savedReflections[0].visualAttachment.storedPath).not.toBe(
+        savedReflections[1].visualAttachment.storedPath
+      );
+    });
+
+    it('should organize files by year-month', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      // Should match pattern: visuals/YYYY-MM/filename.ext
+      expect(result.visualAttachment.storedPath).toMatch(
+        /^visuals\/\d{4}-\d{2}\/.+\.(jpg|jpeg|png|gif|webp)$/
+      );
+    });
+  });
 });
