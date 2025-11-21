@@ -54,7 +54,7 @@ describe('ExportService', () => {
 
       expect(mockReflectionRepository.findAll).toHaveBeenCalledOnce();
       expect(mockExporter.exportToMarkdown).toHaveBeenCalledWith(reflections, {
-        format: 'single-file',
+        format: 'folder',
         includeMetadata: true,
       });
       expect(result).toEqual(exportResult);
@@ -100,7 +100,7 @@ describe('ExportService', () => {
 
       expect(mockReflectionRepository.findAll).toHaveBeenCalledOnce();
       expect(mockExporter.exportToMarkdown).toHaveBeenCalledWith([], {
-        format: 'single-file',
+        format: 'folder',
         includeMetadata: true,
       });
       expect(result.content).toContain('No reflections');

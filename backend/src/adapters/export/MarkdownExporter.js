@@ -5,6 +5,8 @@
  */
 
 import { IExporter } from '../../domain/ports/IExporter.js';
+import { readFile } from 'fs/promises';
+import path from 'path';
 
 class MarkdownExporter extends IExporter {
   /**
@@ -14,10 +16,11 @@ class MarkdownExporter extends IExporter {
    * @param {Object} options - Export options
    * @param {string} options.format - 'single-file' or 'folder' (for images)
    * @param {boolean} [options.includeMetadata=true] - Include AI interaction metadata
+   * @param {string} [options.dataDir] - Base directory for reading image files
    * @returns {Promise<Object>} Export bundle
    */
   async exportToMarkdown(reflections, options = {}) {
-    const { format = 'single-file', includeMetadata = true } = options;
+    const { format = 'folder', includeMetadata = true, dataDir } = options;
 
     // Handle empty reflections
     if (reflections.length === 0) {
@@ -32,6 +35,9 @@ class MarkdownExporter extends IExporter {
       return new Date(b.timestamp) - new Date(a.timestamp);
     });
 
+    // Collect attachments for folder export
+    const attachments = [];
+
     // Generate markdown content
     let markdown = '# My Reflections\n\n';
     markdown += `*Exported on ${this._formatTimestamp(new Date().toISOString())}*\n\n`;
@@ -40,13 +46,24 @@ class MarkdownExporter extends IExporter {
 
     // Add each reflection
     for (const reflection of sortedReflections) {
-      markdown += this._formatReflection(reflection, includeMetadata);
+      const result = await this._formatReflection(
+        reflection,
+        includeMetadata,
+        format,
+        dataDir
+      );
+      markdown += result.markdown;
       markdown += '\n---\n\n';
+
+      // Collect attachments for folder export
+      if (result.attachment) {
+        attachments.push(result.attachment);
+      }
     }
 
     return {
       content: markdown,
-      attachments: [], // TODO: Handle visual attachments in T089
+      attachments,
     };
   }
 
@@ -70,15 +87,55 @@ class MarkdownExporter extends IExporter {
    * Format a single reflection as markdown
    * @private
    */
-  _formatReflection(reflection, includeMetadata) {
+  async _formatReflection(reflection, includeMetadata, format, dataDir) {
     let markdown = '';
+    let attachment = null;
 
     // Add timestamp as header
     markdown += `## ${this._formatTimestamp(reflection.timestamp)}\n\n`;
 
-    // Add content
+    // Handle text mode
     if (reflection.mode === 'text' && reflection.content) {
       markdown += `${reflection.content}\n\n`;
+    }
+
+    // Handle visual mode
+    if (reflection.mode === 'visual' && reflection.visualAttachment) {
+      const visual = reflection.visualAttachment;
+      
+      if (format === 'single-file' && dataDir) {
+        // Embed image as base64 data URL
+        try {
+          const imagePath = path.join(dataDir, visual.storedPath);
+          const imageBuffer = await readFile(imagePath);
+          const base64 = imageBuffer.toString('base64');
+          const dataUrl = `data:${visual.mimeType};base64,${base64}`;
+          
+          markdown += `![${visual.originalFilename}](${dataUrl})\n\n`;
+        } catch (error) {
+          markdown += `*[Image: ${visual.originalFilename} - file not found]*\n\n`;
+        }
+      } else {
+        // Reference external image file for folder export
+        const imageFilename = path.basename(visual.storedPath);
+        markdown += `![${visual.originalFilename}](images/${imageFilename})\n\n`;
+        
+        // Collect attachment info for folder export
+        if (dataDir) {
+          attachment = {
+            sourcePath: path.join(dataDir, visual.storedPath),
+            targetPath: `images/${imageFilename}`,
+            originalFilename: visual.originalFilename,
+          };
+        }
+      }
+
+      // Add image metadata
+      markdown += `*Image: ${visual.originalFilename}*`;
+      if (visual.dimensions) {
+        markdown += ` (${visual.dimensions.width}×${visual.dimensions.height})`;
+      }
+      markdown += `\n\n`;
     }
 
     // Add AI interaction if present and metadata is included
@@ -88,7 +145,15 @@ class MarkdownExporter extends IExporter {
       markdown += `*Model: ${reflection.aiInteraction.model}*\n\n`;
     }
 
-    return markdown;
+    // Add external AI session if present
+    if (includeMetadata && reflection.externalAISession) {
+      const session = reflection.externalAISession;
+      markdown += `### ${session.personaName} Session\n\n`;
+      markdown += `${session.sessionSummary}\n\n`;
+      markdown += `*Session: ${this._formatTimestamp(session.timestamp)}*\n\n`;
+    }
+
+    return { markdown, attachment };
   }
 
   /**

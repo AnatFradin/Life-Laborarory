@@ -181,6 +181,157 @@ describe('MarkdownExporter', () => {
     });
   });
 
+  describe('visual attachments', () => {
+    it('should export visual reflection with folder format (external image reference)', async () => {
+      const reflections = [
+        {
+          id: '1',
+          mode: 'visual',
+          timestamp: '2025-11-19T12:00:00.000Z',
+          visualAttachment: {
+            originalFilename: 'sunset.jpg',
+            storedPath: 'visuals/2025-11/abc123-def456.jpg',
+            mimeType: 'image/jpeg',
+            sizeBytes: 1024000,
+            dimensions: { width: 1920, height: 1080 },
+            importTimestamp: '2025-11-19T12:00:00.000Z',
+          },
+        },
+      ];
+
+      const options = { format: 'folder', includeMetadata: true, dataDir: '/test/data' };
+      const result = await exporter.exportToMarkdown(reflections, options);
+
+      // Should reference external image file
+      expect(result.content).toContain('![sunset.jpg](images/abc123-def456.jpg)');
+      expect(result.content).toContain('*Image: sunset.jpg*');
+      expect(result.content).toContain('(1920×1080)');
+
+      // Should include attachment info
+      expect(result.attachments).toHaveLength(1);
+      expect(result.attachments[0]).toMatchObject({
+        sourcePath: '/test/data/visuals/2025-11/abc123-def456.jpg',
+        targetPath: 'images/abc123-def456.jpg',
+        originalFilename: 'sunset.jpg',
+      });
+    });
+
+    it('should handle visual reflection without dimensions', async () => {
+      const reflections = [
+        {
+          id: '1',
+          mode: 'visual',
+          timestamp: '2025-11-19T12:00:00.000Z',
+          visualAttachment: {
+            originalFilename: 'sketch.png',
+            storedPath: 'visuals/2025-11/xyz789.png',
+            mimeType: 'image/png',
+            sizeBytes: 512000,
+            importTimestamp: '2025-11-19T12:00:00.000Z',
+          },
+        },
+      ];
+
+      const options = { format: 'folder', includeMetadata: true, dataDir: '/test/data' };
+      const result = await exporter.exportToMarkdown(reflections, options);
+
+      expect(result.content).toContain('![sketch.png](images/xyz789.png)');
+      expect(result.content).toContain('*Image: sketch.png*');
+      // Should not have dimensions
+      expect(result.content).not.toMatch(/\d+×\d+/);
+    });
+
+    it('should export visual reflection with AI interaction', async () => {
+      const reflections = [
+        {
+          id: '1',
+          mode: 'visual',
+          timestamp: '2025-11-19T12:00:00.000Z',
+          visualAttachment: {
+            originalFilename: 'drawing.png',
+            storedPath: 'visuals/2025-11/abc.png',
+            mimeType: 'image/png',
+            sizeBytes: 256000,
+            importTimestamp: '2025-11-19T12:00:00.000Z',
+          },
+          aiInteraction: {
+            model: 'llama2',
+            provider: 'local',
+            prompt: 'What do you see in this image?',
+            response: 'I notice vibrant colors and expressive brushstrokes',
+            timestamp: '2025-11-19T12:01:00.000Z',
+            systemPromptVersion: '1.0.0',
+          },
+        },
+      ];
+
+      const options = { format: 'folder', includeMetadata: true, dataDir: '/test/data' };
+      const result = await exporter.exportToMarkdown(reflections, options);
+
+      expect(result.content).toContain('![drawing.png](images/abc.png)');
+      expect(result.content).toContain('I notice vibrant colors');
+      expect(result.content).toMatch(/AI Mirror Response/i);
+    });
+
+    it('should export mixed text and visual reflections', async () => {
+      const reflections = [
+        {
+          id: '1',
+          mode: 'text',
+          content: 'Today was meaningful',
+          timestamp: '2025-11-19T14:00:00.000Z',
+        },
+        {
+          id: '2',
+          mode: 'visual',
+          timestamp: '2025-11-19T12:00:00.000Z',
+          visualAttachment: {
+            originalFilename: 'moment.jpg',
+            storedPath: 'visuals/2025-11/moment123.jpg',
+            mimeType: 'image/jpeg',
+            sizeBytes: 768000,
+            importTimestamp: '2025-11-19T12:00:00.000Z',
+          },
+        },
+      ];
+
+      const options = { format: 'folder', includeMetadata: true, dataDir: '/test/data' };
+      const result = await exporter.exportToMarkdown(reflections, options);
+
+      // Should contain both text and image
+      expect(result.content).toContain('Today was meaningful');
+      expect(result.content).toContain('![moment.jpg](images/moment123.jpg)');
+
+      // Should have one attachment
+      expect(result.attachments).toHaveLength(1);
+    });
+
+    it('should export reflection with external AI session', async () => {
+      const reflections = [
+        {
+          id: '1',
+          mode: 'text',
+          content: 'Exploring my values',
+          timestamp: '2025-11-19T12:00:00.000Z',
+          externalAISession: {
+            personaId: 'stoic-coach',
+            personaName: 'Stoic Coach',
+            sessionSummary: 'Focus on what you can control',
+            chatGPTUrl: 'https://chat.openai.com/...',
+            timestamp: '2025-11-19T12:30:00.000Z',
+          },
+        },
+      ];
+
+      const options = { format: 'folder', includeMetadata: true };
+      const result = await exporter.exportToMarkdown(reflections, options);
+
+      expect(result.content).toContain('Exploring my values');
+      expect(result.content).toContain('Stoic Coach Session');
+      expect(result.content).toContain('Focus on what you can control');
+    });
+  });
+
   describe('getSupportedFormats', () => {
     it('should return array of supported formats', () => {
       const formats = exporter.getSupportedFormats();

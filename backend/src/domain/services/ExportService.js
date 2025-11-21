@@ -14,8 +14,9 @@ class ExportService {
    * Export all reflections to Markdown format
    * 
    * @param {Object} options - Export options
-   * @param {string} options.format - 'single-file' or 'folder' (default: 'single-file')
+   * @param {string} options.format - 'single-file' or 'folder' (default: 'folder')
    * @param {boolean} options.includeMetadata - Include AI interaction metadata (default: true)
+   * @param {string} options.dataDir - Base directory for reading image files
    * @returns {Promise<Object>} Export result
    * @returns {string} return.content - Markdown content
    * @returns {Array<Object>} return.attachments - Array of attachments (if format='folder')
@@ -23,7 +24,7 @@ class ExportService {
   async exportAllToMarkdown(options = {}) {
     // Set default options
     const exportOptions = {
-      format: 'single-file',
+      format: 'folder',
       includeMetadata: true,
       ...options,
     };

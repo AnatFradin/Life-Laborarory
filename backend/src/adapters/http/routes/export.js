@@ -10,6 +10,7 @@ import ExportService from '../../../domain/services/ExportService.js';
 import ReflectionService from '../../../domain/services/ReflectionService.js';
 import MarkdownExporter from '../../export/MarkdownExporter.js';
 import LocalFileRepository from '../../storage/LocalFileRepository.js';
+import config from '../../../config/index.js';
 
 /**
  * Create export router with optional dependencies
@@ -62,10 +63,11 @@ router.post('/', async (req, res, next) => {
 
     const { format, includeMetadata } = validation.data;
 
-    // Export reflections
+    // Export reflections with dataDir for reading images
     const result = await exportService.exportAllToMarkdown({
       format,
       includeMetadata,
+      dataDir: config.dataDir,
     });
 
     // Generate filename with timestamp
