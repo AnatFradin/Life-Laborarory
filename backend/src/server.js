@@ -27,6 +27,7 @@ import aiRouter from './adapters/http/routes/ai.js';
 import createExportRouter from './adapters/http/routes/export.js';
 import preferencesRouter from './adapters/http/routes/preferences.js';
 import personasRouter from './adapters/http/routes/personas.js';
+import visualsRouter from './adapters/http/routes/visuals.js';
 
 // API routes
 app.use('/api/reflections', reflectionsRouter);
@@ -34,6 +35,7 @@ app.use('/api/ai', aiRouter);
 app.use('/api/export', createExportRouter());
 app.use('/api/preferences', preferencesRouter);
 app.use('/api/personas', personasRouter);
+app.use('/api/visuals', visualsRouter);
 
 // Error handler middleware (must be last)
 app.use(errorHandler);
