@@ -30,7 +30,7 @@
   --color-focus: #3d6349; /* Focus indicator color */
 
   /* Semantic colors */
-  --color-success: #4d7c5e; /* Same as primary - calm success */
+  --color-success: #3d6349; /* Darker for 4.5:1 contrast on light bg */
   --color-success-light: #e8f3ed; /* Light green background */
   --color-warning: #92400e; /* Dark brown (contrast ratio: 8.42:1) */
   --color-warning-light: #fef3c7; /* Light yellow background */
