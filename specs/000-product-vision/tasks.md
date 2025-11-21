@@ -227,7 +227,7 @@ This is a web application with backend and frontend:
 - [X] T086 [US2] Add importVisual method to ReflectionService in backend/src/domain/services/ReflectionService.js: copy image to data/visuals/YYYY-MM/ and create reflection with visualAttachment
 - [X] T087 [US2] Add POST /api/reflections endpoint support for multipart/form-data (image upload) in backend/src/adapters/http/routes/reflections.js
 - [ ] T088 [P] [US2] Add image validation in backend/src/adapters/http/middleware/validation.js: check MIME type (jpeg, png, gif, webp), max size 10MB per data-model.md
-- [ ] T089 [US2] Update MarkdownExporter in backend/src/adapters/export/MarkdownExporter.js to handle visual attachments per exportFormat choice (single-file base64 or folder with images)
+- [X] T089 [US2] Update MarkdownExporter in backend/src/adapters/export/MarkdownExporter.js to handle visual attachments per exportFormat choice (single-file base64 or folder with images)
 - [ ] T090 [P] [US2] Create VisualReflectionCard component in frontend/src/components/VisualReflectionCard.vue to display imported images with metadata
 - [ ] T091 [P] [US2] Create ImageImport component in frontend/src/components/ImageImport.vue with file input, drag-and-drop, preview, accessible labels per FR-024
 - [ ] T092 [US2] Add mode selection to ComposeView in frontend/src/views/ComposeView.vue: toggle between text and visual with max 3 choices per FR-001
