@@ -8,35 +8,97 @@
       </div>
     </header>
 
+    <!-- Mode Selection -->
+    <div class="mode-selection" role="group" aria-label="Expression mode">
+      <label class="mode-option">
+        <input
+          type="radio"
+          name="mode"
+          value="text"
+          v-model="currentMode"
+          @change="handleModeChange"
+        />
+        <span class="mode-label">
+          <span class="mode-icon" aria-hidden="true">✍️</span>
+          <span class="mode-name">Text</span>
+        </span>
+      </label>
+      <label class="mode-option">
+        <input
+          type="radio"
+          name="mode"
+          value="visual"
+          v-model="currentMode"
+          @change="handleModeChange"
+        />
+        <span class="mode-label">
+          <span class="mode-icon" aria-hidden="true">🖼️</span>
+          <span class="mode-name">Visual</span>
+        </span>
+      </label>
+    </div>
+
     <div class="compose-content" role="region" aria-label="Reflection composition area">
-      <ReflectionEditor
-        :initial-content="currentContent"
-        :saving="saving"
-        :generating-a-i="generating"
-        :error="error"
-        :last-saved="lastSaved"
-        @save="handleSave"
-        @request-ai-feedback="handleAIFeedback"
-      />
+      <!-- Text Mode -->
+      <template v-if="currentMode === 'text'">
+        <ReflectionEditor
+          :initial-content="currentContent"
+          :saving="saving"
+          :generating-a-i="generating"
+          :error="error"
+          :last-saved="lastSaved"
+          @save="handleSave"
+          @request-ai-feedback="handleAIFeedback"
+        />
 
-      <AIMirrorPanel
-        v-if="currentAIResponse || generating"
-        :ai-response="currentAIResponse"
-        :loading="generating"
-      />
+        <AIMirrorPanel
+          v-if="currentAIResponse || generating"
+          :ai-response="currentAIResponse"
+          :loading="generating"
+        />
 
-      <div v-if="currentContent && currentContent.trim().length > 0" class="external-ai-actions">
-        <button
-          class="talk-chatgpt-btn"
-          @click="handleTalkInChatGPT"
-          :disabled="personasLoading || !selectedPersona"
-          :aria-label="`Open ChatGPT with this reflection and persona ${selectedPersona?.name ?? ''}`"
-        >
-          <!-- show persona name when selected -->
-          <span v-if="selectedPersona">Talk to {{ selectedPersona.name }} in ChatGPT</span>
-          <span v-else>Talk in ChatGPT</span>
-        </button>
-      </div>
+        <div v-if="currentContent && currentContent.trim().length > 0" class="external-ai-actions">
+          <button
+            class="talk-chatgpt-btn"
+            @click="handleTalkInChatGPT"
+            :disabled="personasLoading || !selectedPersona"
+            :aria-label="`Open ChatGPT with this reflection and persona ${selectedPersona?.name ?? ''}`"
+          >
+            <!-- show persona name when selected -->
+            <span v-if="selectedPersona">Talk to {{ selectedPersona.name }} in ChatGPT</span>
+            <span v-else>Talk in ChatGPT</span>
+          </button>
+        </div>
+      </template>
+
+      <!-- Visual Mode -->
+      <template v-else-if="currentMode === 'visual'">
+        <div class="visual-compose">
+          <ImageImport
+            v-model="selectedImage"
+            @dimensions-loaded="handleDimensionsLoaded"
+          />
+          
+          <div v-if="selectedImage" class="visual-actions">
+            <button
+              class="btn-primary"
+              @click="handleSaveVisual"
+              :disabled="saving"
+              :aria-label="saving ? 'Saving...' : 'Save visual reflection'"
+            >
+              {{ saving ? 'Saving...' : 'Save' }}
+            </button>
+          </div>
+
+          <div v-if="error" class="error-message" role="alert">
+            {{ error }}
+          </div>
+
+          <p v-if="lastSaved" class="last-saved text-tertiary text-sm">
+            Last saved: {{ lastSaved.toLocaleString() }}
+          </p>
+        </div>
+      </template>
 
     </div>
 
@@ -55,6 +117,7 @@ import { ref, computed, onMounted } from 'vue';
 import ReflectionEditor from '../components/ReflectionEditor.vue';
 import AIMirrorPanel from '../components/AIMirrorPanel.vue';
 import ExternalAIDialog from '../components/ExternalAIDialog.vue';
+import ImageImport from '../components/ImageImport.vue';
 import { useReflections } from '../composables/useReflections.js';
 import { useAIMirror } from '../composables/useAIMirror.js';
 import { usePreferences } from '../composables/usePreferences.js';
@@ -87,15 +150,42 @@ const privacyStatus = computed(() => {
   return { text: 'Local processing only', icon: '🔒' };
 });
 
+// Mode state
+const currentMode = ref('text'); // 'text' or 'visual'
+
+// Text mode state
 const currentContent = ref('');
 const currentReflectionId = ref(null);
 const currentAIResponse = ref(null);
+
+// Visual mode state
+const selectedImage = ref(null);
+const imageDimensions = ref(null);
+
+// Common state
 const saving = ref(false);
 const error = ref(null);
 const lastSaved = ref(null);
 
 /**
- * Save reflection
+ * Handle mode change
+ */
+const handleModeChange = () => {
+  // Clear error when switching modes
+  error.value = null;
+  // Clear current reflection ID when switching modes
+  currentReflectionId.value = null;
+};
+
+/**
+ * Handle dimensions loaded from image
+ */
+const handleDimensionsLoaded = (dimensions) => {
+  imageDimensions.value = dimensions;
+};
+
+/**
+ * Save text reflection
  */
 const handleSave = async (content) => {
   if (!content || content.trim().length === 0) return;
@@ -112,6 +202,36 @@ const handleSave = async (content) => {
     currentReflectionId.value = reflection.id;
     currentContent.value = content;
     lastSaved.value = new Date();
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    saving.value = false;
+  }
+};
+
+/**
+ * Save visual reflection
+ */
+const handleSaveVisual = async () => {
+  if (!selectedImage.value) return;
+
+  saving.value = true;
+  error.value = null;
+
+  try {
+    // TODO: Implement visual reflection save in T095
+    // This will use FormData to upload the image
+    console.log('Saving visual reflection:', {
+      file: selectedImage.value,
+      dimensions: imageDimensions.value,
+    });
+
+    // Placeholder success
+    lastSaved.value = new Date();
+    
+    // Clear the image after successful save
+    selectedImage.value = null;
+    imageDimensions.value = null;
   } catch (err) {
     error.value = err.message;
   } finally {
@@ -245,10 +365,88 @@ const handleSaveExternalSummary = async () => {
   font-weight: 500;
 }
 
+.mode-selection {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  padding: var(--space-sm);
+  background-color: var(--color-background-secondary);
+  border-radius: var(--radius-md);
+}
+
+.mode-option {
+  flex: 1;
+  display: flex;
+  cursor: pointer;
+}
+
+.mode-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+}
+
+.mode-option input[type="radio"]:checked + .mode-label {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+.mode-option input[type="radio"]:focus-visible + .mode-label {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.mode-icon {
+  font-size: 1.25rem;
+}
+
+.mode-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
 .compose-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
+}
+
+.visual-compose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.visual-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+}
+
+.last-saved {
+  text-align: right;
+  margin-top: var(--space-sm);
+}
+
+.error-message {
+  padding: var(--space-md);
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-error);
 }
 
 .external-ai-actions {
