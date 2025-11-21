@@ -38,7 +38,7 @@ export function useReflections() {
 
   /**
    * Create new reflection
-   * @param {Object} reflectionData - Reflection data
+   * @param {Object} reflectionData - Reflection data (text mode) or { mode, image, dimensions } (visual mode)
    * @returns {Promise<Object>} Created reflection
    */
   const createReflection = async (reflectionData) => {
@@ -46,7 +46,25 @@ export function useReflections() {
     error.value = null;
 
     try {
-      const response = await reflectionsAPI.create(reflectionData);
+      let response;
+      
+      // Visual mode: use FormData for file upload
+      if (reflectionData.mode === 'visual' && reflectionData.image) {
+        const formData = new FormData();
+        formData.append('mode', 'visual');
+        formData.append('image', reflectionData.image);
+        
+        if (reflectionData.dimensions) {
+          formData.append('dimensions', JSON.stringify(reflectionData.dimensions));
+        }
+        
+        response = await reflectionsAPI.createVisual(formData);
+      } 
+      // Text mode: use JSON
+      else {
+        response = await reflectionsAPI.create(reflectionData);
+      }
+      
       const created = response.data;
 
       // Add to local state (at beginning since sorted desc)

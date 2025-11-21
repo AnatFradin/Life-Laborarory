@@ -219,14 +219,13 @@ const handleSaveVisual = async () => {
   error.value = null;
 
   try {
-    // TODO: Implement visual reflection save in T095
-    // This will use FormData to upload the image
-    console.log('Saving visual reflection:', {
-      file: selectedImage.value,
+    const reflection = await createReflection({
+      mode: 'visual',
+      image: selectedImage.value,
       dimensions: imageDimensions.value,
     });
 
-    // Placeholder success
+    currentReflectionId.value = reflection.id;
     lastSaved.value = new Date();
     
     // Clear the image after successful save
