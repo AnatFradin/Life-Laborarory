@@ -46,6 +46,7 @@ yarn.lock
 dist/
 build/
 .cache/
+.vite/
 
 # IDE
 .idea/
