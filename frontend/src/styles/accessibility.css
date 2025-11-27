@@ -1,0 +1,197 @@
+/**
+ * Accessibility styles with visible focus indicators per FR-023
+ * 
+ * Ensures:
+ * - Visible focus indicators (FR-023)
+ * - Keyboard navigation support (FR-022)
+ * - Screen reader compatibility (FR-024)
+ * - WCAG 2.1 Level AA compliance
+ */
+
+/* Visible focus indicators for all interactive elements */
+a:focus,
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[tabindex]:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* Enhanced focus for keyboard navigation (not mouse clicks) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users (but keep for keyboard) */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+[tabindex]:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip to main content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: var(--space-sm) var(--space-md);
+  text-decoration: none;
+  z-index: 100;
+  border-radius: var(--radius-md);
+}
+
+.skip-link:focus {
+  top: var(--space-sm);
+  left: var(--space-sm);
+}
+
+/* Keyboard navigation hints */
+[data-keyboard-hint]::after {
+  content: attr(data-keyboard-hint);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-0.5rem);
+  background: var(--color-text);
+  color: var(--color-bg);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+[data-keyboard-hint]:focus::after {
+  opacity: 1;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: #000000;
+    --color-text: #000000;
+    --color-bg: #ffffff;
+  }
+
+  button {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support (no animations per FR-006, but respect user preference) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus within containers (for composite widgets) */
+.focus-within:focus-within {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+/* Disabled state accessibility */
+[disabled],
+[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading state announcements */
+[aria-busy='true'] {
+  position: relative;
+}
+
+[aria-busy='true']::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+/* Ensure sufficient touch target size (minimum 44x44px per WCAG) */
+button,
+a,
+input[type='checkbox'],
+input[type='radio'] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Exception for inline links */
+a:not(.button) {
+  min-height: auto;
+  min-width: auto;
+}
+
+/* Color contrast for placeholder text */
+::placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
+}
+
+/* Ensure form labels are always visible (no floating labels) */
+label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* Required field indicator */
+.required::after {
+  content: ' *';
+  color: var(--color-error);
+}
+
+/* Error message styling */
+.error-message {
+  color: var(--color-error);
+  font-size: 0.875rem;
+  margin-top: var(--space-xs);
+}
+
+/* Success message styling */
+.success-message {
+  color: var(--color-success);
+  font-size: 0.875rem;
+  margin-top: var(--space-xs);
+}

@@ -1,0 +1,1 @@
+Do not use reminder-for-me.md file for AI Copilot suggestions. This file is private developer notes.

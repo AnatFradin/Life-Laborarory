@@ -1,0 +1,446 @@
+/**
+ * Unit tests for ReflectionService
+ */
+
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { randomUUID } from 'node:crypto';
+import ReflectionService from '../../src/domain/services/ReflectionService.js';
+
+describe('ReflectionService', () => {
+  let mockRepository;
+  let service;
+
+  beforeEach(() => {
+    // Create mock repository
+    mockRepository = {
+      save: vi.fn(),
+      findById: vi.fn(),
+      findAll: vi.fn(),
+      deleteById: vi.fn(),
+      deleteAll: vi.fn(),
+    };
+
+    service = new ReflectionService(mockRepository);
+  });
+
+  describe('createReflection', () => {
+    it('should create and save a valid text reflection', async () => {
+      const reflectionData = {
+        mode: 'text',
+        content: 'This is my reflection',
+      };
+
+      const savedReflection = {
+        id: 'test-id-123',
+        timestamp: '2025-11-19T12:00:00.000Z',
+        ...reflectionData,
+      };
+
+      mockRepository.save.mockResolvedValue(savedReflection);
+
+      const result = await service.createReflection(reflectionData);
+
+      expect(mockRepository.save).toHaveBeenCalledOnce();
+      expect(result).toEqual(savedReflection);
+      expect(result.id).toBeDefined();
+      expect(result.timestamp).toBeDefined();
+    });
+
+    it('should throw validation error for invalid reflection data', async () => {
+      const invalidData = {
+        mode: 'invalid-mode',
+      };
+
+      await expect(service.createReflection(invalidData)).rejects.toThrow();
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if content is missing for text mode', async () => {
+      const invalidData = {
+        mode: 'text',
+        // content is missing
+      };
+
+      await expect(service.createReflection(invalidData)).rejects.toThrow();
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getReflectionById', () => {
+    it('should return reflection when found', async () => {
+      const reflection = {
+        id: 'test-id-123',
+        mode: 'text',
+        content: 'Test reflection',
+        timestamp: '2025-11-19T12:00:00.000Z',
+      };
+
+      mockRepository.findById.mockResolvedValue(reflection);
+
+      const result = await service.getReflectionById('test-id-123');
+
+      expect(mockRepository.findById).toHaveBeenCalledWith('test-id-123');
+      expect(result).toEqual(reflection);
+    });
+
+    it('should return null when reflection not found', async () => {
+      mockRepository.findById.mockResolvedValue(null);
+
+      const result = await service.getReflectionById('non-existent-id');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getAllReflections', () => {
+    it('should return all reflections', async () => {
+      const reflections = [
+        {
+          id: '1',
+          mode: 'text',
+          content: 'First reflection',
+          timestamp: '2025-11-19T12:00:00.000Z',
+        },
+        {
+          id: '2',
+          mode: 'text',
+          content: 'Second reflection',
+          timestamp: '2025-11-19T11:00:00.000Z',
+        },
+      ];
+
+      mockRepository.findAll.mockResolvedValue(reflections);
+
+      const result = await service.getAllReflections();
+
+      expect(mockRepository.findAll).toHaveBeenCalledOnce();
+      expect(result).toEqual(reflections);
+      expect(result).toHaveLength(2);
+    });
+
+    it('should return empty array when no reflections exist', async () => {
+      mockRepository.findAll.mockResolvedValue([]);
+
+      const result = await service.getAllReflections();
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('updateReflection', () => {
+    it('should update existing reflection', async () => {
+      const existingReflection = {
+        id: randomUUID(),
+        mode: 'text',
+        content: 'Original content',
+        timestamp: '2025-11-19T12:00:00.000Z',
+      };
+
+      const updates = {
+        content: 'Updated content',
+      };
+
+      const updatedReflection = {
+        ...existingReflection,
+        ...updates,
+      };
+
+      mockRepository.findById.mockResolvedValue(existingReflection);
+      mockRepository.save.mockResolvedValue(updatedReflection);
+
+      const result = await service.updateReflection(existingReflection.id, updates);
+
+      expect(mockRepository.findById).toHaveBeenCalledWith(existingReflection.id);
+      expect(mockRepository.save).toHaveBeenCalled();
+      expect(result.content).toBe('Updated content');
+      expect(result.id).toBe(existingReflection.id);
+      expect(result.timestamp).toBe(existingReflection.timestamp);
+    });
+
+    it('should throw error when reflection not found', async () => {
+      mockRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.updateReflection('non-existent-id', { content: 'New content' })
+      ).rejects.toThrow('Reflection not found');
+
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should preserve id and timestamp when updating', async () => {
+      const existingReflection = {
+        id: randomUUID(),
+        mode: 'text',
+        content: 'Original content',
+        timestamp: '2025-11-19T12:00:00.000Z',
+      };
+
+      const maliciousUpdates = {
+        id: 'hacked-id',
+        timestamp: '2025-11-20T12:00:00.000Z',
+        content: 'Updated content',
+      };
+
+      mockRepository.findById.mockResolvedValue(existingReflection);
+      mockRepository.save.mockImplementation((data) => Promise.resolve(data));
+
+      const result = await service.updateReflection(existingReflection.id, maliciousUpdates);
+
+      expect(result.id).toBe(existingReflection.id);
+      expect(result.timestamp).toBe('2025-11-19T12:00:00.000Z');
+    });
+  });
+
+  describe('addAIInteraction', () => {
+    it('should add AI interaction to reflection', async () => {
+      const reflection = {
+        id: randomUUID(),
+        mode: 'text',
+        content: 'My reflection',
+        timestamp: '2025-11-19T12:00:00.000Z',
+      };
+
+      const aiInteraction = {
+        model: 'llama2',
+        provider: 'local',
+        prompt: 'My reflection',
+        response: 'I notice some curiosity in your reflection',
+        timestamp: '2025-11-19T12:01:00.000Z',
+        systemPromptVersion: '1.0.0',
+      };
+
+      const updatedReflection = {
+        ...reflection,
+        aiInteraction,
+      };
+
+      mockRepository.findById.mockResolvedValue(reflection);
+      mockRepository.save.mockResolvedValue(updatedReflection);
+
+      const result = await service.addAIInteraction(reflection.id, aiInteraction);
+
+      expect(mockRepository.findById).toHaveBeenCalledWith(reflection.id);
+      expect(mockRepository.save).toHaveBeenCalled();
+      expect(result.aiInteraction).toEqual(aiInteraction);
+    });
+
+    it('should throw error when reflection not found', async () => {
+      mockRepository.findById.mockResolvedValue(null);
+
+      const aiInteraction = {
+        model: 'llama2',
+        provider: 'local',
+        prompt: 'Test',
+        response: 'Test response',
+        timestamp: '2025-11-19T12:01:00.000Z',
+        systemPromptVersion: '1.0.0',
+      };
+
+      await expect(
+        service.addAIInteraction('non-existent-id', aiInteraction)
+      ).rejects.toThrow('Reflection not found');
+
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteReflection', () => {
+    it('should delete a reflection by id', async () => {
+      const reflectionId = randomUUID();
+      
+      mockRepository.deleteById.mockResolvedValue(true);
+
+      const result = await service.deleteReflection(reflectionId);
+
+      expect(mockRepository.deleteById).toHaveBeenCalledWith(reflectionId);
+      expect(result).toBe(true);
+    });
+
+    it('should return false when reflection not found', async () => {
+      mockRepository.deleteById.mockResolvedValue(false);
+
+      const result = await service.deleteReflection('non-existent-id');
+
+      expect(mockRepository.deleteById).toHaveBeenCalledWith('non-existent-id');
+      expect(result).toBe(false);
+    });
+
+    it('should propagate repository errors', async () => {
+      mockRepository.deleteById.mockRejectedValue(new Error('Delete failed'));
+
+      await expect(service.deleteReflection('some-id')).rejects.toThrow('Delete failed');
+    });
+  });
+
+  describe('deleteAllReflections', () => {
+    it('should delete all reflections', async () => {
+      mockRepository.deleteAll.mockResolvedValue(5);
+
+      const result = await service.deleteAllReflections();
+
+      expect(mockRepository.deleteAll).toHaveBeenCalledOnce();
+      expect(result).toBe(5);
+    });
+
+    it('should return 0 when no reflections exist', async () => {
+      mockRepository.deleteAll.mockResolvedValue(0);
+
+      const result = await service.deleteAllReflections();
+
+      expect(mockRepository.deleteAll).toHaveBeenCalledOnce();
+      expect(result).toBe(0);
+    });
+
+    it('should propagate repository errors', async () => {
+      mockRepository.deleteAll.mockRejectedValue(new Error('Delete all failed'));
+
+      await expect(service.deleteAllReflections()).rejects.toThrow('Delete all failed');
+    });
+  });
+
+  describe('importVisual', () => {
+    it('should import visual reflection and save image file', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'my-photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+        dimensions: { width: 1920, height: 1080 },
+      };
+
+      const dataDir = '/tmp/test-data';
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, dataDir);
+
+      expect(mockRepository.save).toHaveBeenCalledOnce();
+      expect(result.mode).toBe('visual');
+      expect(result.visualAttachment).toBeDefined();
+      expect(result.visualAttachment.originalFilename).toBe('my-photo.jpg');
+      expect(result.visualAttachment.storedPath).toMatch(/^visuals\/\d{4}-\d{2}\/.+\.jpg$/);
+    });
+
+    it('should generate correct file extension for PNG', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-png-data'),
+        originalFilename: 'screenshot.png',
+        mimeType: 'image/png',
+        sizeBytes: 2048,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.visualAttachment.storedPath).toMatch(/\.png$/);
+    });
+
+    it('should generate correct file extension for GIF', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-gif-data'),
+        originalFilename: 'animation.gif',
+        mimeType: 'image/gif',
+        sizeBytes: 512,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.visualAttachment.storedPath).toMatch(/\.gif$/);
+    });
+
+    it('should generate correct file extension for WebP', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-webp-data'),
+        originalFilename: 'modern.webp',
+        mimeType: 'image/webp',
+        sizeBytes: 768,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.visualAttachment.storedPath).toMatch(/\.webp$/);
+    });
+
+    it('should include dimensions when provided', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+        dimensions: { width: 3840, height: 2160 },
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.visualAttachment.dimensions).toEqual({
+        width: 3840,
+        height: 2160,
+      });
+    });
+
+    it('should work without dimensions', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      expect(result.mode).toBe('visual');
+      expect(result.visualAttachment).toBeDefined();
+    });
+
+    it('should generate unique IDs for each import', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+      };
+
+      const savedReflections = [];
+      mockRepository.save.mockImplementation(async (reflection) => {
+        savedReflections.push(reflection);
+        return reflection;
+      });
+
+      await service.importVisual(imageData, '/tmp/data');
+      await service.importVisual(imageData, '/tmp/data');
+
+      expect(savedReflections).toHaveLength(2);
+      expect(savedReflections[0].id).not.toBe(savedReflections[1].id);
+      expect(savedReflections[0].visualAttachment.storedPath).not.toBe(
+        savedReflections[1].visualAttachment.storedPath
+      );
+    });
+
+    it('should organize files by year-month', async () => {
+      const imageData = {
+        buffer: Buffer.from('fake-image-data'),
+        originalFilename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+      };
+
+      mockRepository.save.mockImplementation(async (reflection) => reflection);
+
+      const result = await service.importVisual(imageData, '/tmp/data');
+
+      // Should match pattern: visuals/YYYY-MM/filename.ext
+      expect(result.visualAttachment.storedPath).toMatch(
+        /^visuals\/\d{4}-\d{2}\/.+\.(jpg|jpeg|png|gif|webp)$/
+      );
+    });
+  });
+});

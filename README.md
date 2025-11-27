@@ -1,77 +1,194 @@
-# Laboratory of Life
+# 🌿 Laboratory of Life
 
-> A calm, private, AI-assisted space where you can return to life — hear inner striving, know yourself, and find your path — through simple expression, gentle reflection, and authentic contact with technology.
+> A local-first, AI-assisted space for personal self-reflection
 
-## Purpose
+Laboratory of Life is a calm, private tool for self-reflection. Write your thoughts, import visual artifacts, and receive gentle, non-directive feedback from an AI mirror—all stored locally on your device. No accounts, no cloud sync, no tracking.
 
-The Laboratory of Life exists to reconnect technology with the human pulse — to help a person see, hear, and live more deeply. This is not a productivity tool, a therapy app, or a social platform. It is a private sanctuary for reflection and self-discovery.
+## ✨ Key Features
 
-## Core Principles
+- **🔒 Complete Privacy**: All data stays on your device. No external servers, no tracking.
+- **🤖 AI Mirror**: Gentle, reflective feedback from local Ollama (default) or online AI (opt-in).
+- **📝 Multiple Expression Modes**: Write text reflections or import visual artifacts.
+- **♿ Fully Accessible**: Keyboard navigation, screen reader support, WCAG 2.1 AA compliant.
+- **📤 Data Sovereignty**: Export everything to Markdown anytime. Delete what you want.
+- **🎨 Calm Experience**: Max 3 choices on screen, no animations, no notifications.
 
-1. **Small Steps, Always** — Work in tiny, testable slices
-2. **AI as Mirror, Not Guru** — Reflects and clarifies, never instructs or diagnoses
-3. **Multiple Forms, One Doorway** — Writing, metaphor, drawing, silence — all valid
-4. **Calm Experience** — Low cognitive load, gentle pace, emotional safety
-5. **Local-First, Private by Design** — Your data stays on your device
-6. **Trace of Becoming** — Meaningful reflections showing growth over time
-7. **Reversibility** — Easy to undo, delete, or export
-8. **Accessibility and Simplicity** — Clear language, keyboard navigation, readable design
+## 🏗️ Architecture
 
-## What This Is NOT
-
-- ❌ No accounts, analytics, or cloud synchronization
-- ❌ No medical, therapeutic, or diagnostic functions
-- ❌ No gamification, scoring, or attention-grabbing features
-- ❌ No social sharing or external tracking
-
-## Technology Stack
-
-- **Backend**: Node.js 18+ with Express (local API server)
-- **Frontend**: Vue 3 with Composition API, Vite for development
-- **AI (Future)**: Ollama (local models - default), optional OpenAI/Anthropic API (requires explicit opt-in)
-- **Storage**: Local JSON files (optionally in iCloud Drive for sync across your devices)
-- **Testing**: Vitest for unit tests, optional Playwright for end-to-end testing
-
-### AI Model Choice & Privacy
-
-When AI features are added, you'll choose between:
-- **Local Models (Ollama)** - Default, fully private, runs on your machine, no internet needed
-- **Online APIs (OpenAI, etc.)** - Optional, requires explicit consent with clear warning that your reflections will be sent to external services
-
-## Project Structure
+This project follows **Hexagonal Architecture** (Ports & Adapters):
 
 ```
-backend/          # Node.js API server
-frontend/         # Web interface
-data/             # Your private data (gitignored)
-.specify/         # Spec-driven development templates and constitution
+backend/          # Node.js + Express REST API
+├── src/
+│   ├── domain/       # Core business logic (entities, services)
+│   ├── adapters/     # External integrations (storage, AI, HTTP)
+│   └── config/       # Configuration
+└── tests/            # Unit, integration, smoke tests
+
+frontend/         # Vue 3 + Vite
+├── src/
+│   ├── components/   # Reusable Vue components
+│   ├── views/        # Page-level components
+│   ├── composables/  # Vue 3 composition functions
+│   ├── services/     # API client
+│   └── styles/       # Calm color palette, accessibility
+└── tests/            # Unit (Vitest) and E2E (Playwright) tests
+
+data/             # Local JSON storage (gitignored)
+├── reflections/      # Your reflections (organized by month)
+├── visuals/          # Imported images
+└── preferences.json  # User settings
 ```
 
-## Getting Started
+## 🚀 Quick Start
 
-_Coming soon: Once the first feature is implemented, this section will include setup instructions._
+### Prerequisites
 
-## Development Philosophy
+- **Node.js** 18+ ([Download](https://nodejs.org/))
+- **Ollama** (for local AI) - [Installation Guide](https://ollama.ai/)
 
-This project follows **Spec-Driven Development** using the Specify framework:
+### Installation
 
-1. Every feature starts with a Specification (user stories, acceptance criteria)
-2. A Plan is created (technical approach, structure, constitution checks)
-3. Tasks are defined (small, testable units of work)
-4. Implementation follows with tests written first
-5. Each feature can be completed in a single focused session (max 45 minutes)
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/AnatFradin/Life-Laborarory.git
+   cd Life-Laborarory
+   ```
 
-See [.specify/memory/constitution.md](.specify/memory/constitution.md) for the complete project constitution.
+2. **Install backend dependencies**
+   ```bash
+   cd backend
+   npm install
+   ```
 
-## Contributing
+3. **Install frontend dependencies**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
 
-This is a personal project for single-user use. However, the constitution and development approach may be useful to others building similar calm, private tools.
+4. **Install Ollama and pull a model** (for local AI)
+   ```bash
+   # Install Ollama from https://ollama.ai/
+   # Then pull a model (e.g., llama2)
+   ollama pull llama2
+   ```
 
-## License
+### Running the Application
 
-_To be determined_
+1. **Start the backend** (in `backend/` directory)
+   ```bash
+   npm run dev
+   ```
+   Backend runs on `http://localhost:3000`
+
+2. **Start the frontend** (in `frontend/` directory, new terminal)
+   ```bash
+   npm run dev
+   ```
+   Frontend runs on `http://localhost:5173`
+
+3. **Open your browser**
+   Navigate to `http://localhost:5173`
+
+## 📖 Usage
+
+### Writing a Reflection
+
+1. Click "Compose" or press `Cmd/Ctrl + N`
+2. Write your thoughts in the text area
+3. Press `Cmd/Ctrl + Enter` to save
+4. Optionally, click "Ask AI Mirror" for gentle, reflective feedback
+
+### Viewing History
+
+1. Click "History" to see all past reflections
+2. Navigate with keyboard: `Tab`, arrow keys, `Enter`
+3. Search and filter by date
+
+### Exporting Your Data
+
+1. Go to "Export" view
+2. Choose format (single file or folder with images)
+3. Click "Export to Markdown"
+4. Your data is downloaded as a readable `.md` file
+
+### Deleting Data
+
+- **Single reflection**: Click delete button → confirm
+- **All data**: Go to Export → "Delete All" → type "DELETE_ALL" → confirm
+
+## 🔐 Privacy & Security
+
+- **Local-first**: All data stored in `data/` directory on your device
+- **No telemetry**: Zero tracking, analytics, or external calls (except to your chosen AI)
+- **AI options**:
+  - **Local (default)**: Ollama on `localhost:11434` - data never leaves your device
+  - **Online (opt-in)**: OpenAI/Anthropic - clear warning that data leaves device
+- **Data control**: Export and delete anytime
+
+## 🧪 Development
+
+### Running Tests
+
+**Backend**
+```bash
+cd backend
+npm test              # Run all tests
+npm run test:unit     # Unit tests only
+npm run test:coverage # With coverage report
+```
+
+**Frontend**
+```bash
+cd frontend
+npm test              # Unit tests (Vitest)
+npm run test:e2e      # E2E tests (Playwright)
+npm run test:coverage # Coverage report
+```
+
+## 📚 Documentation
+
+- **[Product Vision](./specs/000-product-vision/spec.md)**: What and why
+- **[Implementation Plan](./specs/000-product-vision/plan.md)**: Architecture and technical decisions
+- **[Data Model](./specs/000-product-vision/data-model.md)**: Entity definitions and validation
+- **[API Contracts](./specs/000-product-vision/contracts/)**: REST API specifications
+- **[Tasks](./specs/000-product-vision/tasks.md)**: Implementation task breakdown
+
+## 🌱 Philosophy
+
+This project embodies **seven core principles**:
+
+1. **AI as Mirror**: Reflective, non-directive feedback
+2. **Multiple Forms**: Text and visual expression modes
+3. **Calm Experience**: Max 3 choices, no animations, no pressure
+4. **Local-First**: Privacy by design, data stays on your device
+5. **Trace of Becoming**: Your journey through time, preserved
+6. **Reversibility**: Export and delete with zero friction
+7. **Accessibility**: Full keyboard navigation, screen reader support
+
+See [О-чем-проект.md](./О-чем-проект.md) for the personal manifesto behind this project (in Russian).
+
+## 🛠️ Tech Stack
+
+- **Backend**: Node.js, Express, Zod (validation)
+- **Frontend**: Vue 3 (Composition API), Vite, Radix Vue (accessible primitives)
+- **Storage**: Local JSON files with atomic writes
+- **AI**: Ollama (local), OpenAI/Anthropic (optional)
+- **Testing**: Vitest (unit/integration), Playwright (e2e), axe-core (accessibility)
+
+## 📝 License
+
+**UNLICENSED** - This is a personal project, not intended for redistribution.
+
+## 🤝 Contributing
+
+This is a personal reflection tool. However, if you find bugs or have suggestions, feel free to open an issue.
+
+## 💚 Acknowledgments
+
+Built with care for those seeking a calm, private space for self-reflection.
 
 ---
 
-**Last Updated**: November 8, 2025  
-**Constitution Version**: 1.0.0
+*AI helps me walk, but the path is mine. The meaning is mine. The life is mine.*

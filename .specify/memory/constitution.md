@@ -1,8 +1,14 @@
 <!--
 Sync Impact Report:
-Version: 1.1.0 → 2.0.0 (Major: Refactored to pure development process)
+Version: 2.0.0 → 2.1.0 (Minor: Added AI Assistant Guidelines)
 Ratification Date: 2025-11-08
-Last Amended: 2025-11-08
+Last Amended: 2025-11-19
+
+Changes in v2.1.0:
+- ADDED: Section III "AI Assistant Guidelines" with critical workflow rules
+- Enforces test-first development with mandatory test execution
+- Prevents premature commits without explicit approval
+- Result: Codifies AI assistant behavior and user approval requirements
 
 Changes in v2.0.0:
 - BREAKING: Removed all product-specific principles (moved to product spec)
@@ -54,6 +60,39 @@ Write tests before implementation to ensure correctness and prevent regressions.
 **MUST**: All tests pass before marking a task or feature complete.
 
 **Rationale**: Tests document expected behavior and catch issues early.
+
+### III. AI Assistant Guidelines
+
+When working with AI assistants (GitHub Copilot, etc.), the following rules are mandatory:
+
+**CRITICAL RULES**:
+
+1. ❌ **NEVER commit without explicit user approval**
+   - **MUST**: Present all changes for review before committing
+   - **MUST**: Wait for explicit user approval before any git operations
+   - **MUST NOT**: Auto-commit or suggest commits without permission
+
+2. ✅ **ALWAYS create unit tests for each task**
+   - **MUST**: Write unit tests before or alongside implementation
+   - **MUST**: Ensure tests cover core functionality and edge cases
+   - **SHOULD**: Follow test-first development (Red-Green-Refactor)
+
+3. ✅ **ALWAYS run tests before requesting approval**
+   - **MUST**: Execute all relevant tests after implementation
+   - **MUST**: Verify all tests pass before presenting work for review
+   - **MUST**: Include test results in implementation review
+
+4. ✅ **ALWAYS create acceptance tests for each user story**
+   - **MUST**: Write acceptance tests that verify user story requirements
+   - **MUST**: Ensure acceptance tests pass before marking story complete
+   - **SHOULD**: Use acceptance tests as definition of done criteria
+
+5. ✅ **Present test results with implementation for review**
+   - **MUST**: Show test execution output alongside code changes
+   - **MUST**: Highlight any test failures or warnings
+   - **SHOULD**: Include coverage reports when available
+
+**Rationale**: These rules ensure quality, prevent premature commits, and maintain user control over the codebase. AI assistants accelerate development but must not bypass quality gates or user approval.
 
 ## Definition of Done
 
@@ -142,6 +181,7 @@ This Constitution supersedes all other development practices, coding preferences
 2. Sync Impact Report documenting affected templates and specs
 3. Migration plan for existing features (if applicable)
 4. Clear commit message (e.g., `docs: amend constitution to v1.1.0 (add principle IX)`)
+5. Do not use reminder-for-me.md file for AI Copilot ßsuggestions. This file is private developer notes.
 
 **Version Semantics**:
 - **MAJOR**: Backward incompatible changes (remove/redefine principles, change DoD)
@@ -158,4 +198,4 @@ This Constitution supersedes all other development practices, coding preferences
 
 **Product Requirements**: Product-specific requirements (features, UX, privacy, accessibility, etc.) belong in `/specs/000-product-vision/spec.md`, not in this constitution.
 
-**Version**: 2.0.0 | **Ratified**: 2025-11-08 | **Last Amended**: 2025-11-08
+**Version**: 2.1.0 | **Ratified**: 2025-11-08 | **Last Amended**: 2025-11-19
