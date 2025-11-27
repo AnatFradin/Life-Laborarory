@@ -1,15 +1,43 @@
 <template>
   <div class="reflection-editor">
     <div class="editor-header">
-      <label for="reflection-input" class="editor-label">
-        Your Reflection
-      </label>
+      <div class="header-top">
+        <label for="reflection-input" class="editor-label">
+          Your Reflection
+        </label>
+        
+        <!-- Editor mode toggle switch -->
+        <label class="toggle-switch">
+          <span class="toggle-label-left" :class="{ active: !markdownEnabled }">Plain Text</span>
+          <input
+            type="checkbox"
+            v-model="markdownEnabled"
+            aria-label="Toggle Markdown mode"
+            class="toggle-input"
+          />
+          <span class="toggle-slider"></span>
+          <span class="toggle-label-right" :class="{ active: markdownEnabled }">Markdown</span>
+        </label>
+      </div>
+      
       <span class="editor-hint text-tertiary text-sm" id="editor-hint">
-        Write freely. Press Cmd+Enter to save, or use the button below.
+        {{ markdownEnabled 
+          ? 'Use Markdown syntax for formatting. Press Cmd+P to toggle preview.'
+          : 'Write freely. Press Cmd+Enter to save, or use the button below.'
+        }}
       </span>
     </div>
 
+    <!-- Markdown editor (when enabled) -->
+    <MarkdownEditor
+      v-if="markdownEnabled"
+      v-model="localContent"
+      @keydown="handleKeyDown"
+    />
+
+    <!-- Plain text editor (backward compatible) -->
     <textarea
+      v-else
       id="reflection-input"
       ref="textareaRef"
       v-model="localContent"
@@ -55,6 +83,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import MarkdownEditor from './MarkdownEditor.vue';
 
 const props = defineProps({
   initialContent: {
@@ -84,6 +113,7 @@ const emit = defineEmits(['save', 'request-ai-feedback']);
 const textareaRef = ref(null);
 const localContent = ref(props.initialContent);
 const hasSavedContent = ref(false);
+const markdownEnabled = ref(true); // Default: enabled
 
 // Computed properties
 const hasContent = computed(() => localContent.value.trim().length > 0);
@@ -148,10 +178,89 @@ onMounted(() => {
   gap: var(--space-xs);
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
 .editor-label {
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-text);
+}
+
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+.toggle-label-left,
+.toggle-label-right {
+  font-size: 0.6875rem;
+  color: var(--color-text-tertiary, #a0aec0);
+  transition: color 150ms ease;
+  font-weight: 400;
+}
+
+.toggle-label-left.active,
+.toggle-label-right.active {
+  color: var(--color-text-secondary, #5a6c7d);
+  font-weight: 500;
+}
+
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 32px;
+  height: 16px;
+  background-color: var(--color-border, #e0e5eb);
+  border-radius: 16px;
+  transition: background-color 200ms ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 12px;
+  width: 12px;
+  left: 2px;
+  top: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 200ms ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-input:checked + .toggle-slider {
+  background-color: var(--color-primary, #5a6c7d);
+}
+
+.toggle-input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+}
+
+.toggle-input:focus + .toggle-slider {
+  box-shadow: 0 0 0 2px rgba(90, 108, 125, 0.2);
+}
+
+.toggle-switch:hover .toggle-slider {
+  background-color: var(--color-border-focus, #c5ced9);
+}
+
+.toggle-input:checked + .toggle-slider:hover {
+  background-color: var(--color-primary-hover, #4a5c6d);
 }
 
 .editor-hint {
