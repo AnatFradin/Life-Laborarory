@@ -276,7 +276,7 @@ const getPersonaIcon = (personaId) => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-md);
   gap: var(--space-md);
 }
 
