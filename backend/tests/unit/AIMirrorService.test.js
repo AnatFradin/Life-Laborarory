@@ -26,18 +26,21 @@ describe('AIMirrorService', () => {
       generateResponse: vi.fn(),
       isAvailable: vi.fn(),
       getMetadata: vi.fn().mockReturnValue({ provider: 'ollama', type: 'local' }),
+      getProviderName: vi.fn().mockReturnValue('ollama'),
     };
 
     mockOpenAIProvider = {
       generateResponse: vi.fn(),
       isAvailable: vi.fn(),
       getMetadata: vi.fn().mockReturnValue({ provider: 'openai', type: 'online' }),
+      getProviderName: vi.fn().mockReturnValue('openai'),
     };
 
     mockAnthropicProvider = {
       generateResponse: vi.fn(),
       isAvailable: vi.fn(),
       getMetadata: vi.fn().mockReturnValue({ provider: 'anthropic', type: 'online' }),
+      getProviderName: vi.fn().mockReturnValue('anthropic'),
     };
 
     service = new AIMirrorService({
@@ -244,6 +247,168 @@ describe('AIMirrorService', () => {
       reflectiveResponses.forEach((response) => {
         expect(service._validateResponse(response)).toBe(true);
       });
+    });
+  });
+
+  describe('rephrase', () => {
+    it('should rephrase text successfully with clearer style', async () => {
+      const originalText = 'I am feeling really confused about what to do next';
+      const mockSuggestions = [
+        'I feel uncertain about my next steps',
+        'I am unsure about what to do next',
+      ];
+      const mockResponse = mockSuggestions.join('\n---\n');
+
+      mockOllamaProvider.generateResponse.mockResolvedValue(mockResponse);
+
+      const result = await service.rephrase(originalText, 'clearer', defaultPreferences);
+
+      expect(result).toMatchObject({
+        originalText,
+        style: 'clearer',
+        suggestions: mockSuggestions,
+        timestamp: expect.any(String),
+        provider: 'ollama',
+        model: 'llama2',
+      });
+
+      expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
+        expect.stringContaining('clear'),
+        expect.stringContaining(originalText),
+        { model: 'llama2' }
+      );
+    });
+
+    it('should rephrase text with more-positive style', async () => {
+      const originalText = 'I failed at this task again';
+      const mockSuggestions = [
+        'I am learning from this experience',
+        'This is an opportunity to grow',
+      ];
+      const mockResponse = mockSuggestions.join('\n---\n');
+
+      mockOllamaProvider.generateResponse.mockResolvedValue(mockResponse);
+
+      const result = await service.rephrase(originalText, 'more-positive', defaultPreferences);
+
+      expect(result.style).toBe('more-positive');
+      expect(result.suggestions).toEqual(mockSuggestions);
+      expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
+        expect.stringContaining('positive'),
+        expect.stringContaining(originalText),
+        { model: 'llama2' }
+      );
+    });
+
+    it('should rephrase text with more-constructive style', async () => {
+      const originalText = 'I keep making the same mistakes';
+      const mockSuggestions = [
+        'I am noticing a pattern I can learn from',
+        'I am becoming aware of what I want to change',
+      ];
+      const mockResponse = mockSuggestions.join('\n---\n');
+
+      mockOllamaProvider.generateResponse.mockResolvedValue(mockResponse);
+
+      const result = await service.rephrase(originalText, 'more-constructive', defaultPreferences);
+
+      expect(result.style).toBe('more-constructive');
+      expect(result.suggestions).toEqual(mockSuggestions);
+      expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
+        expect.stringContaining('constructive'),
+        expect.stringContaining(originalText),
+        { model: 'llama2' }
+      );
+    });
+
+    it('should throw error if text is empty', async () => {
+      await expect(service.rephrase('', 'clearer', defaultPreferences)).rejects.toThrow(
+        'Text is required for rephrasing'
+      );
+
+      expect(mockOllamaProvider.generateResponse).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if text is too long (> 5000 chars)', async () => {
+      const longText = 'a'.repeat(5001);
+
+      await expect(service.rephrase(longText, 'clearer', defaultPreferences)).rejects.toThrow(
+        'Text is too long for rephrasing'
+      );
+
+      expect(mockOllamaProvider.generateResponse).not.toHaveBeenCalled();
+    });
+
+    it('should throw error for invalid style', async () => {
+      await expect(
+        service.rephrase('Some text', 'invalid-style', defaultPreferences)
+      ).rejects.toThrow('Invalid rephrasing style');
+
+      expect(mockOllamaProvider.generateResponse).not.toHaveBeenCalled();
+    });
+
+    it('should use online provider when configured', async () => {
+      const onlinePreferences = {
+        ...defaultPreferences,
+        aiProvider: 'online',
+        onlineProvider: 'openai',
+        onlineModel: 'gpt-3.5-turbo',
+        hasAcknowledgedOnlineWarning: true,
+      };
+
+      const mockSuggestions = ['Clearer version 1', 'Clearer version 2'];
+      const mockResponse = mockSuggestions.join('\n---\n');
+
+      mockOpenAIProvider.generateResponse.mockResolvedValue(mockResponse);
+
+      const result = await service.rephrase('Some text', 'clearer', onlinePreferences);
+
+      expect(result.provider).toBe('openai');
+      expect(result.model).toBe('gpt-3.5-turbo');
+      expect(mockOpenAIProvider.generateResponse).toHaveBeenCalled();
+    });
+
+    it('should preserve Markdown formatting in suggestions', async () => {
+      const originalText = 'I am feeling **very** confused';
+      const mockSuggestions = [
+        'I am feeling **quite** uncertain',
+        'I feel **deeply** unsure',
+      ];
+      const mockResponse = mockSuggestions.join('\n---\n');
+
+      mockOllamaProvider.generateResponse.mockResolvedValue(mockResponse);
+
+      const result = await service.rephrase(originalText, 'clearer', defaultPreferences);
+
+      expect(result.suggestions[0]).toContain('**');
+      expect(result.suggestions[1]).toContain('**');
+    });
+
+    it('should handle AI response with multiple suggestions separated by ---', async () => {
+      const mockSuggestions = [
+        'Suggestion one',
+        'Suggestion two',
+        'Suggestion three',
+      ];
+      const mockResponse = mockSuggestions.join('\n---\n');
+
+      mockOllamaProvider.generateResponse.mockResolvedValue(mockResponse);
+
+      const result = await service.rephrase('Some text', 'clearer', defaultPreferences);
+
+      expect(result.suggestions).toHaveLength(3);
+      expect(result.suggestions).toEqual(mockSuggestions);
+    });
+
+    it('should handle AI response with single suggestion (no separator)', async () => {
+      const mockResponse = 'Single suggestion text';
+
+      mockOllamaProvider.generateResponse.mockResolvedValue(mockResponse);
+
+      const result = await service.rephrase('Some text', 'clearer', defaultPreferences);
+
+      expect(result.suggestions).toHaveLength(1);
+      expect(result.suggestions[0]).toBe(mockResponse);
     });
   });
 });
