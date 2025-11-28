@@ -112,13 +112,35 @@
     >
       &lt;/&gt; Code
     </button>
+
+    <span class="toolbar-divider"></span>
+
+    <!-- Rephrase (AI) -->
+    <button
+      type="button"
+      class="toolbar-button"
+      :aria-label="labels.rephrase"
+      :title="labels.rephrase"
+      :disabled="!hasSelection"
+      @click="$emit('rephrase')"
+      data-test="rephrase-button"
+    >
+      ✨ Rephrase
+    </button>
   </div>
 </template>
 
 <script setup>
 import { useMarkdownToolbar } from '@/composables/useMarkdownToolbar'
 
-defineEmits(['format'])
+defineProps({
+  hasSelection: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+defineEmits(['format', 'rephrase'])
 
 const { getButtonLabels } = useMarkdownToolbar()
 const labels = getButtonLabels()
@@ -184,5 +206,22 @@ const labels = getButtonLabels()
   height: 20px;
   background-color: var(--color-border, #e0e5eb);
   margin: 0 4px;
+}
+
+/* Special styling for Rephrase button */
+.toolbar-button[data-test="rephrase-button"]:not(:disabled) {
+  color: #7c3aed;
+  font-weight: 600;
+  background-color: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+.toolbar-button[data-test="rephrase-button"]:not(:disabled):hover {
+  background-color: rgba(124, 58, 237, 0.15);
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.toolbar-button[data-test="rephrase-button"]:disabled {
+  opacity: 0.3;
 }
 </style>

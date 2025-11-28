@@ -104,7 +104,8 @@ export function useMarkdownToolbar() {
       orderedList: 'Numbered List',
       link: 'Insert Link',
       blockquote: 'Quote',
-      code: 'Code'
+      code: 'Code',
+      rephrase: 'AI Rephrase (select text first)'
     }
   }
 

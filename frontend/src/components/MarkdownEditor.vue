@@ -5,7 +5,9 @@
       <!-- Formatting toolbar (only in edit mode) -->
       <MarkdownToolbar
         v-if="mode === 'edit'"
+        :has-selection="hasTextToRephrase"
         @format="handleFormat"
+        @rephrase="handleRephrase"
       />
 
       <!-- Mode toggle button -->
@@ -46,16 +48,30 @@
       @close="linkDialogOpen = false"
       @confirm="handleLinkInsert"
     />
+
+    <!-- Rephrase Dialog -->
+    <RephraseDialog
+      :is-open="rephraseDialogOpen"
+      :original-text="selectedTextForRephrase"
+      :suggestions="rephraseSuggestions"
+      :loading="rephraseLoading"
+      :error="rephraseError"
+      @close="handleRephraseClose"
+      @rephrase="handleRephraseRequest"
+      @accept="handleRephraseAccept"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import MarkdownPreview from './MarkdownPreview.vue'
 import MarkdownToolbar from './MarkdownToolbar.vue'
 import LinkDialog from './LinkDialog.vue'
+import RephraseDialog from './RephraseDialog.vue'
 import { useMarkdownEditor } from '@/composables/useMarkdownEditor'
 import { useMarkdownToolbar } from '@/composables/useMarkdownToolbar'
+import { useRephrasing } from '@/composables/useRephrasing'
 
 const props = defineProps({
   modelValue: {
@@ -70,6 +86,10 @@ const emit = defineEmits(['update:modelValue'])
 const textareaRef = ref(null)
 const linkDialogOpen = ref(false)
 const selectedTextForLink = ref('')
+const rephraseDialogOpen = ref(false)
+const selectedTextForRephrase = ref('')
+const selectionStart = ref(0)
+const selectionEnd = ref(0)
 
 // Use composables
 const { mode, toggleMode, setCursorPosition } = useMarkdownEditor(props.modelValue, 'edit')
@@ -84,6 +104,19 @@ const {
   applyCode,
   handleKeydown: toolbarHandleKeydown
 } = useMarkdownToolbar()
+const {
+  loading: rephraseLoading,
+  error: rephraseError,
+  suggestions: rephraseSuggestions,
+  requestRephrase,
+  clearSuggestions
+} = useRephrasing()
+
+// Computed
+const hasTextToRephrase = computed(() => {
+  // Button is enabled if there's any content in the editor
+  return props.modelValue && props.modelValue.trim().length > 0
+})
 
 // Handle content updates
 const handleInput = (event) => {
@@ -92,8 +125,10 @@ const handleInput = (event) => {
 
 // Handle text selection for cursor position tracking
 const handleSelection = (event) => {
-  const { selectionStart, selectionEnd } = event.target
-  setCursorPosition(selectionStart, selectionEnd)
+  const { selectionStart: start, selectionEnd: end } = event.target
+  selectionStart.value = start
+  selectionEnd.value = end
+  setCursorPosition(start, end)
 }
 
 // Get current textarea state
@@ -172,6 +207,82 @@ const handleLinkInsert = ({ text, url }) => {
   const state = getTextareaState()
   const result = applyLink(state.text, state.start, state.end, url)
   applyFormattingResult(result)
+}
+
+// Handle rephrase button click from toolbar
+const handleRephrase = () => {
+  const state = getTextareaState()
+  
+  // If there's a selection, use it. Otherwise, use all text.
+  let textToRephrase
+  if (state.start !== state.end) {
+    // Text is selected
+    textToRephrase = state.text.substring(state.start, state.end)
+  } else {
+    // No selection, use all text
+    textToRephrase = state.text
+  }
+  
+  if (!textToRephrase || textToRephrase.trim().length === 0) {
+    // No text to rephrase
+    return
+  }
+  
+  selectedTextForRephrase.value = textToRephrase
+  clearSuggestions()
+  rephraseDialogOpen.value = true
+}
+
+// Handle rephrase request from dialog (when user selects style)
+const handleRephraseRequest = async (style) => {
+  await requestRephrase(selectedTextForRephrase.value, style)
+}
+
+// Handle accepting a suggestion from dialog
+const handleRephraseAccept = (suggestion) => {
+  const textarea = textareaRef.value
+  if (!textarea) return
+  
+  const text = textarea.value
+  
+  // Check if we had a selection or used all text
+  if (selectionStart.value === selectionEnd.value || selectedTextForRephrase.value === text) {
+    // Replace all text
+    emit('update:modelValue', suggestion)
+    
+    // Close dialog and restore focus
+    rephraseDialogOpen.value = false
+    clearSuggestions()
+    
+    setTimeout(() => {
+      textarea.focus()
+      textarea.setSelectionRange(suggestion.length, suggestion.length)
+    }, 0)
+  } else {
+    // Replace only selected text
+    const before = text.substring(0, selectionStart.value)
+    const after = text.substring(selectionEnd.value)
+    const newText = before + suggestion + after
+    
+    emit('update:modelValue', newText)
+    
+    // Close dialog and restore focus
+    rephraseDialogOpen.value = false
+    clearSuggestions()
+    
+    // Restore cursor after the replaced text
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = selectionStart.value + suggestion.length
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  }
+}
+
+// Handle closing rephrase dialog
+const handleRephraseClose = () => {
+  rephraseDialogOpen.value = false
+  clearSuggestions()
 }
 
 // Handle keyboard shortcuts

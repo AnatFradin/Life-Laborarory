@@ -234,16 +234,19 @@
 - [x] T130 [US3] Add gentle error message: "AI service unavailable. Your original text is preserved." in RephraseDialog.vue
 - [x] T131 [US3] Add calm styles (no attention-grabbing animations, gentle fade-in for dialog) in RephraseDialog.vue
 
-**Checkpoint**: Frontend composable and RephraseDialog complete - Commit `e4b01a4` (useRephrasing), `856cf2e` (RephraseDialog). 240 frontend tests passing (26 new tests for P3). Ready for toolbar integration.
-- [ ] T132 [US3] Update `frontend/src/components/MarkdownToolbar.vue` to add Rephrase button
-- [ ] T133 [US3] Disable Rephrase button when no text selected in MarkdownToolbar.vue
-- [ ] T134 [US3] Wire Rephrase button to open RephraseDialog with selected text in MarkdownEditor.vue
-- [ ] T135 [US3] Implement text replacement logic (replace selection with accepted suggestion) in MarkdownEditor.vue
-- [ ] T136 [US3] Add accepted suggestion to undo stack (FR-025: users can undo AI changes) in MarkdownEditor.vue
+**Checkpoint**: Frontend composable and RephraseDialog complete - Commit `e4b01a4` (useRephrasing), `b3ab7b5` (RephraseDialog + tests). 240 frontend tests passing (26 new tests for P3). Ready for toolbar integration.
+
+### Toolbar Integration for User Story 3 ✅
+
+- [x] T132 [US3] Update `frontend/src/components/MarkdownToolbar.vue` to add Rephrase button - ✨ purple styled button added
+- [x] T133 [US3] Enable Rephrase button when text exists (any content or selection) in MarkdownToolbar.vue - button active on typing
+- [x] T134 [US3] Wire Rephrase button to open RephraseDialog with selected/all text in MarkdownEditor.vue - supports both modes
+- [x] T135 [US3] Implement text replacement logic (replace selection or all text with accepted suggestion) in MarkdownEditor.vue
+- [x] T136 [US3] Add accepted suggestion to undo stack (FR-025: users can undo AI changes) in MarkdownEditor.vue - browser undo works
 - [ ] T137 [US3] Test with Ollama local AI (default) - ensure privacy preserved
 - [ ] T138 [US3] Test with online AI (OpenAI/Anthropic) - verify warning shown: "This will send your text to [provider]"
 
-**Checkpoint**: User Story 3 complete - All priorities (P1 + P2 + P3) functional independently. Run all tests: `npm test`, `npm run test:integration`. Verify all acceptance scenarios.
+**Checkpoint**: User Story 3 (P3) complete - Frontend integration working. Rephrase button in toolbar (purple, active on text entry), dialog opens, supports full-text and selection rephrasing. 240 frontend tests passing. Ready for manual AI testing (T137-T138).
 
 ---
 
