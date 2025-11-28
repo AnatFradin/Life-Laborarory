@@ -78,6 +78,8 @@ export const reflectionsAPI = {
 export const aiAPI = {
   generateMirror: (prompt, model, provider) =>
     apiClient.post('/ai/mirror', { prompt, model, provider }),
+  rephrase: (originalText, style, aiProvider, model) =>
+    apiClient.post('/ai/rephrase', { originalText, style, aiProvider, model }),
 };
 
 export const exportAPI = {
