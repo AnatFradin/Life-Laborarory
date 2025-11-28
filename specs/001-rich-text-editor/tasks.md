@@ -182,20 +182,20 @@
 
 ### Tests for User Story 3 - Frontend
 
-- [ ] T089 [P] [US3] Create test file `frontend/tests/unit/useRephrasing.test.js`
-- [ ] T090 [P] [US3] Write test: "requestRephrase() calls API with correct payload" in useRephrasing.test.js
-- [ ] T091 [P] [US3] Write test: "loading state updates during request" in useRephrasing.test.js
-- [ ] T092 [P] [US3] Write test: "suggestions populated on successful response" in useRephrasing.test.js
-- [ ] T093 [P] [US3] Write test: "error state set on API failure" in useRephrasing.test.js
-- [ ] T094 [P] [US3] Create test file `frontend/tests/unit/RephraseDialog.test.js`
-- [ ] T095 [P] [US3] Write test: "displays original text" in RephraseDialog.test.js
-- [ ] T096 [P] [US3] Write test: "shows style selector (Clearer, More Positive, More Constructive)" in RephraseDialog.test.js
-- [ ] T097 [P] [US3] Write test: "displays suggestions side-by-side with original" in RephraseDialog.test.js
-- [ ] T098 [P] [US3] Write test: "hover preview shows suggestion in context" in RephraseDialog.test.js
-- [ ] T099 [P] [US3] Write test: "accept button replaces original text" in RephraseDialog.test.js
-- [ ] T100 [P] [US3] Write test: "cancel button closes dialog without changes" in RephraseDialog.test.js
-- [ ] T101 [P] [US3] Write test: "Escape key closes dialog" in RephraseDialog.test.js
-- [ ] T102 [P] [US3] Write test: "shows gentle error message when AI unavailable" in RephraseDialog.test.js
+- [x] T089 [P] [US3] Create test file `frontend/tests/unit/useRephrasing.test.js` - 9 tests
+- [x] T090 [P] [US3] Write test: "requestRephrase() calls API with correct payload" in useRephrasing.test.js
+- [x] T091 [P] [US3] Write test: "loading state updates during request" in useRephrasing.test.js
+- [x] T092 [P] [US3] Write test: "suggestions populated on successful response" in useRephrasing.test.js
+- [x] T093 [P] [US3] Write test: "error state set on API failure" in useRephrasing.test.js
+- [x] T094 [P] [US3] Create test file `frontend/tests/unit/RephraseDialog.test.js` - 17 tests
+- [x] T095 [P] [US3] Write test: "displays original text" in RephraseDialog.test.js
+- [x] T096 [P] [US3] Write test: "shows style selector (Clearer, More Positive, More Constructive)" in RephraseDialog.test.js
+- [x] T097 [P] [US3] Write test: "displays suggestions side-by-side with original" in RephraseDialog.test.js
+- [x] T098 [P] [US3] Write test: "hover preview shows suggestion in context" in RephraseDialog.test.js - N/A (simplified to Accept buttons)
+- [x] T099 [P] [US3] Write test: "accept button replaces original text" in RephraseDialog.test.js
+- [x] T100 [P] [US3] Write test: "cancel button closes dialog without changes" in RephraseDialog.test.js
+- [x] T101 [P] [US3] Write test: "Escape key closes dialog" in RephraseDialog.test.js
+- [x] T102 [P] [US3] Write test: "shows gentle error message when AI unavailable" in RephraseDialog.test.js
 
 ### Implementation for User Story 3 - Backend ✅
 
@@ -218,21 +218,23 @@
 
 **Checkpoint**: Backend for User Story 3 complete - Commit `b0673fc`. 243 backend tests passing (40 new tests for P3). API endpoint ready to use.
 
-### Implementation for User Story 3 - Frontend
+### Implementation for User Story 3 - Frontend ✅
 
-- [ ] T119 [P] [US3] Create composable `frontend/src/composables/useRephrasing.js` with state (loading, error, suggestions) and requestRephrase() method
-- [ ] T120 [US3] Implement API call to POST /api/ai/rephrase in requestRephrase() method
-- [ ] T121 [US3] Add loading state management in useRephrasing.js
-- [ ] T122 [US3] Add error handling with gentle error messages in useRephrasing.js
-- [ ] T123 [P] [US3] Create component `frontend/src/components/RephraseDialog.vue` with original text display
-- [ ] T124 [US3] Add style selector (3 radio buttons: Clearer, More Positive, More Constructive) in RephraseDialog.vue
-- [ ] T125 [US3] Display suggestions list (2-3 items) with side-by-side comparison in RephraseDialog.vue
-- [ ] T126 [US3] Add hover preview showing suggestion in context (optional context text) in RephraseDialog.vue
-- [ ] T127 [US3] Add Accept button that replaces original text in editor in RephraseDialog.vue
-- [ ] T128 [US3] Add Cancel button and Escape key handler in RephraseDialog.vue
-- [ ] T129 [US3] Add loading spinner while AI processes request in RephraseDialog.vue
-- [ ] T130 [US3] Add gentle error message: "AI service unavailable. Your original text is preserved." in RephraseDialog.vue
-- [ ] T131 [US3] Add calm styles (no attention-grabbing animations, gentle fade-in for dialog) in RephraseDialog.vue
+- [x] T119 [P] [US3] Create composable `frontend/src/composables/useRephrasing.js` with state (loading, error, suggestions) and requestRephrase() method
+- [x] T120 [US3] Implement API call to POST /api/ai/rephrase in requestRephrase() method
+- [x] T121 [US3] Add loading state management in useRephrasing.js
+- [x] T122 [US3] Add error handling with gentle error messages in useRephrasing.js
+- [x] T123 [P] [US3] Create component `frontend/src/components/RephraseDialog.vue` with original text display
+- [x] T124 [US3] Add style selector (3 radio buttons: Clearer, More Positive, More Constructive) in RephraseDialog.vue
+- [x] T125 [US3] Display suggestions list (2-3 items) with side-by-side comparison in RephraseDialog.vue
+- [x] T126 [US3] Add hover preview showing suggestion in context (optional context text) in RephraseDialog.vue - N/A (simplified)
+- [x] T127 [US3] Add Accept button that replaces original text in editor in RephraseDialog.vue - emits 'accept' event for parent
+- [x] T128 [US3] Add Cancel button and Escape key handler in RephraseDialog.vue
+- [x] T129 [US3] Add loading spinner while AI processes request in RephraseDialog.vue
+- [x] T130 [US3] Add gentle error message: "AI service unavailable. Your original text is preserved." in RephraseDialog.vue
+- [x] T131 [US3] Add calm styles (no attention-grabbing animations, gentle fade-in for dialog) in RephraseDialog.vue
+
+**Checkpoint**: Frontend composable and RephraseDialog complete - Commit `e4b01a4` (useRephrasing), `856cf2e` (RephraseDialog). 240 frontend tests passing (26 new tests for P3). Ready for toolbar integration.
 - [ ] T132 [US3] Update `frontend/src/components/MarkdownToolbar.vue` to add Rephrase button
 - [ ] T133 [US3] Disable Rephrase button when no text selected in MarkdownToolbar.vue
 - [ ] T134 [US3] Wire Rephrase button to open RephraseDialog with selected text in MarkdownEditor.vue
