@@ -157,20 +157,31 @@ class AIMirrorService {
       ? (preferences.localModel || 'llama2')
       : (preferences.onlineModel || null);
 
+    // Debug logging
+    console.log('[AIMirrorService.rephrase] Preferences:', {
+      aiProvider: preferences.aiProvider,
+      localModel: preferences.localModel,
+      selectedModel: model
+    });
+
     // Build user prompt
     const userPrompt = `Please rephrase the following text:\n\n${text}`;
 
     // Generate suggestions using selected provider
+    // Note: OllamaAdapter signature is (prompt, options) where options.systemPrompt is the system context
     const response = await provider.generateResponse(
-      systemPromptText,
       userPrompt,
-      { model }
+      { 
+        model,
+        systemPrompt: systemPromptText
+      }
     );
 
     // Parse suggestions from response
     // AI should return suggestions separated by "---"
+    // Handle various separator formats: "\n---\n", " --- ", "---", etc.
     const suggestions = response
-      .split(/\n---\n/)
+      .split(/\s*---\s*/)
       .map(s => s.trim())
       .filter(s => s.length > 0);
 

@@ -79,7 +79,9 @@ export const aiAPI = {
   generateMirror: (prompt, model, provider) =>
     apiClient.post('/ai/mirror', { prompt, model, provider }),
   rephrase: (originalText, style, aiProvider, model) =>
-    apiClient.post('/ai/rephrase', { originalText, style, aiProvider, model }),
+    apiClient.post('/ai/rephrase', { originalText, style, aiProvider, model }, {
+      timeout: 120000, // 2 minutes for AI generation (models can be slow)
+    }),
 };
 
 export const exportAPI = {

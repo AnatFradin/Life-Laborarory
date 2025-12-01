@@ -10,7 +10,7 @@
  * - Accessible keyboard navigation
  */
 
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { usePreferences } from '../composables/usePreferences.js';
 import {
   DialogRoot,
@@ -40,9 +40,24 @@ const selectedLocalModel = ref('llama2');
 const selectedOnlineProvider = ref('openai');
 const selectedOnlineModel = ref('gpt-3.5-turbo');
 
+// Save state
+const saveMessage = ref('');
+const saveError = ref(false);
+
 // Available models (will be loaded from API)
 const ollamaModels = ref([]);
 const loadingOllamaModels = ref(false);
+
+// Track if there are unsaved changes
+const hasUnsavedChanges = computed(() => {
+  if (!preferences.value) return false;
+  return (
+    selectedProvider.value !== preferences.value.aiProvider ||
+    selectedLocalModel.value !== preferences.value.localModel ||
+    selectedOnlineProvider.value !== preferences.value.onlineProvider ||
+    selectedOnlineModel.value !== preferences.value.onlineModel
+  );
+});
 
 const openaiModels = [
   { value: 'gpt-4', label: 'GPT-4 (Most capable, slower)', description: 'Best for complex reflections' },
@@ -102,22 +117,59 @@ const loadOllamaModels = async () => {
 // Load preferences on mount
 onMounted(async () => {
   await loadPreferences();
-  syncWithPreferences();
+  syncWithPreferences(); // Sync after loading
   await loadOllamaModels();
 });
+
+// Watch preferences and sync when they change
+watch(preferences, () => {
+  syncWithPreferences();
+}, { deep: true });
 
 // Computed: Is privacy warning needed?
 const needsPrivacyWarning = computed(() => {
   return !preferences.value?.hasAcknowledgedOnlineWarning;
 });
 
-// Handle local model change
-const handleLocalModelChange = async () => {
-  if (selectedProvider.value === 'local') {
-    await updatePreferences({
-      localModel: selectedLocalModel.value,
-    });
+// Handle local model change (just update local state, don't auto-save)
+const handleLocalModelChange = () => {
+  // Model change is now tracked as unsaved change
+  // User must click Save Settings button
+  saveMessage.value = '';
+};
+
+// Handle save settings
+const handleSaveSettings = async () => {
+  saveMessage.value = '';
+  saveError.value = false;
+  
+  try {
+    if (selectedProvider.value === 'local') {
+      await updatePreferences({
+        aiProvider: 'local',
+        localModel: selectedLocalModel.value,
+      });
+      saveMessage.value = '✅ Settings saved successfully!';
+    } else {
+      await updatePreferences({
+        aiProvider: 'online',
+        onlineProvider: selectedOnlineProvider.value,
+        onlineModel: selectedOnlineModel.value,
+      });
+      saveMessage.value = '✅ Settings saved successfully!';
+    }
+    
+    // Sync state after save
     syncWithPreferences();
+    
+    // Clear message after 3 seconds
+    setTimeout(() => {
+      saveMessage.value = '';
+    }, 3000);
+  } catch (err) {
+    console.error('Failed to save settings:', err);
+    saveMessage.value = '❌ Failed to save settings. Please try again.';
+    saveError.value = true;
   }
 };
 
@@ -379,6 +431,20 @@ const handleOnlineModelChange = async () => {
         </RadioGroupRoot>
       </section>
 
+      <!-- Save Settings Button -->
+      <section class="setting-section save-section">
+        <button 
+          @click="handleSaveSettings" 
+          class="save-button"
+          :disabled="loading || !hasUnsavedChanges"
+        >
+          {{ loading ? 'Saving...' : 'Save Settings' }}
+        </button>
+        <p v-if="saveMessage" class="save-message" :class="{ error: saveError }">
+          {{ saveMessage }}
+        </p>
+      </section>
+
       <!-- Privacy Information -->
       <section class="setting-section privacy-info">
         <h2 class="section-title">Privacy Information</h2>
@@ -604,6 +670,21 @@ const handleOnlineModelChange = async () => {
 
 .radio-item[data-state="checked"] {
   border-color: var(--color-primary);
+  background-color: var(--color-primary);
+}
+
+/* Add a white inner circle for checked state */
+.radio-item[data-state="checked"]::after {
+  content: '' !important;
+  display: block !important;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .radio-indicator {
@@ -613,6 +694,7 @@ const handleOnlineModelChange = async () => {
   width: 100%;
   height: 100%;
   font-size: 0;
+  pointer-events: none;
 }
 
 .radio-dot {
@@ -781,6 +863,52 @@ const handleOnlineModelChange = async () => {
   padding: 1rem;
   border-radius: var(--radius-md);
   background-color: var(--color-background-secondary);
+}
+
+/* Save Section */
+.save-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.save-button {
+  padding: 0.75rem 2rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.save-button:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.save-message {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background-color: var(--color-success-bg, #e8f5e9);
+  color: var(--color-success, #2e7d32);
+}
+
+.save-message.error {
+  background-color: var(--color-error-bg, #ffebee);
+  color: var(--color-error, #c62828);
 }
 
 .info-text {

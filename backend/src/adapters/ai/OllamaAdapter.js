@@ -26,6 +26,11 @@ class OllamaAdapter {
     const systemPrompt = options.systemPrompt || '';
 
     try {
+      // Set timeout for AI generation (2 minutes for slow models)
+      const timeout = 120000; // 2 minutes
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
       const response = await fetch(`${this.ollamaUrl}/api/generate`, {
         method: 'POST',
         headers: {
@@ -42,7 +47,10 @@ class OllamaAdapter {
             top_k: 40,
           },
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -67,6 +75,14 @@ class OllamaAdapter {
 
       return data.response.trim();
     } catch (error) {
+      // Handle timeout errors
+      if (error.name === 'AbortError') {
+        const enhancedError = new Error('AI generation timed out after 2 minutes. Try a simpler prompt or smaller model.');
+        enhancedError.code = 'TIMEOUT';
+        enhancedError.statusCode = 504;
+        throw enhancedError;
+      }
+
       // Handle network errors (Ollama not running)
       if (error.code === 'ECONNREFUSED' || error.cause?.code === 'ECONNREFUSED') {
         const enhancedError = new Error('Could not connect to Ollama. Is it running?');

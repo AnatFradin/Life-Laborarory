@@ -196,10 +196,27 @@ router.post('/rephrase', validateBody(RephraseRequestSchema), async (req, res, n
     // AI service unavailable error
     if (error.message?.includes('not available') || error.message?.includes('unavailable')) {
       return res.status(503).json({
-        error: 'AI service unavailable',
-        message: 'Could not connect to AI service. Your original text is preserved.',
+        error: true,
+        message: 'AI service unavailable. Your original text is preserved. Please try again later.',
       });
     }
+    
+    // Timeout error
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      return res.status(504).json({
+        error: true,
+        message: 'AI is taking longer than expected. Your original text is preserved. Please try again.',
+      });
+    }
+    
+    // Connection error (Ollama not running)
+    if (error.code === 'ECONNREFUSED' || error.message?.includes('ECONNREFUSED')) {
+      return res.status(503).json({
+        error: true,
+        message: 'AI service is not running. Your original text is preserved. Please start Ollama and try again.',
+      });
+    }
+    
     next(error);
   }
 });
