@@ -153,4 +153,55 @@ router.get('/status', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/ai/rephrase
+ * Rephrase text using AI with different styles
+ * 
+ * Per User Story 3 (P3):
+ * - Supports three styles: clearer, more-positive, more-constructive
+ * - Returns 2-3 alternative suggestions
+ * - Privacy-focused: only sends selected text
+ */
+const RephraseRequestSchema = z.object({
+  originalText: z.string().min(1).max(5000, 'Text must be between 1 and 5000 characters'),
+  style: z.enum(['clearer', 'more-positive', 'more-constructive']),
+  aiProvider: z.enum(['local', 'openai', 'anthropic']).optional(),
+  model: z.string().optional(),
+});
+
+router.post('/rephrase', validateBody(RephraseRequestSchema), async (req, res, next) => {
+  try {
+    const { originalText, style, aiProvider, model } = req.body;
+
+    // Load current preferences
+    const preferences = await preferencesRepo.getPreferences();
+
+    // Override preferences if specified in request
+    if (aiProvider) {
+      preferences.aiProvider = aiProvider;
+    }
+    if (model) {
+      if (preferences.aiProvider === 'local') {
+        preferences.localModel = model;
+      } else {
+        preferences.onlineModel = model;
+      }
+    }
+
+    // Generate rephrase suggestions using AI
+    const result = await aiMirrorService.rephrase(originalText, style, preferences);
+
+    res.json(result);
+  } catch (error) {
+    // AI service unavailable error
+    if (error.message?.includes('not available') || error.message?.includes('unavailable')) {
+      return res.status(503).json({
+        error: 'AI service unavailable',
+        message: 'Could not connect to AI service. Your original text is preserved.',
+      });
+    }
+    next(error);
+  }
+});
+
 export default router;
