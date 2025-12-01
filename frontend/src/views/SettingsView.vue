@@ -538,18 +538,29 @@ const handleOnlineModelChange = async () => {
         >
           <!-- Local AI Option -->
           <div class="radio-option-container">
-            <label class="radio-option" for="provider-local">
-              <RadioGroupItem value="local" class="radio-item" id="provider-local">
+            <label class="radio-option" :class="{ 'is-selected': selectedProvider === 'local' }" for="provider-local">
+              <RadioGroupItem value="local" class="radio-item-hidden" id="provider-local">
                 <RadioGroupIndicator class="radio-indicator">
                   <div class="radio-dot"></div>
                 </RadioGroupIndicator>
               </RadioGroupItem>
-              <div class="radio-label">
-                <span class="radio-title">🔒 Local AI (Ollama)</span>
-                <span class="radio-description">
-                  Complete privacy. Your reflections never leave your device. Requires Ollama running locally.
-                </span>
-                <span class="privacy-badge local">100% Private</span>
+              <div class="option-content">
+                <div class="option-header">
+                  <div class="option-icon">🔒</div>
+                  <div class="option-info">
+                    <div class="option-title">Local AI (Ollama)</div>
+                    <div class="option-description">
+                      Complete privacy. Your reflections never leave your device. Requires Ollama running locally.
+                    </div>
+                  </div>
+                  <div v-if="selectedProvider === 'local'" class="selection-indicator">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="10" cy="10" r="10" fill="#6366f1"/>
+                      <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="privacy-badge local">100% Private</div>
               </div>
             </label>
             
@@ -599,18 +610,29 @@ const handleOnlineModelChange = async () => {
 
           <!-- Online AI Option -->
           <div class="radio-option-container">
-            <label class="radio-option" for="provider-online">
-              <RadioGroupItem value="online" class="radio-item" id="provider-online">
+            <label class="radio-option" :class="{ 'is-selected': selectedProvider === 'online' }" for="provider-online">
+              <RadioGroupItem value="online" class="radio-item-hidden" id="provider-online">
                 <RadioGroupIndicator class="radio-indicator">
                   <div class="radio-dot"></div>
                 </RadioGroupIndicator>
               </RadioGroupItem>
-              <div class="radio-label">
-                <span class="radio-title">🌐 Online AI</span>
-                <span class="radio-description">
-                  More capable models, but your reflection content is sent to external AI services (OpenAI or Anthropic).
-                </span>
-                <span class="privacy-badge online">Data Leaves Device</span>
+              <div class="option-content">
+                <div class="option-header">
+                  <div class="option-icon">🌐</div>
+                  <div class="option-info">
+                    <div class="option-title">Online AI</div>
+                    <div class="option-description">
+                      More capable models, but your reflection content is sent to external AI services (OpenAI or Anthropic).
+                    </div>
+                  </div>
+                  <div v-if="selectedProvider === 'online'" class="selection-indicator">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="10" cy="10" r="10" fill="#6366f1"/>
+                      <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="privacy-badge online">Data Leaves Device</div>
               </div>
             </label>
 
@@ -630,25 +652,27 @@ const handleOnlineModelChange = async () => {
                   class="radio-group radio-group-compact"
                   aria-label="Online AI provider selection"
                 >
-                  <label class="radio-option radio-option-compact" for="provider-openai">
-                    <RadioGroupItem value="openai" class="radio-item" id="provider-openai">
+                  <label class="radio-option radio-option-compact" :class="{ 'is-selected': selectedOnlineProvider === 'openai' }" for="provider-openai">
+                    <RadioGroupItem value="openai" class="radio-item-hidden" id="provider-openai">
                       <RadioGroupIndicator class="radio-indicator">
                         <div class="radio-dot"></div>
                       </RadioGroupIndicator>
                     </RadioGroupItem>
-                    <div class="radio-label">
-                      <span class="radio-title">OpenAI (GPT)</span>
+                    <div class="option-content-compact">
+                      <span class="option-title-compact">OpenAI (GPT)</span>
+                      <div v-if="selectedOnlineProvider === 'openai'" class="selection-indicator-small">✓</div>
                     </div>
                   </label>
 
-                  <label class="radio-option radio-option-compact" for="provider-anthropic">
-                    <RadioGroupItem value="anthropic" class="radio-item" id="provider-anthropic">
+                  <label class="radio-option radio-option-compact" :class="{ 'is-selected': selectedOnlineProvider === 'anthropic' }" for="provider-anthropic">
+                    <RadioGroupItem value="anthropic" class="radio-item-hidden" id="provider-anthropic">
                       <RadioGroupIndicator class="radio-indicator">
                         <div class="radio-dot"></div>
                       </RadioGroupIndicator>
                     </RadioGroupItem>
-                    <div class="radio-label">
-                      <span class="radio-title">Anthropic (Claude)</span>
+                    <div class="option-content-compact">
+                      <span class="option-title-compact">Anthropic (Claude)</span>
+                      <div v-if="selectedOnlineProvider === 'anthropic'" class="selection-indicator-small">✓</div>
                     </div>
                   </label>
                 </RadioGroupRoot>
@@ -997,50 +1021,53 @@ const handleOnlineModelChange = async () => {
 }
 
 .section-title {
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .section-summary {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
   font-weight: 400;
   margin: 0;
 }
 
 .section-description {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: 1rem;
 }
 
 .subsection-title {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-top: 1rem;
   margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* Radio Groups */
 .radio-group {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.625rem;
 }
 
 .radio-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  padding: 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  display: block;
+  padding: 1.25rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+  background-color: #ffffff;
+  position: relative;
 }
 
 .radio-option-container {
@@ -1048,22 +1075,30 @@ const handleOnlineModelChange = async () => {
 }
 
 .radio-option:hover {
-  border-color: var(--color-primary);
-  background-color: var(--color-background-hover);
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.radio-option.is-selected {
+  border-color: #6366f1;
+  background-color: #f5f5ff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .radio-option:has(.radio-item[data-state="checked"]) {
-  border-color: var(--color-primary);
-  background-color: var(--color-primary-light);
+  border-color: #6366f1;
+  background-color: #f5f5ff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .nested-options {
-  margin-left: 1.5rem;
-  margin-top: 0.625rem;
-  padding: 0.625rem;
-  border-left: 2px solid var(--color-primary);
-  background-color: var(--color-background-subtle);
-  border-radius: 0 0.375rem 0.375rem 0;
+  margin-left: 2.25rem;
+  margin-top: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-left: 3px solid #e5e7eb;
+  background-color: #f9fafb;
+  border-radius: 0 6px 6px 0;
 }
 
 .nested-section-header {
@@ -1072,24 +1107,28 @@ const handleOnlineModelChange = async () => {
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
-  padding: 0.25rem 0;
-  margin-bottom: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  margin: -0.25rem -0.5rem 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
 }
 
 .nested-section-header:hover {
-  opacity: 0.8;
+  background-color: #f3f4f6;
 }
 
 .nested-section-header .subsection-title {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .expand-icon-small {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
+  font-size: 0.625rem;
+  color: #9ca3af;
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -1118,18 +1157,59 @@ const handleOnlineModelChange = async () => {
 }
 
 .radio-option-compact {
-  padding: 0.5rem;
+  padding: 0.875rem 1rem;
+  border-width: 1.5px;
+  border-radius: 8px;
+}
+
+.radio-option-compact:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.radio-option-compact.is-selected {
+  border-color: #6366f1;
+  background-color: #f5f5ff;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.radio-option-compact .radio-title {
+  font-size: 0.8125rem;
 }
 
 .radio-option-compact .radio-description {
   display: none;
 }
 
+.radio-option-compact .radio-item {
+  width: 16px;
+  height: 16px;
+  border-width: 1.5px;
+}
+
+.radio-option-compact .radio-item[data-state="checked"]::after {
+  width: 8px;
+  height: 8px;
+}
+
+/* Hide the actual radio button */
+.radio-item-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 .radio-item {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  border: 2px solid var(--color-border);
+  border: 2px solid #d1d5db;
   background-color: white;
   flex-shrink: 0;
   margin-top: 0.125rem;
@@ -1140,6 +1220,7 @@ const handleOnlineModelChange = async () => {
   font-size: 0 !important;
   color: transparent !important;
   overflow: hidden;
+  transition: all 0.15s ease;
 }
 
 /* Hide any text content inside radio button */
@@ -1151,14 +1232,15 @@ const handleOnlineModelChange = async () => {
 .radio-item[data-state="checked"] {
   border-color: var(--color-primary);
   background-color: var(--color-primary);
+  border-width: 2px;
 }
 
 /* Add a white inner circle for checked state */
 .radio-item[data-state="checked"]::after {
   content: '' !important;
   display: block !important;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background-color: white;
   position: absolute;
@@ -1184,43 +1266,112 @@ const handleOnlineModelChange = async () => {
   background-color: var(--color-primary);
 }
 
+/* New card-based option layout */
+.option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.option-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.option-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.option-title {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 1.0625rem;
+  line-height: 1.3;
+}
+
+.option-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.selection-indicator {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Compact option layout for nested items */
+.option-content-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.option-title-compact {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+}
+
+.selection-indicator-small {
+  color: #6366f1;
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
 .radio-label {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.375rem;
   cursor: pointer;
 }
 
 .radio-title {
   font-weight: 600;
   color: var(--color-text-primary);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
+  line-height: 1.3;
 }
 
 .radio-description {
   font-size: 0.8125rem;
-  color: var(--color-text-secondary);
-  line-height: 1.4;
+  color: #6b7280;
+  line-height: 1.5;
 }
 
 .privacy-badge {
   display: inline-block;
-  padding: 0.1875rem 0.5rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
   font-weight: 600;
   margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .privacy-badge.local {
-  background-color: var(--color-success-light);
-  color: var(--color-success);
+  background-color: #dcfce7;
+  color: #16a34a;
 }
 
 .privacy-badge.online {
-  background-color: var(--color-warning-light);
-  color: var(--color-warning);
+  background-color: #fef3c7;
+  color: #d97706;
 }
 
 /* Local Options */
@@ -1232,47 +1383,48 @@ const handleOnlineModelChange = async () => {
 
 .model-description {
   font-size: 0.8125rem;
-  color: var(--color-text-secondary);
-  margin-bottom: 0.5rem;
+  color: #6b7280;
+  margin-bottom: 0.625rem;
   line-height: 1.5;
 }
 
 .loading-models {
   padding: 0.75rem;
   text-align: center;
-  color: var(--color-text-secondary);
+  color: #6b7280;
   font-size: 0.8125rem;
 }
 
 .no-models-warning {
-  padding: 0.75rem;
-  background-color: var(--color-warning-light);
-  border: 1px solid var(--color-warning);
-  border-radius: var(--radius-sm);
-  margin-bottom: 0.5rem;
+  padding: 0.875rem;
+  background-color: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+  margin-bottom: 0.625rem;
 }
 
 .no-models-warning .warning-text {
-  color: var(--color-warning);
+  color: #92400e;
   font-weight: 600;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
   font-size: 0.8125rem;
 }
 
 .model-hint {
-  margin-top: 0.5rem;
+  margin-top: 0.625rem;
   font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  line-height: 1.4;
+  color: #6b7280;
+  line-height: 1.5;
 }
 
 .model-hint code {
-  background-color: var(--color-background-secondary);
-  padding: 0.125rem 0.3125rem;
-  border-radius: var(--radius-sm);
-  font-family: 'Courier New', monospace;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
   font-size: 0.75rem;
-  color: var(--color-primary);
+  color: #6366f1;
+  border: 1px solid #e5e7eb;
 }
 
 /* Online Options */
@@ -1288,27 +1440,34 @@ const handleOnlineModelChange = async () => {
 
 .model-select {
   width: 100%;
-  padding: 0.5rem 0.625rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.8125rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
   background-color: white;
   color: var(--color-text-primary);
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.model-select:hover {
+  border-color: #9ca3af;
 }
 
 .model-select:focus {
-  outline: 1px solid var(--color-focus);
-  outline-offset: 1px;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
   border-color: var(--color-primary);
 }
 
 .model-label {
   display: block;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .model-description {
@@ -1372,40 +1531,39 @@ const handleOnlineModelChange = async () => {
 
 /* Privacy Info */
 .privacy-info-inline {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .privacy-info-inline .info-card {
-  padding: 0.75rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  padding: 1rem 1.125rem;
+  border-radius: 8px;
+  border: 1px solid;
 }
 
 .privacy-safe .info-card,
 .privacy-info-inline .info-card:has(.privacy-safe) {
-  background-color: #e8f5e9;
-  border-color: #4caf50;
+  background-color: #f0fdf4;
+  border-color: #86efac;
 }
 
 .privacy-warning .info-card,
 .privacy-info-inline .info-card:has(.privacy-warning) {
-  background-color: #fff3e0;
-  border-color: #ff9800;
+  background-color: #fffbeb;
+  border-color: #fcd34d;
 }
 
 .info-card .info-text {
-  font-size: 0.8125rem;
-  line-height: 1.5;
+  font-size: 0.875rem;
+  line-height: 1.6;
   margin: 0;
-  color: var(--color-text-primary);
 }
 
 .info-card .privacy-safe {
-  color: #2e7d32;
+  color: #15803d;
 }
 
 .info-card .privacy-warning {
-  color: #e65100;
+  color: #b45309;
 }
 
 .privacy-info .info-card {
