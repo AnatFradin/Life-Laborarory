@@ -357,6 +357,26 @@
 
 ---
 
+### Phase 7.2: AI Rephrasing Language Preservation Fix ✅
+
+**Purpose**: Ensure AI responds in the same language as the input text (multi-language support)
+
+**Commit**: `fe6bc97` fix: preserve original language in AI rephrasing responses
+
+**Issue**: When rephrasing Russian text, AI was responding in English instead of preserving the original language.
+
+**Solution**: 
+- [x] T227 Add language preservation instruction to clearer rephrasing prompt
+- [x] T228 Add language preservation instruction to more-positive rephrasing prompt  
+- [x] T229 Add language preservation instruction to more-constructive rephrasing prompt
+- [x] T230 Verify all 17 rephrasing prompt tests still pass
+
+**Implementation**: Added "IMPORTANT: Respond in the SAME LANGUAGE as the input text (English, Russian, etc.)" to all three prompt guidelines.
+
+**Tests**: ✅ All 17 rephrasing prompt tests passing
+
+---
+
 ### Storage Location Feature: Remaining Manual Testing
 
 - [ ] T207 Test storage location switching: Create reflection in default location, switch to iCloud, create another, verify both saved correctly
