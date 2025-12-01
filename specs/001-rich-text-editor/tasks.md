@@ -1,4 +1,4 @@
-Tasks: Rich Text Editor with Markdown Support
+# Tasks: Rich Text Editor with Markdown Support
 
 **Input**: Design documents from `/specs/001-rich-text-editor/`  
 **Prerequisites**: ✅ plan.md, ✅ spec.md, ✅ research.md, ✅ data-model.md, ✅ contracts/, ✅ quickstart.md
@@ -247,6 +247,95 @@ Tasks: Rich Text Editor with Markdown Support
 - [ ] T138 [US3] Test with online AI (OpenAI/Anthropic) - verify warning shown: "This will send your text to [provider]"
 
 **Checkpoint**: User Story 3 (P3) complete - Frontend integration working. Rephrase button in toolbar (purple, active on text entry), dialog opens, supports full-text and selection rephrasing. 240 frontend tests passing. Ready for manual AI testing (T137-T138).
+
+---
+
+## Phase 7: Settings UI Enhancement & Storage Location Feature
+
+**Purpose**: Improve Settings UX with compact collapsible sections and add storage location selection with iCloud support
+
+**Commits**: `2fafaf8` feat: redesign Settings UI with collapsible sections and storage location feature
+
+### Backend: Storage Location Infrastructure ✅
+
+- [x] T156 [P] Extend UserPreferences schema with storageLocation ('local'/'icloud') and customStoragePath fields in `backend/src/domain/entities/UserPreferences.js`
+- [x] T157 [P] Create iCloud detection utility `backend/src/utils/icloud.js` with detectiCloudPath(), isiCloudAvailable(), getiCloudStoragePath() for macOS
+- [x] T158 [P] Create StoragePathService `backend/src/domain/services/StoragePathService.js` with getBasePath(), getReflectionsDir(), getVisualsDir(), getExportsDir()
+- [x] T159 [P] Create RepositoryFactory `backend/src/domain/factories/RepositoryFactory.js` with createReflectionRepository() and cache management
+- [x] T160 Update LocalFileRepository constructor in `backend/src/adapters/storage/LocalFileRepository.js` to accept optional reflectionsDir parameter
+- [x] T161 Update all reflection routes in `backend/src/adapters/http/routes/reflections.js` to use RepositoryFactory pattern
+- [x] T162 Add repository cache clearing in `backend/src/adapters/http/routes/preferences.js` when storage preferences change
+- [x] T163 [P] Create storage locations API endpoint `GET /api/storage/locations` in `backend/src/adapters/http/routes/storage.js`
+- [x] T164 Register storage routes in `backend/src/server.js`
+
+**Tests**: 243 backend tests passing (all existing tests maintained)
+
+### Frontend: Storage Location UI ✅
+
+- [x] T165 Add storage location state to SettingsView (selectedStoragePath, availableStorageOptions, customStoragePath, showCustomPathInput)
+- [x] T166 Implement loadStorageLocations() to fetch available options from API in `frontend/src/views/SettingsView.vue`
+- [x] T167 Add storage location dropdown selector with options (Default Local, iCloud Drive, Custom Location)
+- [x] T168 Add custom path input field that appears when "Custom" option selected
+- [x] T169 Add path preview display for predefined options (shows actual filesystem path)
+- [x] T170 Add storage info box with migration warning (existing files don't move automatically)
+- [x] T171 Implement handleStoragePathChange() to show/hide custom input based on selection
+- [x] T172 Implement handleSaveSettings() to convert UI selection to API format (storageLocation + customStoragePath)
+- [x] T173 Add syncWithPreferences() to populate UI from saved preferences on load
+- [x] T174 Add currentStoragePath computed property to determine effective storage path
+- [x] T175 Add isInitialLoad flag to prevent migration dialog on page load/save
+- [x] T176 Create storage migration warning dialog component
+- [x] T177 Add watcher on selectedStoragePath to show migration dialog (only if !isInitialLoad)
+
+**Tests**: 240 frontend tests passing (all existing tests maintained)
+
+### Frontend: Settings UI Redesign ✅
+
+- [x] T178 Move "Save Changes" button to sticky top position with prominent styling
+- [x] T179 Rename "Save Settings" to "Save Changes" throughout UI
+- [x] T180 Add collapsible sections state (expandedSection, expandedNestedSection refs)
+- [x] T181 Implement toggleSection() and toggleNestedSection() functions
+- [x] T182 Redesign AI Processing section with collapsible header showing current selection summary
+- [x] T183 Move Privacy Information inside AI Processing section (appears first when opened)
+- [x] T184 Update Privacy Information to show dynamic messages based on provider (Local = green/safe, Online = orange/warning)
+- [x] T185 Make Local AI model selection collapsible nested section
+- [x] T186 Make Online AI provider & model selection collapsible nested section
+- [x] T187 Redesign Storage Location section with collapsible header showing current location
+- [x] T188 Remove standalone Privacy Information section (now inside AI Processing)
+- [x] T189 Reduce all font sizes throughout Settings (titles: 1.5rem→1rem, descriptions: 0.875rem→0.8125rem)
+- [x] T190 Reduce padding and spacing (sections: 1.5rem→0.875rem, gaps: 2rem→0.75rem)
+- [x] T191 Add compact radio button styles for nested sections (remove descriptions, reduce padding)
+- [x] T192 Add expand/collapse icons (▶/▼) with smooth transitions
+- [x] T193 Add section summary text showing current selection when collapsed
+- [x] T194 Add CSS animations for section expand/collapse (slideDown 0.15-0.2s)
+- [x] T195 Add nested section header styles with hover states
+- [x] T196 Add compact model selection styles (smaller dropdowns, reduced hints)
+- [x] T197 Style inline privacy info card with color-coded backgrounds (green/orange)
+
+**Tests**: All manual UI testing verified - collapsible sections work smoothly, storage location selection functional
+
+### Quality Checks ✅
+
+- [x] T198 Verify no console errors when toggling sections
+- [x] T199 Verify storage location dropdown loads available options
+- [x] T200 Verify custom path input appears/disappears correctly
+- [x] T201 Verify migration dialog shows only on user-initiated changes (not on page load)
+- [x] T202 Verify "Save Changes" button enables/disables based on hasUnsavedChanges
+- [x] T203 Verify all sections collapse/expand smoothly with animations
+- [x] T204 Verify nested sections (Local Model, Online Provider) collapse independently
+- [x] T205 Verify Privacy Information shows correct message based on AI provider selection
+- [x] T206 Verify compact spacing allows viewing multiple sections without scrolling
+
+**Checkpoint**: Settings UI enhancement complete - Commit `2fafaf8`. All sections collapsible with compact design. Storage location feature fully functional. Privacy information integrated into AI Processing. 243 backend tests + 240 frontend tests passing.
+
+---
+
+### Storage Location Feature: Remaining Manual Testing
+
+- [ ] T207 Test storage location switching: Create reflection in default location, switch to iCloud, create another, verify both saved correctly
+- [ ] T208 Test custom path: Enter custom absolute path, save, create reflection, verify it saves to custom location
+- [ ] T209 Test iCloud availability detection on macOS vs non-macOS systems
+- [ ] T210 Test migration scenario: Create reflections in one location, switch location, verify old reflections not visible, switch back, verify old reflections reappear
+- [ ] T211 Test error handling: Enter invalid custom path, attempt to save reflection, verify graceful error message
 
 ---
 
