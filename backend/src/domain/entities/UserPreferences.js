@@ -2,12 +2,13 @@ import { z } from 'zod';
 
 /**
  * UserPreferences Entity Schema
- * User settings for AI model choice, privacy level, and UI preferences
+ * User settings for AI model choice, privacy level, storage location, and UI preferences
  * 
  * Per data-model.md:
  * - Default aiProvider is always 'local' (Ollama)
  * - Cannot use online AI without acknowledging privacy warning
  * - State machine validation prevents unsafe configurations
+ * - Storage location can be 'local' (./data) or 'icloud' (iCloud Drive on macOS)
  */
 export const UserPreferencesSchema = z
   .object({
@@ -26,6 +27,10 @@ export const UserPreferencesSchema = z
     theme: z.enum(['calm-light', 'calm-dark'], {
       errorMap: () => ({ message: 'Theme must be calm-light or calm-dark' }),
     }),
+    storageLocation: z.enum(['local', 'icloud'], {
+      errorMap: () => ({ message: 'Storage location must be local or icloud' }),
+    }).default('local'),
+    customStoragePath: z.string().nullable().optional(),
   })
   .refine(
     data => {
@@ -54,6 +59,8 @@ export const DEFAULT_PREFERENCES = {
   selectedPersonaId: 'stoic-coach',
   language: 'en',
   theme: 'calm-light',
+  storageLocation: 'local',
+  customStoragePath: null,
 };
 
 /**

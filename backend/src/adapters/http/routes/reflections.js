@@ -11,7 +11,7 @@
 import express from 'express';
 import multer from 'multer';
 import ReflectionService from '../../../domain/services/ReflectionService.js';
-import LocalFileRepository from '../../storage/LocalFileRepository.js';
+import repositoryFactory from '../../../domain/factories/RepositoryFactory.js';
 import { validateBody } from '../middleware/validation.js';
 import { ReflectionSchema } from '../../../domain/entities/Reflection.js';
 import config from '../../../config/index.js';
@@ -26,9 +26,11 @@ const upload = multer({
   },
 });
 
-// Initialize service with repository
-const repository = new LocalFileRepository();
-const reflectionService = new ReflectionService(repository);
+// Helper function to get reflection service with correct storage location
+async function getReflectionService() {
+  const repository = await repositoryFactory.createReflectionRepository();
+  return new ReflectionService(repository);
+}
 
 /**
  * GET /api/reflections
@@ -36,6 +38,7 @@ const reflectionService = new ReflectionService(repository);
  */
 router.get('/', async (req, res, next) => {
   try {
+    const reflectionService = await getReflectionService();
     const reflections = await reflectionService.getAllReflections();
     res.json({
       reflections,
@@ -52,6 +55,7 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
+    const reflectionService = await getReflectionService();
     const { id } = req.params;
     const reflection = await reflectionService.getReflectionById(id);
 
@@ -86,6 +90,7 @@ router.post(
   upload.single('image'),
   async (req, res, next) => {
     try {
+      const reflectionService = await getReflectionService();
       const { mode } = req.body;
 
       // Handle visual mode (image upload)
@@ -146,6 +151,7 @@ router.post(
  */
 router.delete('/:id', async (req, res, next) => {
   try {
+    const reflectionService = await getReflectionService();
     const { id } = req.params;
     const deleted = await reflectionService.deleteReflection(id);
     
@@ -175,6 +181,7 @@ router.delete('/:id', async (req, res, next) => {
  */
 router.post('/delete-all', async (req, res, next) => {
   try {
+    const reflectionService = await getReflectionService();
     const { confirmation } = req.body;
     
     // Require exact confirmation string per FR-017
@@ -202,6 +209,7 @@ router.post('/delete-all', async (req, res, next) => {
  */
 router.post('/:id/external', async (req, res, next) => {
   try {
+    const reflectionService = await getReflectionService();
     const { id } = req.params;
     const { personaId, personaName, sessionSummary, chatGPTUrl, timestamp } = req.body;
 

@@ -48,14 +48,68 @@ const saveError = ref(false);
 const ollamaModels = ref([]);
 const loadingOllamaModels = ref(false);
 
+// Storage location state
+const selectedStoragePath = ref(''); // Will store the actual path or 'default-local' or 'default-icloud'
+const availableStorageOptions = ref([]); // Predefined options from API
+const customStoragePath = ref('');
+const showCustomPathInput = ref(false);
+const loadingStorageLocations = ref(false);
+const showStorageMigrationWarning = ref(false);
+const pendingStoragePath = ref(null);
+const isInitialLoad = ref(true); // Flag to prevent dialog on initial sync
+
+// Collapsible sections state
+const expandedSection = ref(null); // Track which section is expanded
+const expandedNestedSection = ref(null); // Track which nested section is expanded
+
+// Toggle section expansion
+const toggleSection = (sectionName) => {
+  if (expandedSection.value === sectionName) {
+    expandedSection.value = null; // Collapse if already expanded
+  } else {
+    expandedSection.value = sectionName; // Expand the clicked section
+  }
+};
+
+// Toggle nested section expansion
+const toggleNestedSection = (sectionName) => {
+  if (expandedNestedSection.value === sectionName) {
+    expandedNestedSection.value = null;
+  } else {
+    expandedNestedSection.value = sectionName;
+  }
+};
+
+// Computed: current effective storage path
+const currentStoragePath = computed(() => {
+  if (!preferences.value) return '';
+  
+  // If custom path is set, use it
+  if (preferences.value.customStoragePath) {
+    return preferences.value.customStoragePath;
+  }
+  
+  // Otherwise, use the storage location default
+  if (preferences.value.storageLocation === 'icloud') {
+    return 'default-icloud';
+  }
+  
+  return 'default-local';
+});
+
 // Track if there are unsaved changes
 const hasUnsavedChanges = computed(() => {
   if (!preferences.value) return false;
+  
+  const currentPath = currentStoragePath.value;
+  const newPath = selectedStoragePath.value === 'custom' ? customStoragePath.value : selectedStoragePath.value;
+  
   return (
     selectedProvider.value !== preferences.value.aiProvider ||
     selectedLocalModel.value !== preferences.value.localModel ||
     selectedOnlineProvider.value !== preferences.value.onlineProvider ||
-    selectedOnlineModel.value !== preferences.value.onlineModel
+    selectedOnlineModel.value !== preferences.value.onlineModel ||
+    newPath !== currentPath
   );
 });
 
@@ -83,7 +137,113 @@ const syncWithPreferences = () => {
     if (preferences.value.onlineModel) {
       selectedOnlineModel.value = preferences.value.onlineModel;
     }
+    // Sync storage path
+    if (preferences.value.customStoragePath) {
+      // Custom path is set
+      selectedStoragePath.value = 'custom';
+      customStoragePath.value = preferences.value.customStoragePath;
+      showCustomPathInput.value = true;
+    } else if (preferences.value.storageLocation === 'icloud') {
+      selectedStoragePath.value = 'default-icloud';
+      customStoragePath.value = '';
+      showCustomPathInput.value = false;
+    } else {
+      // Default local
+      selectedStoragePath.value = 'default-local';
+      customStoragePath.value = '';
+      showCustomPathInput.value = false;
+    }
   }
+};
+
+// Load available storage locations
+const loadStorageLocations = async () => {
+  loadingStorageLocations.value = true;
+  try {
+    const api = await import('../services/api.js');
+    const response = await api.default.get('/storage/locations');
+    const locations = response.data.data.locations;
+    
+    // Build options list
+    availableStorageOptions.value = [
+      // Default local option
+      {
+        value: 'default-local',
+        label: '💾 Default Local Storage',
+        path: locations.find(l => l.value === 'local')?.displayPath || './data',
+        description: 'Application data folder',
+        available: true,
+      },
+    ];
+    
+    // Add iCloud option if available
+    const icloudLocation = locations.find(l => l.value === 'icloud');
+    if (icloudLocation?.available) {
+      availableStorageOptions.value.push({
+        value: 'default-icloud',
+        label: '☁️ iCloud Drive',
+        path: icloudLocation.displayPath,
+        description: 'Sync across Apple devices',
+        available: true,
+      });
+    }
+    
+    // Add "Custom" option
+    availableStorageOptions.value.push({
+      value: 'custom',
+      label: '📂 Custom Location',
+      path: 'Specify your own path',
+      description: 'Choose any directory',
+      available: true,
+    });
+  } catch (err) {
+    console.error('Failed to load storage locations:', err);
+    // Fallback options
+    availableStorageOptions.value = [
+      {
+        value: 'default-local',
+        label: '💾 Default Local Storage',
+        path: './data',
+        description: 'Application data folder',
+        available: true,
+      },
+      {
+        value: 'custom',
+        label: '📂 Custom Location',
+        path: 'Specify your own path',
+        description: 'Choose any directory',
+        available: true,
+      },
+    ];
+  } finally {
+    loadingStorageLocations.value = false;
+  }
+};
+
+// Handle storage location change
+// Handle storage path selection change
+const handleStoragePathChange = () => {
+  if (selectedStoragePath.value === 'custom') {
+    showCustomPathInput.value = true;
+  } else {
+    showCustomPathInput.value = false;
+    customStoragePath.value = '';
+  }
+};
+
+// Confirm storage location change
+const confirmStorageLocationChange = () => {
+  // Keep the new selection that triggered the dialog
+  showStorageMigrationWarning.value = false;
+  pendingStoragePath.value = null;
+};
+
+// Cancel storage location change
+const cancelStorageLocationChange = () => {
+  showStorageMigrationWarning.value = false;
+  // Revert to the saved preference
+  syncWithPreferences();
+  pendingStoragePath.value = null;
 };
 
 // Load available Ollama models
@@ -116,15 +276,48 @@ const loadOllamaModels = async () => {
 
 // Load preferences on mount
 onMounted(async () => {
+  isInitialLoad.value = true;
   await loadPreferences();
   syncWithPreferences(); // Sync after loading
-  await loadOllamaModels();
+  await Promise.all([
+    loadOllamaModels(),
+    loadStorageLocations(),
+  ]);
+  // After initial sync, enable the watcher
+  setTimeout(() => {
+    isInitialLoad.value = false;
+  }, 100);
 });
 
 // Watch preferences and sync when they change
 watch(preferences, () => {
+  // Temporarily disable watcher during sync to avoid triggering dialog
+  isInitialLoad.value = true;
   syncWithPreferences();
+  setTimeout(() => {
+    isInitialLoad.value = false;
+  }, 50);
 }, { deep: true });
+
+// Watch for storage path changes and show confirmation dialog
+watch(selectedStoragePath, (newValue, oldValue) => {
+  // Only show dialog if:
+  // 1. Not initial load (prevent dialog on mount)
+  // 2. Preferences are loaded
+  // 3. Value actually changed
+  // 4. Change is different from saved preference
+  // 5. Dialog is not already shown
+  if (
+    !isInitialLoad.value &&
+    preferences.value &&
+    newValue !== oldValue &&
+    newValue !== currentStoragePath.value &&
+    !showStorageMigrationWarning.value
+  ) {
+    pendingStoragePath.value = newValue;
+    showStorageMigrationWarning.value = true;
+  }
+});
 
 // Computed: Is privacy warning needed?
 const needsPrivacyWarning = computed(() => {
@@ -144,20 +337,37 @@ const handleSaveSettings = async () => {
   saveError.value = false;
   
   try {
-    if (selectedProvider.value === 'local') {
-      await updatePreferences({
-        aiProvider: 'local',
-        localModel: selectedLocalModel.value,
-      });
-      saveMessage.value = '✅ Settings saved successfully!';
+    const updates = {};
+    
+    // Determine storage location and custom path based on selection
+    if (selectedStoragePath.value === 'custom') {
+      if (!customStoragePath.value || customStoragePath.value.trim() === '') {
+        saveMessage.value = '❌ Please enter a custom path or select a predefined location.';
+        saveError.value = true;
+        return;
+      }
+      updates.storageLocation = 'local'; // Use local as base
+      updates.customStoragePath = customStoragePath.value.trim();
+    } else if (selectedStoragePath.value === 'default-icloud') {
+      updates.storageLocation = 'icloud';
+      updates.customStoragePath = null;
     } else {
-      await updatePreferences({
-        aiProvider: 'online',
-        onlineProvider: selectedOnlineProvider.value,
-        onlineModel: selectedOnlineModel.value,
-      });
-      saveMessage.value = '✅ Settings saved successfully!';
+      // default-local
+      updates.storageLocation = 'local';
+      updates.customStoragePath = null;
     }
+    
+    if (selectedProvider.value === 'local') {
+      updates.aiProvider = 'local';
+      updates.localModel = selectedLocalModel.value;
+    } else {
+      updates.aiProvider = 'online';
+      updates.onlineProvider = selectedOnlineProvider.value;
+      updates.onlineModel = selectedOnlineModel.value;
+    }
+    
+    await updatePreferences(updates);
+    saveMessage.value = '✅ Settings saved successfully!';
     
     // Sync state after save
     syncWithPreferences();
@@ -272,14 +482,55 @@ const handleOnlineModelChange = async () => {
     </div>
 
     <div v-else-if="preferences" class="settings-content">
-      <!-- AI Provider Selection -->
-      <section class="setting-section">
-        <h2 class="section-title">AI Processing</h2>
-        <p class="section-description">
-          Choose how your reflections are processed by AI. This determines where your personal reflections are analyzed.
+      <!-- Save Settings Button - At Top -->
+      <section class="setting-section save-section save-section-top">
+        <button 
+          @click="handleSaveSettings" 
+          class="save-button"
+          :disabled="loading || !hasUnsavedChanges"
+        >
+          {{ loading ? 'Saving...' : 'Save Changes' }}
+        </button>
+        <p v-if="saveMessage" class="save-message" :class="{ error: saveError }">
+          {{ saveMessage }}
         </p>
+      </section>
 
-        <RadioGroupRoot
+      <!-- AI Provider Selection -->
+      <!-- AI Processing Section - Collapsible -->
+      <section class="setting-section collapsible-section">
+        <div class="section-header" @click="toggleSection('aiProcessing')">
+          <div class="section-header-content">
+            <h2 class="section-title">AI Processing</h2>
+            <p v-if="expandedSection !== 'aiProcessing'" class="section-summary">
+              {{ selectedProvider === 'local' ? '🔒 Local AI (Ollama)' : '🌐 Online AI' }}
+              {{ selectedProvider === 'online' ? `- ${selectedOnlineProvider === 'openai' ? 'OpenAI' : 'Anthropic'}` : '' }}
+            </p>
+          </div>
+          <span class="expand-icon" :class="{ expanded: expandedSection === 'aiProcessing' }">
+            {{ expandedSection === 'aiProcessing' ? '▼' : '▶' }}
+          </span>
+        </div>
+
+        <div v-show="expandedSection === 'aiProcessing'" class="section-content">
+          <!-- Privacy Information - First in section -->
+          <div class="privacy-info-inline">
+            <div class="info-card">
+              <p v-if="selectedProvider === 'local'" class="info-text privacy-safe">
+                ✅ <strong>Your data is completely private.</strong> All reflections are processed locally on your device using Ollama. Nothing is sent to external servers.
+              </p>
+              <p v-else class="info-text privacy-warning">
+                ⚠️ <strong>Your reflection content will be sent to {{ selectedOnlineProvider === 'openai' ? 'OpenAI' : 'Anthropic' }}.</strong>
+                While these services have privacy policies, your reflections will leave your device for processing.
+              </p>
+            </div>
+          </div>
+
+          <p class="section-description">
+            Choose how your reflections are processed by AI. This determines where your personal reflections are analyzed.
+          </p>
+
+          <RadioGroupRoot
           v-model="selectedProvider"
           @update:modelValue="handleProviderChange"
           class="radio-group"
@@ -304,44 +555,45 @@ const handleOnlineModelChange = async () => {
             
             <!-- Local Model Selection (shown when local is selected) -->
             <div v-if="selectedProvider === 'local'" class="nested-options">
-          <h3 class="subsection-title">Ollama Model</h3>
-          <p class="model-description">Select which Ollama model to use for reflections. Make sure the model is installed locally.</p>
-          
-          <div v-if="loadingOllamaModels" class="loading-models">
-            <span>Loading available models...</span>
-          </div>
-          
-          <div v-else-if="ollamaModels.length === 0" class="no-models-warning">
-            <p class="warning-text">
-              ⚠️ No Ollama models found. Please install a model first.
-            </p>
-            <p class="model-hint">
-              Install a model with: <code>ollama pull llama2</code>
-            </p>
-            <p class="model-hint">
-              Popular models: llama2, llama3, mistral, codellama, phi
-            </p>
-          </div>
-          
-          <div v-else>
-            <select
-              v-model="selectedLocalModel"
-              @change="handleLocalModelChange"
-              class="model-select"
-              aria-label="Ollama model selection"
-            >
-              <option
-                v-for="model in ollamaModels"
-                :key="model.value"
-                :value="model.value"
-              >
-                {{ model.label }}
-              </option>
-            </select>
-            <p class="model-hint">
-              💡 {{ ollamaModels.length }} model(s) available. To add more: <code>ollama pull &lt;model-name&gt;</code>
-            </p>
-          </div>
+              <div class="nested-section-header" @click="toggleNestedSection('localModel')">
+                <h3 class="subsection-title">Ollama Model</h3>
+                <span class="expand-icon-small" :class="{ expanded: expandedNestedSection === 'localModel' }">
+                  {{ expandedNestedSection === 'localModel' ? '▼' : '▶' }}
+                </span>
+              </div>
+              
+              <div v-show="expandedNestedSection === 'localModel'" class="nested-content">
+                <p class="model-description">Select which Ollama model to use for reflections.</p>
+                
+                <div v-if="loadingOllamaModels" class="loading-models">
+                  <span>Loading models...</span>
+                </div>
+                
+                <div v-else-if="ollamaModels.length === 0" class="no-models-warning">
+                  <p class="warning-text">⚠️ No models found. Install with:</p>
+                  <p class="model-hint"><code>ollama pull llama2</code></p>
+                </div>
+                
+                <div v-else>
+                  <select
+                    v-model="selectedLocalModel"
+                    @change="handleLocalModelChange"
+                    class="model-select"
+                    aria-label="Ollama model selection"
+                  >
+                    <option
+                      v-for="model in ollamaModels"
+                      :key="model.value"
+                      :value="model.value"
+                    >
+                      {{ model.label }}
+                    </option>
+                  </select>
+                  <p class="model-hint">
+                    💡 {{ ollamaModels.length }} model(s) available
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -364,98 +616,169 @@ const handleOnlineModelChange = async () => {
 
             <!-- Online Provider Selection (shown when online is selected) -->
             <div v-if="selectedProvider === 'online'" class="nested-options">
-          <h3 class="subsection-title">Choose Online Provider</h3>
-          
-          <RadioGroupRoot
-            v-model="selectedOnlineProvider"
-            @update:modelValue="handleOnlineProviderChange"
-            class="radio-group"
-            aria-label="Online AI provider selection"
-          >
-            <label class="radio-option" for="provider-openai">
-              <RadioGroupItem value="openai" class="radio-item" id="provider-openai">
-                <RadioGroupIndicator class="radio-indicator">
-                  <div class="radio-dot"></div>
-                </RadioGroupIndicator>
-              </RadioGroupItem>
-              <div class="radio-label">
-                <span class="radio-title">OpenAI (GPT)</span>
-                <span class="radio-description">ChatGPT models - versatile and reliable</span>
+              <div class="nested-section-header" @click="toggleNestedSection('onlineProvider')">
+                <h3 class="subsection-title">Provider & Model</h3>
+                <span class="expand-icon-small" :class="{ expanded: expandedNestedSection === 'onlineProvider' }">
+                  {{ expandedNestedSection === 'onlineProvider' ? '▼' : '▶' }}
+                </span>
               </div>
-            </label>
+              
+              <div v-show="expandedNestedSection === 'onlineProvider'" class="nested-content">
+                <RadioGroupRoot
+                  v-model="selectedOnlineProvider"
+                  @update:modelValue="handleOnlineProviderChange"
+                  class="radio-group radio-group-compact"
+                  aria-label="Online AI provider selection"
+                >
+                  <label class="radio-option radio-option-compact" for="provider-openai">
+                    <RadioGroupItem value="openai" class="radio-item" id="provider-openai">
+                      <RadioGroupIndicator class="radio-indicator">
+                        <div class="radio-dot"></div>
+                      </RadioGroupIndicator>
+                    </RadioGroupItem>
+                    <div class="radio-label">
+                      <span class="radio-title">OpenAI (GPT)</span>
+                    </div>
+                  </label>
 
-            <label class="radio-option" for="provider-anthropic">
-              <RadioGroupItem value="anthropic" class="radio-item" id="provider-anthropic">
-                <RadioGroupIndicator class="radio-indicator">
-                  <div class="radio-dot"></div>
-                </RadioGroupIndicator>
-              </RadioGroupItem>
-              <div class="radio-label">
-                <span class="radio-title">Anthropic (Claude)</span>
-                <span class="radio-description">Claude models - thoughtful and nuanced</span>
+                  <label class="radio-option radio-option-compact" for="provider-anthropic">
+                    <RadioGroupItem value="anthropic" class="radio-item" id="provider-anthropic">
+                      <RadioGroupIndicator class="radio-indicator">
+                        <div class="radio-dot"></div>
+                      </RadioGroupIndicator>
+                    </RadioGroupItem>
+                    <div class="radio-label">
+                      <span class="radio-title">Anthropic (Claude)</span>
+                    </div>
+                  </label>
+                </RadioGroupRoot>
+
+                <!-- Model Selection -->
+                <div class="model-selection">
+                  <label class="model-label">Model:</label>
+                  <select
+                    v-model="selectedOnlineModel"
+                    @change="handleOnlineModelChange"
+                    class="model-select"
+                    aria-label="AI model selection"
+                  >
+                    <optgroup v-if="selectedOnlineProvider === 'openai'" label="OpenAI Models">
+                      <option
+                        v-for="model in openaiModels"
+                        :key="model.value"
+                        :value="model.value"
+                      >
+                        {{ model.label }}
+                      </option>
+                    </optgroup>
+                    <optgroup v-if="selectedOnlineProvider === 'anthropic'" label="Anthropic Models">
+                      <option
+                        v-for="model in anthropicModels"
+                        :key="model.value"
+                        :value="model.value"
+                      >
+                        {{ model.label }}
+                      </option>
+                    </optgroup>
+                  </select>
+                </div>
               </div>
-            </label>
-          </RadioGroupRoot>
-
-          <!-- Model Selection -->
-          <div class="model-selection">
-            <h4 class="subsection-title">Select Model</h4>
-            <select
-              v-model="selectedOnlineModel"
-              @change="handleOnlineModelChange"
-              class="model-select"
-              aria-label="AI model selection"
-            >
-              <optgroup v-if="selectedOnlineProvider === 'openai'" label="OpenAI Models">
-                <option
-                  v-for="model in openaiModels"
-                  :key="model.value"
-                  :value="model.value"
-                >
-                  {{ model.label }}
-                </option>
-              </optgroup>
-              <optgroup v-if="selectedOnlineProvider === 'anthropic'" label="Anthropic Models">
-                <option
-                  v-for="model in anthropicModels"
-                  :key="model.value"
-                  :value="model.value"
-                >
-                  {{ model.label }}
-                </option>
-              </optgroup>
-            </select>
-          </div>
             </div>
           </div>
         </RadioGroupRoot>
+        </div>
       </section>
 
-      <!-- Save Settings Button -->
-      <section class="setting-section save-section">
-        <button 
-          @click="handleSaveSettings" 
-          class="save-button"
-          :disabled="loading || !hasUnsavedChanges"
-        >
-          {{ loading ? 'Saving...' : 'Save Settings' }}
-        </button>
-        <p v-if="saveMessage" class="save-message" :class="{ error: saveError }">
-          {{ saveMessage }}
-        </p>
-      </section>
+      <!-- Storage Location - Collapsible -->
+      <section class="setting-section collapsible-section">
+        <div class="section-header" @click="toggleSection('storageLocation')">
+          <div class="section-header-content">
+            <h2 class="section-title">Storage Location</h2>
+            <p v-if="expandedSection !== 'storageLocation'" class="section-summary">
+              📁 {{ availableStorageOptions.find(o => o.value === selectedStoragePath)?.label || 'Not configured' }}
+            </p>
+          </div>
+          <span class="expand-icon" :class="{ expanded: expandedSection === 'storageLocation' }">
+            {{ expandedSection === 'storageLocation' ? '▼' : '▶' }}
+          </span>
+        </div>
 
-      <!-- Privacy Information -->
-      <section class="setting-section privacy-info">
-        <h2 class="section-title">Privacy Information</h2>
-        <div class="info-card">
-          <p v-if="selectedProvider === 'local'" class="info-text">
-            ✅ <strong>Your data is completely private.</strong> All reflections are processed locally on your device. Nothing is sent to external servers.
+        <div v-show="expandedSection === 'storageLocation'" class="section-content">
+          <p class="section-description">
+            Choose where your reflections are stored. Select a predefined location or specify a custom path.
           </p>
-          <p v-else class="info-text warning">
-            ⚠️ <strong>Your reflection content will be sent to {{ selectedOnlineProvider === 'openai' ? 'OpenAI' : 'Anthropic' }}.</strong>
-            While these services have privacy policies, your reflections will leave your device for processing.
+
+          <div v-if="loadingStorageLocations" class="loading-state">
+          <p>Loading storage options...</p>
+        </div>
+
+        <div v-else class="storage-selector">
+          <label for="storage-path-select" class="storage-label">
+            📁 Storage Location
+          </label>
+          <select
+            id="storage-path-select"
+            v-model="selectedStoragePath"
+            @change="handleStoragePathChange"
+            class="storage-select"
+            aria-label="Storage location selection"
+          >
+            <option
+              v-for="option in availableStorageOptions"
+              :key="option.value"
+              :value="option.value"
+              :disabled="!option.available"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+          
+          <!-- Show path info for selected option -->
+          <div v-if="selectedStoragePath !== 'custom'" class="selected-path-info">
+            <p class="path-description">
+              {{ availableStorageOptions.find(o => o.value === selectedStoragePath)?.description }}
+            </p>
+            <div class="path-display">
+              📂 {{ availableStorageOptions.find(o => o.value === selectedStoragePath)?.path }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Path Input (only shown when "Custom" is selected) -->
+        <div v-if="showCustomPathInput" class="custom-path-section">
+          <h3 class="subsection-title">Specify Custom Path</h3>
+          <p class="path-description">
+            Enter the full directory path where you want to store your reflections.
           </p>
+          
+          <div class="path-input-group">
+            <label for="custom-path" class="path-label">
+              📂 Directory Path
+            </label>
+            <input
+              id="custom-path"
+              v-model="customStoragePath"
+              type="text"
+              class="path-input"
+              placeholder="e.g., /Users/yourname/Documents/MyReflections"
+              aria-label="Custom storage path"
+            />
+            <p class="path-hint">
+              💡 <strong>Tip:</strong> Use an absolute path (starting with /) for best results.
+            </p>
+            <p v-if="customStoragePath" class="path-hint">
+              <strong>Selected:</strong> {{ customStoragePath }}
+            </p>
+          </div>
+        </div>
+
+          <div class="storage-info-box">
+            <p class="info-icon">💡</p>
+            <div class="info-content">
+              <p><strong>Note:</strong> Changing storage location does not automatically move existing reflections.</p>
+              <p>Your previous reflections will remain in the old location. New reflections will be saved to the new location.</p>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -509,6 +832,56 @@ const handleOnlineModelChange = async () => {
         </DialogContent>
       </DialogPortal>
     </DialogRoot>
+
+    <!-- Storage Migration Warning Dialog -->
+    <DialogRoot v-model:open="showStorageMigrationWarning">
+      <DialogPortal>
+        <DialogOverlay class="dialog-overlay" />
+        <DialogContent class="dialog-content storage-migration-dialog">
+          <DialogTitle class="dialog-title">
+            📦 Storage Location Change
+          </DialogTitle>
+          
+          <DialogDescription class="dialog-description">
+            <p class="warning-text">
+              <strong>Important: This does not move your existing reflections.</strong>
+            </p>
+            <p>
+              Changing storage location affects where NEW reflections will be saved:
+            </p>
+            <ul class="warning-list">
+              <li>Existing reflections remain in the current location</li>
+              <li>New reflections will be saved to the new location</li>
+              <li>You won't see old reflections until you switch back</li>
+            </ul>
+            <p class="migration-tip">
+              <strong>💡 To move existing data:</strong> Manually copy files from the old location to the new one, or use export/import features.
+            </p>
+          </DialogDescription>
+
+          <div class="dialog-actions">
+            <button
+              @click="cancelStorageLocationChange"
+              class="button button-secondary"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmStorageLocationChange"
+              class="button button-primary"
+              type="button"
+            >
+              Continue - Change Location
+            </button>
+          </div>
+
+          <DialogClose class="dialog-close" aria-label="Close dialog">
+            ×
+          </DialogClose>
+        </DialogContent>
+      </DialogPortal>
+    </DialogRoot>
   </div>
 </template>
 
@@ -524,16 +897,16 @@ const handleOnlineModelChange = async () => {
 }
 
 .settings-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .settings-description {
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .loading-state,
@@ -559,51 +932,113 @@ const handleOnlineModelChange = async () => {
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 0.75rem;
 }
 
 .setting-section {
   background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+/* Collapsible section styles */
+.collapsible-section {
+  padding: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.section-header:hover {
+  background-color: var(--color-background-hover);
+}
+
+.section-header-content {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.expand-icon {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.expand-icon.expanded {
+  transform: rotate(0deg);
+}
+
+.section-content {
+  padding: 0 1rem 1rem 1rem;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .section-title {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 0.5rem;
+  margin: 0;
 }
 
-.section-description,
-.subsection-title {
-  font-size: 0.875rem;
+.section-summary {
+  font-size: 0.8125rem;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  font-weight: 400;
+  margin: 0;
+}
+
+.section-description {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
   margin-bottom: 1rem;
 }
 
 .subsection-title {
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-top: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 /* Radio Groups */
 .radio-group {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .radio-option {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
+  gap: 0.625rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -623,17 +1058,49 @@ const handleOnlineModelChange = async () => {
 }
 
 .nested-options {
-  margin-left: 2.5rem;
-  margin-top: 1rem;
-  padding: 1rem;
-  border-left: 3px solid var(--color-primary);
+  margin-left: 1.5rem;
+  margin-top: 0.625rem;
+  padding: 0.625rem;
+  border-left: 2px solid var(--color-primary);
   background-color: var(--color-background-subtle);
-  border-radius: 0 0.5rem 0.5rem 0;
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.nested-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.25rem 0;
+  margin-bottom: 0.5rem;
+}
+
+.nested-section-header:hover {
+  opacity: 0.8;
+}
+
+.nested-section-header .subsection-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.expand-icon-small {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.nested-content {
+  animation: slideDown 0.15s ease;
 }
 
 .nested-options .subsection-title {
-  font-size: 0.95rem;
-  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  margin-bottom: 0.5rem;
   color: var(--color-text-secondary);
 }
 
@@ -642,17 +1109,30 @@ const handleOnlineModelChange = async () => {
 }
 
 .nested-options .model-selection {
-  margin-top: 1rem;
+  margin-top: 0.625rem;
+}
+
+/* Compact radio options for nested sections */
+.radio-group-compact {
+  gap: 0.5rem;
+}
+
+.radio-option-compact {
+  padding: 0.5rem;
+}
+
+.radio-option-compact .radio-description {
+  display: none;
 }
 
 .radio-item {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   border: 2px solid var(--color-border);
   background-color: white;
   flex-shrink: 0;
-  margin-top: 0.25rem;
+  margin-top: 0.125rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -715,18 +1195,18 @@ const handleOnlineModelChange = async () => {
 .radio-title {
   font-weight: 600;
   color: var(--color-text-primary);
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .radio-description {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--color-text-secondary);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .privacy-badge {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
+  padding: 0.1875rem 0.5rem;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 600;
@@ -751,46 +1231,47 @@ const handleOnlineModelChange = async () => {
 }
 
 .model-description {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--color-text-secondary);
-  margin-bottom: 0.75rem;
-  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
 }
 
 .loading-models {
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .no-models-warning {
-  padding: 1rem;
+  padding: 0.75rem;
   background-color: var(--color-warning-light);
   border: 1px solid var(--color-warning);
-  border-radius: var(--radius-md);
-  margin-bottom: 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
 }
 
 .no-models-warning .warning-text {
   color: var(--color-warning);
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
+  font-size: 0.8125rem;
 }
 
 .model-hint {
-  margin-top: 0.75rem;
-  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 .model-hint code {
   background-color: var(--color-background-secondary);
-  padding: 0.125rem 0.375rem;
+  padding: 0.125rem 0.3125rem;
   border-radius: var(--radius-sm);
   font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--color-primary);
 }
 
@@ -802,24 +1283,55 @@ const handleOnlineModelChange = async () => {
 }
 
 .model-selection {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 
 .model-select {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: 1rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
   background-color: white;
   color: var(--color-text-primary);
   cursor: pointer;
 }
 
 .model-select:focus {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
+  outline: 1px solid var(--color-focus);
+  outline-offset: 1px;
   border-color: var(--color-primary);
+}
+
+.model-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.375rem;
+}
+
+.model-description {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.model-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.375rem;
+}
+
+.loading-models, .no-models-warning {
+  padding: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.no-models-warning .warning-text {
+  font-size: 0.8125rem;
+  margin-bottom: 0.375rem;
 }
 
 /* Privacy Explainer */
@@ -859,6 +1371,43 @@ const handleOnlineModelChange = async () => {
 }
 
 /* Privacy Info */
+.privacy-info-inline {
+  margin-bottom: 1rem;
+}
+
+.privacy-info-inline .info-card {
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.privacy-safe .info-card,
+.privacy-info-inline .info-card:has(.privacy-safe) {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.privacy-warning .info-card,
+.privacy-info-inline .info-card:has(.privacy-warning) {
+  background-color: #fff3e0;
+  border-color: #ff9800;
+}
+
+.info-card .info-text {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.info-card .privacy-safe {
+  color: #2e7d32;
+}
+
+.info-card .privacy-warning {
+  color: #e65100;
+}
+
 .privacy-info .info-card {
   padding: 1rem;
   border-radius: var(--radius-md);
@@ -869,17 +1418,27 @@ const handleOnlineModelChange = async () => {
 .save-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
   align-items: flex-start;
+  padding: 0.875rem 1rem;
+}
+
+.save-section-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-surface);
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 0.5rem;
 }
 
 .save-button {
-  padding: 0.75rem 2rem;
+  padding: 0.625rem 1.5rem;
   background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -899,8 +1458,8 @@ const handleOnlineModelChange = async () => {
 }
 
 .save-message {
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  padding: 0.375rem 0.75rem;
   border-radius: 4px;
   background-color: var(--color-success-bg, #e8f5e9);
   color: var(--color-success, #2e7d32);
@@ -1042,5 +1601,188 @@ const handleOnlineModelChange = async () => {
 .dialog-close:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
+}
+
+/* Storage Location Styles */
+.storage-selector {
+  margin-bottom: 1rem;
+}
+
+.storage-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.375rem;
+}
+
+.storage-select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.storage-select:hover {
+  border-color: var(--color-primary);
+}
+
+.storage-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.selected-path-info {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--color-background-secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.path-display {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background-color: white;
+  border-radius: var(--radius-sm);
+}
+
+.custom-path-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--color-background-info, #eff6ff);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
+}
+
+.path-description {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.path-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.path-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: block;
+}
+
+.path-input {
+  width: 100%;
+  padding: 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-family: 'Courier New', monospace;
+  color: var(--color-text-primary);
+  background-color: white;
+  transition: border-color 0.2s ease;
+}
+
+.path-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.path-input::placeholder {
+  color: var(--color-text-tertiary, #9ca3af);
+  font-size: 0.8125rem;
+}
+
+.path-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.unavailable-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  background-color: var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  margin-left: 0.5rem;
+  font-weight: normal;
+}
+
+.hint-text {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-top: 0.375rem;
+}
+
+.radio-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.radio-option.disabled .radio-item {
+  cursor: not-allowed;
+}
+
+.storage-info-box {
+  display: flex;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  background-color: var(--color-background-info, #eff6ff);
+  border: 1px solid var(--color-border-info, #bfdbfe);
+  border-radius: var(--radius-sm);
+}
+
+.info-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  margin: 0;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-content p {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0 0 0.375rem 0;
+}
+
+.info-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Storage Migration Dialog */
+.storage-migration-dialog {
+  max-width: 550px;
+}
+
+.migration-tip {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: var(--color-background-info, #eff6ff);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
 }
 </style>

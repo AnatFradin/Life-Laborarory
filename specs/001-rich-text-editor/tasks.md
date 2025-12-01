@@ -1,4 +1,4 @@
-# Tasks: Rich Text Editor with Markdown Support
+Tasks: Rich Text Editor with Markdown Support
 
 **Input**: Design documents from `/specs/001-rich-text-editor/`  
 **Prerequisites**: ✅ plan.md, ✅ spec.md, ✅ research.md, ✅ data-model.md, ✅ contracts/, ✅ quickstart.md

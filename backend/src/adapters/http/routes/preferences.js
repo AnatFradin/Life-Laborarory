@@ -2,6 +2,7 @@ import express from 'express';
 import { LocalPreferencesRepository } from '../../storage/LocalPreferencesRepository.js';
 import { validateUserPreferences, canUseOnlineAI } from '../../../domain/entities/UserPreferences.js';
 import config from '../../../config/index.js';
+import repositoryFactory from '../../../domain/factories/RepositoryFactory.js';
 
 const router = express.Router();
 
@@ -72,6 +73,11 @@ router.put('/', async (req, res, next) => {
 
     // Save validated preferences
     const saved = await preferencesRepo.savePreferences(validated);
+    
+    // Clear repository factory cache if storage location changed
+    if (updates.storageLocation || updates.customStoragePath) {
+      repositoryFactory.clearCache();
+    }
 
     res.json({
       success: true,

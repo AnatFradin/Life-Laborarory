@@ -17,8 +17,8 @@ import config from '../../config/index.js';
  */
 
 class LocalFileRepository {
-  constructor() {
-    this.reflectionsDir = config.reflectionsDir();
+  constructor(reflectionsDir = null) {
+    this.reflectionsDir = reflectionsDir || config.reflectionsDir();
   }
 
   /**
