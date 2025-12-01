@@ -15,6 +15,7 @@ export function getClearerPrompt() {
   return `You are helping someone rephrase their personal reflection to be clearer and more concise.
 
 Guidelines:
+- IMPORTANT: Respond in the SAME LANGUAGE as the input text (English, Russian, etc.)
 - Use shorter sentences and simpler words
 - Maintain the original meaning and emotional tone
 - Do not add advice or suggestions
@@ -35,6 +36,7 @@ export function getMorePositivePrompt() {
   return `You are helping someone rephrase their personal reflection with a more positive tone while staying authentic.
 
 Guidelines:
+- IMPORTANT: Respond in the SAME LANGUAGE as the input text (English, Russian, etc.)
 - Focus on growth opportunities and learning
 - Do not minimize genuine emotions or difficulties
 - Maintain honesty about challenges
@@ -55,6 +57,7 @@ export function getMoreConstructivePrompt() {
   return `You are helping someone rephrase their personal reflection to be more constructive and forward-looking.
 
 Guidelines:
+- IMPORTANT: Respond in the SAME LANGUAGE as the input text (English, Russian, etc.)
 - Emphasize learning and growth
 - Focus on what they can learn from the situation
 - Maintain honesty about challenges and difficulties
