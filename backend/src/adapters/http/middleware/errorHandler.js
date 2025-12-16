@@ -66,7 +66,7 @@ const errorHandler = (err, req, res, next) => {
     userMessage = 'The request data wasn\'t formatted correctly.';
     suggestions = ['Please check the request format and try again'];
   }
-  // Data corruption (FR-029)
+  // Data corruption (FR-029, FR-032)
   else if (err.name === 'SyntaxError' && err.message.includes('JSON')) {
     statusCode = 500;
     userMessage = 'Some stored data couldn\'t be read properly.';
@@ -74,6 +74,16 @@ const errorHandler = (err, req, res, next) => {
       'Your other reflections are safe',
       'Export your data to create a backup',
       'The problematic file will be skipped',
+    ];
+  }
+  // Data validation errors from corrupted files
+  else if (err.code === 'DATA_CORRUPTION' || err.message?.includes('corrupted')) {
+    statusCode = 500;
+    userMessage = 'We found a file that couldn\'t be read.';
+    suggestions = [
+      'Your other reflections are still accessible',
+      'Consider exporting your data as a backup',
+      'The damaged file will be skipped automatically',
     ];
   }
   // Validation errors (Zod or custom)

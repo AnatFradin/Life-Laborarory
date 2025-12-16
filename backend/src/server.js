@@ -1,7 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import config from './config/index.js';
+import config, { validateConfig } from './config/index.js';
 import errorHandler from './adapters/http/middleware/errorHandler.js';
+
+// Validate configuration at startup (T104)
+validateConfig();
 
 const app = express();
 
