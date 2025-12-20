@@ -84,6 +84,51 @@ class LocalFileRepository {
   }
 
   /**
+   * Validate reflection data integrity (T098, FR-032)
+   * @param {Object} data - Parsed reflection data
+   * @param {string} filePath - File path for error reporting
+   * @returns {Object} Validated reflection or throws error
+   */
+  _validateReflectionData(data, filePath) {
+    // Basic structure validation
+    if (!data || typeof data !== 'object') {
+      const err = new Error(`Invalid reflection data structure in ${filePath}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    // Required fields validation
+    if (!data.id || typeof data.id !== 'string') {
+      const err = new Error(`Missing or invalid reflection ID in ${filePath}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    if (!data.timestamp || typeof data.timestamp !== 'string') {
+      const err = new Error(`Missing or invalid timestamp in ${filePath}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    // Validate timestamp format
+    const timestampDate = new Date(data.timestamp);
+    if (isNaN(timestampDate.getTime())) {
+      const err = new Error(`Invalid timestamp format in ${filePath}: ${data.timestamp}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    // Mode validation
+    if (!data.mode || !['text', 'visual'].includes(data.mode)) {
+      const err = new Error(`Invalid or missing mode in ${filePath}: ${data.mode}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    return data;
+  }
+
+  /**
    * Find reflection by ID
    * @param {string} id - Reflection ID
    * @returns {Promise<Object|null>} Reflection or null if not found
@@ -98,7 +143,9 @@ class LocalFileRepository {
         monthDirs.map(async (monthDir) => {
           const filePath = path.join(monthDir, `${id}.json`);
           const data = await fs.readFile(filePath, 'utf8');
-          return JSON.parse(data);
+          const parsed = JSON.parse(data);
+          // Validate data integrity (T098, FR-032)
+          return this._validateReflectionData(parsed, filePath);
         })
       );
 
@@ -141,7 +188,9 @@ class LocalFileRepository {
             jsonFiles.map(async (file) => {
               const filePath = path.join(monthDir, file);
               const data = await fs.readFile(filePath, 'utf8');
-              return JSON.parse(data);
+              const parsed = JSON.parse(data);
+              // Validate data integrity (T098, FR-032)
+              return this._validateReflectionData(parsed, filePath);
             })
           );
 
@@ -149,8 +198,8 @@ class LocalFileRepository {
           return fileResults
             .filter((result) => {
               if (result.status === 'rejected') {
-                // Log corrupted file but continue (FR-029)
-                console.error(`Skipping corrupted file:`, result.reason.message);
+                // Log corrupted file but continue (FR-029, FR-032)
+                console.error(`[Data Integrity] Skipping corrupted file:`, result.reason.message);
                 return false;
               }
               return true;
