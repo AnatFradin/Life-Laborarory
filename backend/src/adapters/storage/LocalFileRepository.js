@@ -84,25 +84,75 @@ class LocalFileRepository {
   }
 
   /**
+   * Validate reflection data integrity (T098, FR-032)
+   * @param {Object} data - Parsed reflection data
+   * @param {string} filePath - File path for error reporting
+   * @returns {Object} Validated reflection or throws error
+   */
+  _validateReflectionData(data, filePath) {
+    // Basic structure validation
+    if (!data || typeof data !== 'object') {
+      const err = new Error(`Invalid reflection data structure in ${filePath}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    // Required fields validation
+    if (!data.id || typeof data.id !== 'string') {
+      const err = new Error(`Missing or invalid reflection ID in ${filePath}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    if (!data.timestamp || typeof data.timestamp !== 'string') {
+      const err = new Error(`Missing or invalid timestamp in ${filePath}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    // Validate timestamp format
+    const timestampDate = new Date(data.timestamp);
+    if (isNaN(timestampDate.getTime())) {
+      const err = new Error(`Invalid timestamp format in ${filePath}: ${data.timestamp}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    // Mode validation
+    if (!data.mode || !['text', 'visual'].includes(data.mode)) {
+      const err = new Error(`Invalid or missing mode in ${filePath}: ${data.mode}`);
+      err.code = 'DATA_CORRUPTION';
+      throw err;
+    }
+
+    return data;
+  }
+
+  /**
    * Find reflection by ID
    * @param {string} id - Reflection ID
    * @returns {Promise<Object|null>} Reflection or null if not found
    */
   async findById(id) {
     try {
-      // Search all month directories
+      // Search all month directories in parallel
       const monthDirs = await this._getAllMonthDirs();
 
-      for (const monthDir of monthDirs) {
-        const filePath = path.join(monthDir, `${id}.json`);
-        try {
+      // Try reading from all directories in parallel
+      const results = await Promise.allSettled(
+        monthDirs.map(async (monthDir) => {
+          const filePath = path.join(monthDir, `${id}.json`);
           const data = await fs.readFile(filePath, 'utf8');
-          return JSON.parse(data);
-        } catch (err) {
-          // File not in this month, continue searching
-          if (err.code !== 'ENOENT') {
-            throw err;
-          }
+          const parsed = JSON.parse(data);
+          // Validate data integrity (T098, FR-032)
+          return this._validateReflectionData(parsed, filePath);
+        })
+      );
+
+      // Find the first successful result
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          return result.value;
         }
       }
 
@@ -122,25 +172,44 @@ class LocalFileRepository {
       await this._ensureDir(this.reflectionsDir);
 
       const monthDirs = await this._getAllMonthDirs();
-      const reflections = [];
 
-      for (const monthDir of monthDirs) {
-        const files = await fs.readdir(monthDir);
+      // Process all month directories in parallel
+      const monthResults = await Promise.all(
+        monthDirs.map(async (monthDir) => {
+          const files = await fs.readdir(monthDir);
+          
+          // Filter JSON files
+          const jsonFiles = files.filter(
+            (file) => file.endsWith('.json') && !file.endsWith('.tmp')
+          );
 
-        for (const file of files) {
-          if (file.endsWith('.json') && !file.endsWith('.tmp')) {
-            const filePath = path.join(monthDir, file);
-            try {
+          // Read all files in this month in parallel
+          const fileResults = await Promise.allSettled(
+            jsonFiles.map(async (file) => {
+              const filePath = path.join(monthDir, file);
               const data = await fs.readFile(filePath, 'utf8');
-              const reflection = JSON.parse(data);
-              reflections.push(reflection);
-            } catch (err) {
-              // Log corrupted file but continue (FR-029)
-              console.error(`Skipping corrupted file ${filePath}:`, err.message);
-            }
-          }
-        }
-      }
+              const parsed = JSON.parse(data);
+              // Validate data integrity (T098, FR-032)
+              return this._validateReflectionData(parsed, filePath);
+            })
+          );
+
+          // Extract successful results and log errors
+          return fileResults
+            .filter((result) => {
+              if (result.status === 'rejected') {
+                // Log corrupted file but continue (FR-029, FR-032)
+                console.error(`[Data Integrity] Skipping corrupted file:`, result.reason.message);
+                return false;
+              }
+              return true;
+            })
+            .map((result) => result.value);
+        })
+      );
+
+      // Flatten all reflections from all months
+      const reflections = monthResults.flat();
 
       // Sort by timestamp descending (newest first)
       reflections.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -161,19 +230,17 @@ class LocalFileRepository {
     try {
       const monthDirs = await this._getAllMonthDirs();
 
-      for (const monthDir of monthDirs) {
-        const filePath = path.join(monthDir, `${id}.json`);
-        try {
+      // Try to delete from all directories in parallel
+      const results = await Promise.allSettled(
+        monthDirs.map(async (monthDir) => {
+          const filePath = path.join(monthDir, `${id}.json`);
           await fs.unlink(filePath);
           return true;
-        } catch (err) {
-          if (err.code !== 'ENOENT') {
-            throw err;
-          }
-        }
-      }
+        })
+      );
 
-      return false;
+      // Return true if any deletion succeeded
+      return results.some((result) => result.status === 'fulfilled');
     } catch (err) {
       console.error(`Error deleting reflection ${id}:`, err);
       throw err;
@@ -189,26 +256,34 @@ class LocalFileRepository {
       await this._ensureDir(this.reflectionsDir);
 
       const monthDirs = await this._getAllMonthDirs();
-      let deletedCount = 0;
 
-      for (const monthDir of monthDirs) {
-        const files = await fs.readdir(monthDir);
+      // Process all month directories in parallel
+      const monthResults = await Promise.all(
+        monthDirs.map(async (monthDir) => {
+          const files = await fs.readdir(monthDir);
+          const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
-        for (const file of files) {
-          if (file.endsWith('.json')) {
-            const filePath = path.join(monthDir, file);
-            await fs.unlink(filePath);
-            deletedCount++;
+          // Delete all JSON files in parallel
+          await Promise.all(
+            jsonFiles.map((file) => {
+              const filePath = path.join(monthDir, file);
+              return fs.unlink(filePath);
+            })
+          );
+
+          // Try to remove empty month directory
+          try {
+            await fs.rmdir(monthDir);
+          } catch {
+            // Directory not empty or other error, ignore
           }
-        }
 
-        // Remove empty month directory
-        try {
-          await fs.rmdir(monthDir);
-        } catch {
-          // Directory not empty or other error, ignore
-        }
-      }
+          return jsonFiles.length;
+        })
+      );
+
+      // Sum up deleted files from all months
+      const deletedCount = monthResults.reduce((sum, count) => sum + count, 0);
 
       return deletedCount;
     } catch (err) {

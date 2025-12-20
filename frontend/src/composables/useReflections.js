@@ -16,10 +16,13 @@ import { reflectionsAPI } from '../services/api.js';
 const reflections = ref([]);
 const loading = ref(false);
 const error = ref(null);
+const hasMore = ref(true);
+const currentPage = ref(0);
 
 export function useReflections() {
   /**
    * Load all reflections from API
+   * For backward compatibility, loads all reflections
    */
   const loadReflections = async () => {
     loading.value = true;
@@ -28,6 +31,51 @@ export function useReflections() {
     try {
       const response = await reflectionsAPI.getAll();
       reflections.value = response.data.reflections || [];
+      hasMore.value = false;
+    } catch (err) {
+      error.value = err.message;
+      console.error('Failed to load reflections:', err);
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  /**
+   * Load reflections with lazy loading by month (T100, FR-035)
+   * Optimized for 1000+ entries
+   * @param {boolean} reset - If true, reset pagination and load from beginning
+   */
+  const loadReflectionsLazy = async (reset = false) => {
+    if (reset) {
+      currentPage.value = 0;
+      reflections.value = [];
+      hasMore.value = true;
+    }
+
+    if (!hasMore.value) {
+      return;
+    }
+
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await reflectionsAPI.getAll({
+        page: currentPage.value,
+        perPage: 50, // Load 50 at a time (roughly 1-2 months)
+      });
+      
+      const newReflections = response.data.reflections || [];
+      
+      if (reset) {
+        reflections.value = newReflections;
+      } else {
+        reflections.value.push(...newReflections);
+      }
+
+      // Check if there are more reflections
+      hasMore.value = newReflections.length === 50;
+      currentPage.value += 1;
     } catch (err) {
       error.value = err.message;
       console.error('Failed to load reflections:', err);
@@ -207,6 +255,7 @@ export function useReflections() {
     reflections,
     loading,
     error,
+    hasMore,
 
     // Computed
     reflectionCount,
@@ -214,6 +263,7 @@ export function useReflections() {
 
     // Methods
     loadReflections,
+    loadReflectionsLazy,
     createReflection,
     getReflectionById,
     updateReflectionAI,

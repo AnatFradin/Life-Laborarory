@@ -45,7 +45,62 @@ data/             # Local JSON storage (gitignored)
 ### Prerequisites
 
 - **Node.js** 18+ ([Download](https://nodejs.org/))
-- **Ollama** (for local AI) - [Installation Guide](https://ollama.ai/)
+- **Ollama** (for local AI) - See installation instructions below
+
+### Ollama Installation
+
+Ollama provides local AI models that run entirely on your device for complete privacy.
+
+#### macOS
+```bash
+# Download from https://ollama.ai/download/mac
+# Or use Homebrew
+brew install ollama
+
+# Start Ollama
+ollama serve
+
+# Pull a model (in a new terminal)
+ollama pull llama2
+```
+
+#### Linux
+```bash
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Start Ollama (runs as a service)
+ollama serve
+
+# Pull a model
+ollama pull llama2
+```
+
+#### Windows
+```bash
+# Download from https://ollama.ai/download/windows
+# Run the installer
+# Ollama starts automatically
+
+# Pull a model (in Command Prompt or PowerShell)
+ollama pull llama2
+```
+
+#### Available Models
+```bash
+# Fast, lightweight (recommended for most users)
+ollama pull llama2
+
+# Larger, more capable
+ollama pull llama2:13b
+
+# Alternative models
+ollama pull mistral
+ollama pull neural-chat
+
+# List installed models
+ollama list
+```
 
 ### Installation
 
@@ -67,11 +122,12 @@ data/             # Local JSON storage (gitignored)
    npm install
    ```
 
-4. **Install Ollama and pull a model** (for local AI)
+4. **Verify Ollama is running**
    ```bash
-   # Install Ollama from https://ollama.ai/
-   # Then pull a model (e.g., llama2)
-   ollama pull llama2
+   # Check Ollama status
+   curl http://localhost:11434/api/tags
+   
+   # You should see a list of installed models
    ```
 
 ### Running the Application
@@ -90,6 +146,52 @@ data/             # Local JSON storage (gitignored)
 
 3. **Open your browser**
    Navigate to `http://localhost:5173`
+
+### Troubleshooting Setup
+
+#### Ollama Connection Issues
+
+If the AI isn't responding:
+
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# If not running, start it
+ollama serve
+
+# Verify model is installed
+ollama list
+
+# Pull a model if needed
+ollama pull llama2
+```
+
+#### Port Conflicts
+
+If ports are already in use:
+
+```bash
+# Check what's using port 3000 (backend)
+lsof -i :3000  # macOS/Linux
+netstat -ano | findstr :3000  # Windows
+
+# Check what's using port 5173 (frontend)
+lsof -i :5173  # macOS/Linux
+netstat -ano | findstr :5173  # Windows
+
+# Kill the process or change ports in config
+```
+
+#### Node.js Version
+
+```bash
+# Check Node.js version (need 18+)
+node --version
+
+# Update if needed
+# Visit https://nodejs.org/ for latest version
+```
 
 ## 📖 Usage
 
@@ -149,6 +251,12 @@ npm run test:coverage # Coverage report
 
 ## 📚 Documentation
 
+### For Users
+- **[User Guide](./docs/user-guide.md)**: Complete guide to using Laboratory of Life
+- **README** (this file): Quick start and overview
+
+### For Developers
+- **[Developer Quickstart](./docs/quickstart.md)**: Get started developing in 5 minutes
 - **[Product Vision](./specs/000-product-vision/spec.md)**: What and why
 - **[Implementation Plan](./specs/000-product-vision/plan.md)**: Architecture and technical decisions
 - **[Data Model](./specs/000-product-vision/data-model.md)**: Entity definitions and validation

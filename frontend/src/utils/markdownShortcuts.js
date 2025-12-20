@@ -63,42 +63,37 @@ export function insertItalic(text, selectionStart, selectionEnd) {
  * Insert heading at line start (# text)
  */
 export function insertHeading(text, selectionStart, selectionEnd, level = 1) {
-  // Find line start
-  const lines = text.split('\n')
-  let currentPos = 0
-  let lineIndex = 0
-  
-  for (let i = 0; i < lines.length; i++) {
-    if (currentPos + lines[i].length >= selectionStart) {
-      lineIndex = i
-      break
-    }
-    currentPos += lines[i].length + 1 // +1 for \n
-  }
+  // Find line boundaries without splitting entire text
+  let lineStart = text.lastIndexOf('\n', selectionStart - 1) + 1;
+  let lineEnd = text.indexOf('\n', selectionStart);
+  if (lineEnd === -1) lineEnd = text.length;
 
-  const currentLine = lines[lineIndex]
-  const prefix = '#'.repeat(level) + ' '
-  const existingHeadingMatch = currentLine.match(/^#{1,6} /)
+  const currentLine = text.substring(lineStart, lineEnd);
+  const prefix = '#'.repeat(level) + ' ';
+  const existingHeadingMatch = currentLine.match(/^#{1,6} /);
 
+  let newLine;
   if (existingHeadingMatch && existingHeadingMatch[0] === prefix) {
     // Remove existing heading
-    lines[lineIndex] = currentLine.replace(/^#{1,6} /, '')
+    newLine = currentLine.replace(/^#{1,6} /, '');
   } else if (existingHeadingMatch) {
     // Replace with different level
-    lines[lineIndex] = currentLine.replace(/^#{1,6} /, prefix)
+    newLine = currentLine.replace(/^#{1,6} /, prefix);
   } else {
     // Add heading
-    lines[lineIndex] = prefix + currentLine
+    newLine = prefix + currentLine;
   }
 
-  const newText = lines.join('\n')
-  const newSelectionStart = selectionStart + (lines[lineIndex].length - currentLine.length)
+  const before = text.substring(0, lineStart);
+  const after = text.substring(lineEnd);
+  const newText = before + newLine + after;
+  const newSelectionStart = selectionStart + (newLine.length - currentLine.length);
 
   return {
     text: newText,
     selectionStart: newSelectionStart,
     selectionEnd: newSelectionStart
-  }
+  };
 }
 
 /**
@@ -126,36 +121,32 @@ export function insertBlockquote(text, selectionStart, selectionEnd) {
  * Helper: Insert or remove prefix at line start
  */
 function insertLinePrefix(text, selectionStart, prefix) {
-  const lines = text.split('\n')
-  let currentPos = 0
-  let lineIndex = 0
-  
-  for (let i = 0; i < lines.length; i++) {
-    if (currentPos + lines[i].length >= selectionStart) {
-      lineIndex = i
-      break
-    }
-    currentPos += lines[i].length + 1
-  }
+  // Find line boundaries without splitting entire text
+  let lineStart = text.lastIndexOf('\n', selectionStart - 1) + 1;
+  let lineEnd = text.indexOf('\n', selectionStart);
+  if (lineEnd === -1) lineEnd = text.length;
 
-  const currentLine = lines[lineIndex]
+  const currentLine = text.substring(lineStart, lineEnd);
   
+  let newLine;
   if (currentLine.startsWith(prefix)) {
     // Remove prefix
-    lines[lineIndex] = currentLine.substring(prefix.length)
+    newLine = currentLine.substring(prefix.length);
   } else {
     // Add prefix
-    lines[lineIndex] = prefix + currentLine
+    newLine = prefix + currentLine;
   }
 
-  const newText = lines.join('\n')
-  const newSelectionStart = selectionStart + (lines[lineIndex].length - currentLine.length)
+  const before = text.substring(0, lineStart);
+  const after = text.substring(lineEnd);
+  const newText = before + newLine + after;
+  const newSelectionStart = selectionStart + (newLine.length - currentLine.length);
 
   return {
     text: newText,
     selectionStart: newSelectionStart,
     selectionEnd: newSelectionStart
-  }
+  };
 }
 
 /**
