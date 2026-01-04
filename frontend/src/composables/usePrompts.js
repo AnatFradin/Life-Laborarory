@@ -1,20 +1,31 @@
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import api from '../services/api.js';
 
 /**
  * Composable for managing persona prompts
- * @param {string} personaId - The persona ID
+ * @param {import('vue').Ref<string>|string} personaIdRef - The persona ID (can be a ref or string)
  */
-export function usePrompts(personaId) {
+export function usePrompts(personaIdRef) {
   const prompts = ref([]);
   const loading = ref(false);
   const error = ref(null);
   const selectedPrompt = ref(null);
 
+  // Watch personaId changes
+  watch(() => typeof personaIdRef === 'string' ? personaIdRef : personaIdRef?.value, 
+    (newPersonaId) => {
+      if (newPersonaId) {
+        fetchPrompts();
+      }
+    },
+    { immediate: true }
+  );
+
   /**
    * Fetch all prompts for the persona
    */
   async function fetchPrompts() {
+    const personaId = typeof personaIdRef === 'string' ? personaIdRef : personaIdRef?.value;
     if (!personaId) return;
 
     loading.value = true;
@@ -49,6 +60,7 @@ export function usePrompts(personaId) {
    * @param {string} promptId - The prompt ID
    */
   async function fetchPromptById(promptId) {
+    const personaId = typeof personaIdRef === 'string' ? personaIdRef : personaIdRef?.value;
     if (!personaId || !promptId) return null;
 
     try {

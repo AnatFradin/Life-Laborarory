@@ -178,16 +178,24 @@ const showToast = ref(false);
 const toastMessage = ref('');
 const toastType = ref('info');
 
-// Use composables
+// Create a computed ref for personaId
 const personaId = computed(() => props.persona?.id);
-const { prompts, loading, error, fetchPrompts, fetchPromptById } = usePrompts(personaId.value);
+
+// Use composables with computed personaId
+const { prompts, loading, error, fetchPrompts, fetchPromptById } = usePrompts(personaId);
 const { copying, copy } = useClipboard();
 
 // Watch for open prop changes
 watch(() => props.open, (newValue) => {
   isOpen.value = newValue;
-  if (newValue && props.persona) {
-    loadPrompts();
+  if (newValue && props.persona && prompts.value.length > 0) {
+    // Auto-select default prompt when opening
+    const defaultPrompt = prompts.value.find(p => p.isDefault);
+    if (defaultPrompt) {
+      selectedPromptId.value = defaultPrompt.id;
+    } else if (prompts.value.length > 0) {
+      selectedPromptId.value = prompts.value[0].id;
+    }
   }
 });
 
@@ -199,29 +207,17 @@ watch(isOpen, (newValue) => {
   }
 });
 
-// Watch for persona changes
-watch(() => props.persona, (newPersona) => {
-  if (isOpen.value && newPersona) {
-    loadPrompts();
+// Watch for prompts changes to auto-select default
+watch(prompts, (newPrompts) => {
+  if (newPrompts.length > 0 && !selectedPromptId.value) {
+    const defaultPrompt = newPrompts.find(p => p.isDefault);
+    if (defaultPrompt) {
+      selectedPromptId.value = defaultPrompt.id;
+    } else {
+      selectedPromptId.value = newPrompts[0].id;
+    }
   }
 });
-
-/**
- * Load prompts for the persona
- */
-async function loadPrompts() {
-  if (!props.persona) return;
-  
-  await fetchPrompts();
-  
-  // Auto-select default prompt
-  const defaultPrompt = prompts.value.find(p => p.isDefault);
-  if (defaultPrompt) {
-    selectedPromptId.value = defaultPrompt.id;
-  } else if (prompts.value.length > 0) {
-    selectedPromptId.value = prompts.value[0].id;
-  }
-}
 
 /**
  * Handle prompt selection
