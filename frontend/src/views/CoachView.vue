@@ -38,6 +38,7 @@
             :selected="selectedPersona?.id === persona.id"
             @select="handleSelectPersona"
             @view-prompt="handleViewPrompt"
+            @select-prompt="handleSelectPrompt"
           />
         </div>
       </section>
@@ -48,6 +49,24 @@
         :open="showPromptDialog"
         @update:open="showPromptDialog = $event"
         @close="closePromptDialog"
+      />
+
+      <!-- Prompt Selector Dialog -->
+      <PromptSelectorDialog
+        :persona="promptSelectorPersona"
+        :open="showPromptSelector"
+        @update:open="showPromptSelector = $event"
+        @select="handlePromptSelected"
+        @chat="handleChatRequest"
+      />
+
+      <!-- Chat Dialog -->
+      <CoachChatDialog
+        :persona="chatPersona"
+        :prompt-id="chatPromptId"
+        :prompt-title="chatPromptTitle"
+        :open="showChatDialog"
+        @update:open="showChatDialog = $event"
       />
 
       <!-- Privacy & Cost Information -->
@@ -117,6 +136,8 @@ import { usePersonas } from '../composables/usePersonas.js';
 import { usePreferences } from '../composables/usePreferences.js';
 import PersonaCard from '../components/PersonaCard.vue';
 import PromptViewDialog from '../components/PromptViewDialog.vue';
+import PromptSelectorDialog from '../components/PromptSelectorDialog.vue';
+import CoachChatDialog from '../components/CoachChatDialog.vue';
 
 const { personas, selectedPersona, loading, error, loadPersonas, selectPersona } = usePersonas();
 const { preferences, updatePreferences } = usePreferences();
@@ -124,6 +145,16 @@ const { preferences, updatePreferences } = usePreferences();
 // Prompt view dialog state
 const showPromptDialog = ref(false);
 const promptViewPersona = ref(null);
+
+// Prompt selector dialog state
+const showPromptSelector = ref(false);
+const promptSelectorPersona = ref(null);
+
+// Chat dialog state
+const showChatDialog = ref(false);
+const chatPersona = ref(null);
+const chatPromptId = ref(null);
+const chatPromptTitle = ref('');
 
 /**
  * Handle persona selection
@@ -145,6 +176,35 @@ const handleSelectPersona = async (personaId) => {
 const handleViewPrompt = (persona) => {
   promptViewPersona.value = persona;
   showPromptDialog.value = true;
+};
+
+/**
+ * Handle select prompt request
+ */
+const handleSelectPrompt = (persona) => {
+  promptSelectorPersona.value = persona;
+  showPromptSelector.value = true;
+};
+
+/**
+ * Handle prompt selection
+ */
+const handlePromptSelected = ({ personaId, promptId, prompt }) => {
+  console.log('Prompt selected:', { personaId, promptId, prompt });
+  // You can store this in preferences if needed
+};
+
+/**
+ * Handle chat request from prompt selector
+ */
+const handleChatRequest = ({ personaId, promptId, prompt }) => {
+  const persona = personas.value.find(p => p.id === personaId);
+  if (persona) {
+    chatPersona.value = persona;
+    chatPromptId.value = promptId;
+    chatPromptTitle.value = prompt.title;
+    showChatDialog.value = true;
+  }
 };
 
 /**
