@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,43 +38,47 @@ const config = {
 };
 
 /**
- * Validate configuration at startup (T104)
- * Ensures critical environment variables are properly set
+ * Validate configuration on startup (T104)
+ * Ensures critical paths exist or can be created
  */
 export function validateConfig() {
-  const warnings = [];
   const errors = [];
 
-  // Validate DATA_DIR
-  if (!config.dataDir) {
-    errors.push('DATA_DIR is not set. Application cannot store reflections.');
+  // Validate DATA_DIR is accessible
+  try {
+    // Try to create data directory if it doesn't exist
+    // mkdirSync with recursive: true does not throw EEXIST, it succeeds silently
+    fs.mkdirSync(config.dataDir, { recursive: true });
+    
+    // Check if we can write to the data directory
+    fs.accessSync(config.dataDir, fs.constants.W_OK | fs.constants.R_OK);
+  } catch (err) {
+    errors.push(`DATA_DIR (${config.dataDir}) is not accessible or writable: ${err.message}`);
   }
 
-  // Validate OLLAMA_URL format
-  if (!config.ollamaUrl) {
-    warnings.push('OLLAMA_URL is not set. Defaulting to http://localhost:11434');
-  } else if (!config.ollamaUrl.startsWith('http://') && !config.ollamaUrl.startsWith('https://')) {
-    errors.push(`OLLAMA_URL must start with http:// or https://. Got: ${config.ollamaUrl}`);
+  // Validate OLLAMA_URL format (should be valid URL)
+  try {
+    new URL(config.ollamaUrl);
+  } catch (err) {
+    errors.push(`OLLAMA_URL (${config.ollamaUrl}) is not a valid URL: ${err.message}`);
   }
 
-  // Log warnings
-  if (warnings.length > 0) {
-    console.warn('[Config] Warnings:');
-    warnings.forEach((warning) => console.warn(`  - ${warning}`));
+  // Validate port is a number in valid range
+  const port = Number(config.port);
+  if (isNaN(port) || port < 1 || port > 65535) {
+    errors.push(`PORT (${config.port}) must be a number between 1 and 65535`);
   }
 
-  // Throw errors if critical config is missing
   if (errors.length > 0) {
-    console.error('[Config] Critical errors:');
-    errors.forEach((error) => console.error(`  - ${error}`));
-    throw new Error('Configuration validation failed. Please check environment variables.');
+    console.error('[Config] Validation errors:');
+    errors.forEach(err => console.error(`  - ${err}`));
+    throw new Error('Configuration validation failed. Please check the errors above.');
   }
 
-  // Log successful validation
-  console.log('[Config] Configuration validated successfully');
-  console.log(`  - Data directory: ${config.dataDir}`);
-  console.log(`  - Ollama URL: ${config.ollamaUrl}`);
-  console.log(`  - Environment: ${config.nodeEnv}`);
+  console.log('[Config] Validation passed ✓');
+  console.log(`[Config] Data directory: ${config.dataDir}`);
+  console.log(`[Config] Ollama URL: ${config.ollamaUrl}`);
+  console.log(`[Config] Server port: ${config.port}`);
 }
 
 export default config;

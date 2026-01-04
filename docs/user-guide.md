@@ -1,308 +1,385 @@
-# 🌿 Laboratory of Life - User Guide
-
-Welcome to Laboratory of Life, your private space for self-reflection. This guide will help you get started and make the most of the application.
-
-## 🎯 What is Laboratory of Life?
-
-Laboratory of Life is a calm, private tool for personal reflection. It helps you:
-
-- Write your thoughts and feelings in a peaceful environment
-- Import visual artifacts (photos, drawings, sketches) as reflections
-- Get gentle, non-directive feedback from an AI mirror
-- Keep all your reflections organized chronologically
-- Export your data anytime, or delete what you no longer need
-
-**Everything stays on your device** — no cloud sync, no tracking, no accounts.
-
-## 🚀 Getting Started
-
-### First Launch
-
-When you first open Laboratory of Life:
-
-1. The application creates a local data folder on your device
-2. You'll see a calm, uncluttered interface with minimal choices
-3. Your default view is "Compose" — ready for you to start reflecting
-
-### Writing Your First Reflection
-
-1. **Start typing** in the text area
-2. Your work is **auto-saved** as you type (you'll see "Saved" appear)
-3. Press **Cmd/Ctrl + Enter** to manually save
-4. Click **"Ask AI Mirror"** for gentle, reflective feedback (optional)
-
-The AI Mirror doesn't give advice or tell you what to do. Instead, it reflects your thoughts back to you in a curious, non-judgmental way.
-
-## ✨ Key Features
-
-### 📝 Expression Modes
-
-Laboratory of Life supports two ways to express yourself:
-
-#### Text Mode
-- Write freely in the text editor
-- Auto-save protects your work as you type
-- Request AI feedback when you're ready
-- All standard text formatting is preserved
-
-#### Visual Mode
-- Import images: photos, drawings, sketches, artwork
-- Drag and drop or click to upload
-- Supported formats: JPEG, PNG, GIF, WebP, PDF
-- Maximum file size: 10 MB
-
-**Both modes are treated with equal care** — no mode is more important than the other.
-
-### 🤖 AI Mirror Options
-
-You can choose between two AI options:
-
-#### Local AI (Default) - Complete Privacy
-- Uses Ollama running on your computer
-- **Your reflections never leave your device**
-- Requires Ollama to be installed and running
-- Completely private and offline
-
-#### Online AI (Optional) - More Capable
-- Uses OpenAI or Anthropic via the internet
-- **Your reflections are sent to the AI provider**
-- More sophisticated responses
-- Requires an API key
-
-To switch between AI options, go to **Settings** → **AI Model**.
-
-### 👥 Coach Personas (ChatGPT Integration)
-
-If you have a ChatGPT Plus subscription, you can use predefined coaching personas:
-
-1. Go to the **Coach** tab
-2. Select a persona (Stoic Coach, Creative Mentor, etc.)
-3. In **Compose**, click **"Talk to [Persona] in ChatGPT"**
-4. Your reflection opens in ChatGPT with the persona's context
-5. Have a conversation with the persona
-6. Copy back any insights you want to keep
-
-This feature uses your existing ChatGPT subscription — no extra API costs.
-
-### 📚 History
-
-View all your past reflections in chronological order:
-
-- Click **History** in the navigation
-- Browse by date (newest first)
-- Click any reflection to view details
-- Delete individual reflections if needed
-
-### 📤 Data Export
-
-Export your reflections to Markdown format:
-
-1. Go to the **Export** tab
-2. Click **"Export All Reflections"**
-3. Choose format:
-   - **Single file** (includes images as base64)
-   - **Folder** (separate image files)
-4. Your data downloads as a `.md` file
-
-Exported files are human-readable and work with any text editor.
-
-### 🗑️ Deleting Data
-
-You have complete control over your data:
-
-#### Delete Single Reflection
-- In **History**, click the delete button on any reflection
-- Confirm deletion
-- The reflection is permanently removed
-
-#### Delete All Data
-- Go to **Export**
-- Click **"Delete All"**
-- Type `DELETE_ALL` to confirm
-- **We recommend exporting first** — deletion is permanent
-
-## ♿ Accessibility
-
-Laboratory of Life is designed to be accessible to everyone:
-
-### Keyboard Navigation
-- **Tab**: Move between elements
-- **Enter/Space**: Activate buttons and links
-- **Escape**: Close dialogs
-- **Cmd/Ctrl + Enter**: Save reflection
-- **Cmd/Ctrl + N**: New reflection
-- **Shift + ?**: Show keyboard shortcuts
-
-### Screen Reader Support
-- All controls have proper labels
-- Status messages are announced
-- Focus indicators are clearly visible
-- Logical navigation order throughout
-
-### Visual Design
-- High contrast colors (WCAG 2.1 AA compliant)
-- No attention-grabbing animations
-- Calm color palette
-- Readable font sizes
-
-## 🔐 Privacy & Security
-
-### What Stays Private
-
-**Everything** stays on your device unless you explicitly choose otherwise:
-
-- All reflections are stored locally
-- Visual attachments are stored locally
-- Settings and preferences are stored locally
-- No analytics, tracking, or telemetry
-
-### When Data Leaves Your Device
-
-Data only leaves your device when you:
-
-1. **Use online AI** — Your reflection is sent to OpenAI or Anthropic
-2. **Use ChatGPT integration** — You manually copy text to ChatGPT
-3. **Export data** — You download a file (still under your control)
-
-The application will **always warn you** before sending data online.
-
-### Local AI Privacy
-
-When using Ollama (local AI):
-
-- No internet connection required
-- Your reflections never leave your computer
-- The AI model runs entirely on your device
-- Complete privacy guaranteed
-
-## 🛠️ Settings
-
-Customize your experience:
-
-### AI Model
-- Choose between local (Ollama) and online AI
-- Select which local model to use
-- Configure API keys for online AI
-
-### Storage
-- View where your data is stored
-- See how much space you're using
-- Change data location (advanced)
-
-### Theme
-- Light or dark mode (coming soon)
-- Adjust text size (coming soon)
-
-## 💡 Tips for Meaningful Reflection
-
-1. **Write regularly** — Even a few sentences can be valuable
-2. **Don't overthink it** — There's no "right" way to reflect
-3. **Use both modes** — Sometimes words work best, sometimes images do
-4. **Try AI feedback** — It might offer perspectives you hadn't considered
-5. **Export periodically** — Keep backups of your journey
-6. **Delete freely** — You're not obligated to keep everything
-
-## 🤔 Common Questions
-
-### Why isn't the AI responding?
-
-If the local AI isn't working:
-
-1. Check if Ollama is running: `ollama serve`
-2. Make sure you've pulled a model: `ollama pull llama2`
-3. Verify Ollama URL in Settings (default: `http://localhost:11434`)
-
-### Where is my data stored?
-
-By default: `[repository-root]/data/`
-
-You can see the exact path in **Settings** → **Storage**.
-
-### Can I use this on multiple devices?
-
-Laboratory of Life is designed for single-device use. To sync between devices:
-
-1. Export your data on Device A
-2. Copy the export file to Device B
-3. Manually import or recreate reflections
-
-(Automatic sync would require cloud storage, which goes against our privacy principles.)
-
-### What happens if I lose my data?
-
-Your reflections are stored as JSON files in the data folder. As long as you have:
-
-1. Regular exports (recommended)
-2. Backups of your data folder
-3. Time Machine or similar backup system
-
-...your data is safe.
-
-### Can I edit old reflections?
-
-Currently, reflections are write-once. This preserves the "trace of becoming" — showing your journey over time. Future versions may add editing with history tracking.
-
-### Is this a medical or therapeutic tool?
-
-**No.** Laboratory of Life is not:
-
-- A replacement for professional mental health care
-- A diagnostic tool
-- Medical or therapeutic treatment
-
-It's a personal reflection tool. If you're struggling with mental health concerns, please seek help from qualified professionals.
-
-## 🆘 Troubleshooting
-
-### Application won't start
-
-1. Check Node.js version: `node --version` (need 18+)
-2. Reinstall dependencies: `npm install` in both `backend/` and `frontend/`
-3. Check for port conflicts (backend uses 3000, frontend uses 5173)
-
-### Reflections aren't loading
-
-1. Check backend is running: `http://localhost:3000/health`
-2. Verify data directory exists and is readable
-3. Check browser console for errors (F12)
-
-### Can't upload images
-
-1. Check file size (max 10 MB)
-2. Verify file type (JPEG, PNG, GIF, WebP, PDF)
-3. Ensure you have disk space available
-
-### Export isn't working
-
-1. Check that you have reflections to export
-2. Verify browser allows downloads
-3. Check disk space for saving the export file
-
-## 📞 Getting Help
-
-If you encounter issues:
-
-1. Check this guide
-2. Review the [README.md](../README.md) for technical setup
-3. Check the [Developer Quickstart](./quickstart.md) for advanced topics
-4. Open an issue on GitHub with:
-   - What you tried to do
-   - What happened instead
-   - Any error messages
-   - Your OS and browser version
-
-## 🌱 Philosophy
-
-Laboratory of Life is built on seven principles:
-
-1. **AI as Mirror**: Reflective, not directive
-2. **Multiple Forms**: Text and visual equally valued
-3. **Calm Experience**: No pressure, no rush
-4. **Local-First**: Your data stays with you
-5. **Trace of Becoming**: Your journey preserved
-6. **Reversibility**: Export and delete freely
-7. **Accessibility**: Inclusive for all
+# Laboratory of Life - User Guide
+
+> A calm, private space for self-reflection with AI assistance
+
+Welcome to Laboratory of Life! This guide will help you get started and make the most of your reflective journey.
+
+## Table of Contents
+
+1. [Getting Started](#getting-started)
+2. [Writing Reflections](#writing-reflections)
+3. [Using AI Feedback](#using-ai-feedback)
+4. [Markdown Editing](#markdown-editing)
+5. [Visual Reflections](#visual-reflections)
+6. [Viewing Your History](#viewing-your-history)
+7. [Exporting Your Data](#exporting-your-data)
+8. [Settings & Privacy](#settings--privacy)
+9. [Keyboard Shortcuts](#keyboard-shortcuts)
+10. [Accessibility](#accessibility)
 
 ---
 
-*Remember: The AI helps you walk, but the path is yours. The meaning is yours. The life is yours.*
+## Getting Started
+
+### First Launch
+
+When you first open Laboratory of Life, you'll see a clean, calm interface with a simple navigation menu:
+
+- **Compose**: Write a new reflection
+- **History**: View past reflections
+- **Coach**: Select AI coaching personas (optional)
+- **Export**: Download and manage your data
+- **Settings**: Customize your experience
+
+### Your Data is Private
+
+All your reflections are stored locally on your device in the `data/` directory. Nothing is sent to external servers unless you explicitly choose to use online AI features.
+
+---
+
+## Writing Reflections
+
+### Text Reflections
+
+1. Click **"Compose"** in the navigation menu
+2. Start typing in the text area
+3. Your reflection is automatically saved as you type (debounced)
+4. Press **Cmd/Ctrl + Enter** to manually save
+
+### Writing Tips
+
+- Write freely without judgment
+- There's no "right" way to reflect
+- You can use plain text or Markdown formatting
+- The interface stays calm - no timers, no pressure
+
+---
+
+## Using AI Feedback
+
+### Local AI (Default)
+
+Laboratory of Life uses **Ollama** for local AI processing, which means:
+
+- Your data never leaves your device
+- Complete privacy - no internet connection needed (except to localhost)
+- Free to use
+- Requires Ollama to be installed and running
+
+**To get AI feedback:**
+1. Write your reflection
+2. Click **"Ask AI Mirror"**
+3. Wait a few seconds for a gentle, reflective response
+4. The AI provides non-directive feedback - it mirrors and reflects, never tells you what to do
+
+### Online AI (Optional)
+
+If you prefer more capable AI models, you can switch to online providers:
+
+1. Go to **Settings**
+2. Select "Online AI"
+3. Choose OpenAI or Anthropic
+4. Enter your API key
+5. **⚠️ Warning**: You'll see a clear message that data will leave your device
+
+### AI Rephrasing
+
+The rich text editor includes an AI rephrasing feature:
+
+1. Write some text
+2. Select the text you want to rephrase (or leave unselected to rephrase all)
+3. Click the **"Rephrase"** button (purple) in the toolbar
+4. Choose a style:
+   - **Clearer**: Simpler, more concise language
+   - **More Positive**: Reframe with a hopeful tone
+   - **More Constructive**: Focus on growth and learning
+5. Review the 2-3 suggestions
+6. Click **"Accept"** on the one you like, or **"Cancel"** to keep your original text
+
+---
+
+## Markdown Editing
+
+### Enabling Markdown
+
+At the top of the Compose view, you'll see a toggle:
+- **Plain Text** (default)
+- **Markdown** (for formatting)
+
+Click to switch between modes.
+
+### Markdown Syntax
+
+When in Markdown mode, you can use:
+
+| Syntax | Result |
+|--------|--------|
+| `**bold**` | **bold** |
+| `*italic*` | *italic* |
+| `# Heading 1` | Large heading |
+| `## Heading 2` | Medium heading |
+| `### Heading 3` | Small heading |
+| `- item` | Bullet list |
+| `1. item` | Numbered list |
+| `> quote` | Blockquote |
+| `` `code` `` | Inline code |
+| `[text](url)` | Link |
+
+### Using the Toolbar
+
+Don't know Markdown? No problem! Use the formatting toolbar:
+
+- **B** - Bold
+- **I** - Italic
+- **H1, H2, H3** - Headings
+- **List** - Bullet list
+- **1.** - Numbered list
+- **Link** - Insert link
+- **Quote** - Blockquote
+- **Rephrase** - AI rephrasing (purple button)
+
+### Keyboard Shortcuts
+
+- **Cmd/Ctrl + B**: Bold
+- **Cmd/Ctrl + I**: Italic
+- **Cmd/Ctrl + K**: Insert link
+- **Cmd/Ctrl + P**: Toggle edit/preview mode
+
+### Live Preview
+
+Toggle between **Edit** and **Preview** modes to see how your formatted text will look. The preview updates within 200ms of typing.
+
+---
+
+## Visual Reflections
+
+### Importing Images
+
+Not all reflection is verbal. Import visual artifacts:
+
+1. In **Compose** view, toggle from "Text" to "Visual" mode
+2. Click the image import area or drag and drop an image
+3. Supported formats: JPEG, PNG, GIF, WebP, PDF
+4. Maximum file size: 10MB
+5. Your image is stored locally in `data/visuals/`
+
+### Why Visual?
+
+- Import photos that capture a moment
+- Scan and save handwritten journal pages
+- Keep sketches, drawings, or artwork
+- Any visual that holds meaning for you
+
+---
+
+## Viewing Your History
+
+### The History View
+
+Click **"History"** to see all your past reflections:
+
+- Sorted chronologically (newest first)
+- Human-readable timestamps ("2 hours ago", "Yesterday", "March 15")
+- Text and visual reflections displayed with equal prominence
+- Reflections with AI feedback show a small indicator
+
+### Navigating
+
+**With Mouse:**
+- Click on any reflection to view details
+
+**With Keyboard:**
+- **Tab**: Move between reflections
+- **Arrow keys**: Navigate the list
+- **Enter**: Open selected reflection
+- **Delete**: Delete selected reflection (with confirmation)
+
+---
+
+## Exporting Your Data
+
+### Why Export?
+
+- Create a backup
+- Move to a different device
+- Switch to another journaling tool
+- Have peace of mind knowing your data is portable
+
+### How to Export
+
+1. Go to **Export** view
+2. Choose format:
+   - **Single file** (default): One Markdown file with base64-encoded images
+   - **Folder**: Separate Markdown file with images in a subfolder
+3. Click **"Export to Markdown"**
+4. Your browser downloads a `.md` file containing all reflections
+
+### Export Format
+
+The Markdown export is human-readable and includes:
+- Timestamps
+- Full reflection content
+- AI interactions (if any)
+- Visual attachments
+- Coach persona information (if used)
+
+---
+
+## Settings & Privacy
+
+### AI Provider Settings
+
+**Local AI (Default)**
+- Provider: Ollama
+- Model: Choose from available models (llama2, mistral, etc.)
+- Pull models with: `ollama pull <model-name>`
+
+**Online AI (Opt-in)**
+- OpenAI: Requires API key
+- Anthropic: Requires API key
+- **Privacy warning shown** before first use
+- Clear indicator in the header when online AI is active
+
+### Storage Location
+
+Choose where your reflections are stored:
+- **Default Local**: `data/` in the application directory
+- **iCloud Drive** (macOS only): Automatic sync across Apple devices
+- **Custom Location**: Any folder on your device
+
+**Note**: When switching locations, existing files don't move automatically. Export your data first if you want to migrate.
+
+### Privacy Status
+
+The app shows your current privacy mode:
+- 🟢 **Local-only**: All processing on your device
+- 🟠 **Online AI active**: Data being sent to chosen provider
+
+---
+
+## Keyboard Shortcuts
+
+### Global
+
+- **Cmd/Ctrl + N**: New reflection (go to Compose)
+- **Cmd/Ctrl + H**: View history
+- **Cmd/Ctrl + E**: Export data
+- **Cmd/Ctrl + ,**: Open settings
+- **Escape**: Close dialogs
+
+### Compose View
+
+- **Cmd/Ctrl + Enter**: Save reflection
+- **Cmd/Ctrl + P**: Toggle edit/preview (Markdown mode)
+- **Cmd/Ctrl + B**: Bold selection (Markdown mode)
+- **Cmd/Ctrl + I**: Italic selection (Markdown mode)
+- **Cmd/Ctrl + K**: Insert link (Markdown mode)
+
+### Navigation
+
+- **Tab**: Move forward between interactive elements
+- **Shift + Tab**: Move backward
+- **Enter/Space**: Activate buttons
+- **Arrow keys**: Navigate lists
+
+---
+
+## Accessibility
+
+Laboratory of Life is designed to be fully accessible to everyone.
+
+### Screen Reader Support
+
+- All interactive elements have proper labels
+- ARIA live regions announce dynamic content changes
+- Status messages are announced when actions complete
+- Keyboard navigation matches visual layout
+
+### Keyboard Navigation
+
+- **100% keyboard accessible** - no mouse required
+- Visible focus indicators (2px blue borders)
+- Logical tab order
+- Skip to main content link
+- Press **Shift + ?** to view all keyboard shortcuts
+
+### Visual Design
+
+- **WCAG 2.1 Level AA** compliant color contrast
+- Minimum 4.5:1 contrast ratio for all text
+- No reliance on color alone to convey information
+- Calm color palette designed to reduce eye strain
+
+### Motion
+
+- No auto-playing animations
+- No attention-grabbing effects
+- Gentle transitions (< 300ms)
+- Respects `prefers-reduced-motion` user preference
+
+### Screen Magnification
+
+- Layouts adapt to text scaling up to 200%
+- No horizontal scrolling at standard zoom levels
+- Touch targets at least 44×44px
+
+---
+
+## Troubleshooting
+
+### "AI assistant isn't available"
+
+**Problem**: Ollama is not running  
+**Solution**:
+1. Install Ollama from https://ollama.ai/
+2. Start Ollama: `ollama serve`
+3. Pull a model: `ollama pull llama2`
+4. Refresh the app
+
+### "AI model you selected isn't available"
+
+**Problem**: The model hasn't been downloaded  
+**Solution**:
+1. Check available models: `ollama list`
+2. Pull the model: `ollama pull <model-name>`
+3. Go to Settings and select the model
+
+### "Device is running low on storage"
+
+**Problem**: Not enough disk space  
+**Solution**:
+1. Export your reflections first (to keep them safe)
+2. Free up space on your device
+3. Consider deleting older reflections you no longer need
+
+### Slow Performance
+
+**Problem**: Loading 1000+ reflections takes time  
+**Solution**:
+- Reflections are organized by month for performance
+- Consider exporting and archiving older reflections
+- The app is optimized for up to 1000 active reflections
+
+---
+
+## Tips for Meaningful Reflection
+
+1. **No judgments**: There's no "right" way to reflect
+2. **Consistency over length**: Short, regular reflections are valuable
+3. **Use multiple modes**: Switch between text and visual as needed
+4. **Try Markdown**: Headings and lists can help organize thoughts
+5. **AI as mirror**: The AI reflects back to you; it doesn't give advice
+6. **Export regularly**: Create backups for peace of mind
+7. **Privacy first**: Use local AI for complete privacy
+
+---
+
+## Getting Help
+
+- **Documentation**: Check this guide and the README
+- **Issues**: Report bugs on GitHub
+- **Philosophy**: Read "О-чем-проект.md" (in Russian) to understand the project's values
+
+---
+
+*Laboratory of Life is a tool for self-reflection. The AI helps you walk, but the path is yours. The meaning is yours. The life is yours.* 🌿
