@@ -1,7 +1,7 @@
 # Feature Specification: Dynamic Coach Prompts
 
 **Feature ID:** 002-dynamic-coach-prompts  
-**Status:** Planning  
+**Status:** Planning → Implementation  
 **Created:** 2025-12-01  
 **Branch:** `002-dynamic-coach-prompts`
 
@@ -28,52 +28,90 @@ Implement a flexible prompt management system that:
 
 ## 🎯 User Stories
 
-### US1: File-Based Prompts
+### US1: File-Based Prompts ✅ **PARTIALLY IMPLEMENTED**
 **As a user**, I want coach personas to read prompts from files  
 **So that** I can customize and extend coaching approaches without code changes
 
 **Acceptance Criteria:**
-- Prompts can be loaded from JSON configuration files
-- System falls back to hardcoded prompts if file not found
-- File changes are detected and prompts reload without server restart (development mode)
-- Invalid prompt files show clear error messages
+- ✅ **DONE** - Prompts can be loaded from `.txt` files (not JSON yet)
+- ✅ **DONE** - System falls back to hardcoded prompts if file not found
+- ❌ **TODO** - File changes are detected and prompts reload without server restart (development mode)
+- ⚠️ **PARTIAL** - Invalid prompt files fail silently and use fallback (no error messages yet)
 
-### US2: Multiple Prompts per Coach
+**Current Implementation:**
+- `backend/src/domain/entities/prompt-loader.js` - loads prompts from `.txt` files
+- `backend/src/domain/entities/persona-prompts/` - directory for prompt files
+- `GET /api/personas/:id/prompt` - API endpoint to get prompt (with file detection)
+
+### US2: Multiple Prompts per Coach ❌ **NOT IMPLEMENTED**
 **As a user**, I want each coach to have multiple prompt options  
 **So that** I can choose the right coaching approach for my current situation
 
 **Acceptance Criteria:**
-- Each coach can have 1-N prompt variants
-- Each variant has a title, description, and use-case tags
-- UI shows all available prompts for a selected coach
-- User can preview full prompt text before selecting
-- Selected prompt is used for AI interactions
+- ❌ **TODO** - Each coach can have 1-N prompt variants
+- ❌ **TODO** - Each variant has a title, description, and use-case tags
+- ❌ **TODO** - UI shows all available prompts for a selected coach
+- ❌ **TODO** - User can preview full prompt text before selecting
+- ❌ **TODO** - Selected prompt is used for AI interactions
 
-### US3: Copy Prompt to Clipboard
+**Current Status:** Each persona only has ONE prompt (either inline or from file)
+
+### US3: Copy Prompt to Clipboard ❌ **NOT IMPLEMENTED**
 **As a user**, I want to copy any prompt to clipboard  
 **So that** I can manually paste it into ChatGPT or other AI tools
 
 **Acceptance Criteria:**
-- Each prompt has a "Copy" button
-- Clipboard copy includes the full system prompt
-- Success feedback shown after copy (toast/notification)
-- Works in all modern browsers with clipboard API
+- ❌ **TODO** - Each prompt has a "Copy" button
+- ❌ **TODO** - Clipboard copy includes the full system prompt
+- ❌ **TODO** - Success feedback shown after copy (toast/notification)
+- ❌ **TODO** - Works in all modern browsers with clipboard API
 
-### US4: Chat with Local AI Models
+**Current Status:** 
+- ✅ **DONE** - PromptViewDialog shows full prompt text (but no copy button)
+- ❌ **TODO** - No clipboard functionality yet
+
+### US4: Chat with Local AI Models ❌ **NOT IMPLEMENTED**
 **As a user using local AI**, I want to open a chat window  
 **So that** I can have an interactive conversation with the coach
 
 **Acceptance Criteria:**
-- Chat window opens with selected prompt pre-loaded
-- User can send messages and receive AI responses
-- Message history is maintained during the session
-- Supports streaming responses (text appears as it's generated)
-- Works with Ollama local models
-- Chat can be closed and conversation is not persisted
+- ❌ **TODO** - Chat window opens with selected prompt pre-loaded
+- ❌ **TODO** - User can send messages and receive AI responses
+- ❌ **TODO** - Message history is maintained during the session
+- ❌ **TODO** - Supports streaming responses (text appears as it's generated)
+- ❌ **TODO** - Works with Ollama local models
+- ❌ **TODO** - Chat can be closed and conversation is not persisted
+
+**Current Status:** No chat window exists - only ChatGPT link generation for external use
 
 ---
 
 ## 🏗️ Technical Architecture
+
+### ✅ Already Implemented
+
+#### Existing File-Based Prompt System
+**Location:** `backend/src/domain/entities/`
+
+**Current Implementation:**
+- `prompt-loader.js` - Loads prompts from `.txt` files
+- `persona-prompts/` - Directory for individual prompt files (e.g., `tatyana-muzhitskaya.txt`)
+- **Limitation:** Only ONE prompt per persona (not multiple variants)
+
+#### Existing Components
+- ✅ `CoachPersona` entity with validation (Zod schema)
+- ✅ 7 predefined personas in `predefined-personas.js`
+- ✅ `GET /api/personas` - List all personas
+- ✅ `GET /api/personas/:id` - Get single persona
+- ✅ `GET /api/personas/:id/prompt` - Get prompt (with file loading)
+- ✅ `PromptViewDialog.vue` - Shows full prompt text
+- ✅ `PersonaCard.vue` - Displays persona with "View Prompt" button
+- ✅ `CoachView.vue` - Main coach selection view
+- ✅ `ChatGPTLinkGenerator` - Generates external ChatGPT links
+
+---
+
+### 🚧 Needed Additions
 
 ### File Structure
 ```
@@ -358,32 +396,36 @@ interface PersonaWithPrompts {
 ## 🚀 Implementation Phases
 
 ### Phase 1: Backend Foundation (2 days)
-- [ ] Create prompt file schema and example data
-- [ ] Implement PromptFileService
-- [ ] Update API endpoints for prompts
-- [ ] Add unit tests
-- [ ] Add integration tests
+- [x] ✅ **DONE** - Create prompt file schema and example data (simple .txt files exist)
+- [ ] ❌ **TODO** - Migrate to JSON format with multiple prompts per persona
+- [ ] ❌ **TODO** - Implement PromptFileService (enhance existing prompt-loader.js)
+- [ ] ❌ **TODO** - Update API endpoints for multiple prompts per persona
+  - [ ] `GET /api/personas/:id/prompts` - List all prompts for a persona
+  - [ ] `GET /api/personas/:id/prompts/:promptId` - Get specific prompt
+- [x] ✅ **DONE** - Add unit tests (existing tests for personas)
+- [ ] ❌ **TODO** - Add integration tests for new prompt endpoints
 
 ### Phase 2: Frontend - Prompt Selection (2 days)
-- [ ] Create PromptSelectorDialog component
-- [ ] Update PersonaCard to open selector
-- [ ] Implement clipboard copy functionality
-- [ ] Add UI tests
-- [ ] Style and polish
+- [ ] ❌ **TODO** - Create PromptSelectorDialog component
+- [x] ✅ **DONE** - Update PersonaCard to open prompt viewer (opens PromptViewDialog)
+- [ ] ❌ **TODO** - Implement clipboard copy functionality in PromptViewDialog
+- [ ] ❌ **TODO** - Add UI tests
+- [x] ✅ **DONE** - Style and polish (PromptViewDialog exists with styling)
 
 ### Phase 3: Frontend - Chat Window (2 days)
-- [ ] Create CoachChatDialog component
-- [ ] Implement chat API integration
-- [ ] Add streaming response support
-- [ ] Handle loading and error states
-- [ ] Add tests
+- [ ] ❌ **TODO** - Create CoachChatDialog component
+- [ ] ❌ **TODO** - Implement chat API integration
+- [ ] ❌ **TODO** - Add streaming response support
+- [ ] ❌ **TODO** - Handle loading and error states
+- [ ] ❌ **TODO** - Add tests
 
 ### Phase 4: Polish & Documentation (1 day)
-- [ ] Create example prompts for all personas
-- [ ] Update user documentation
-- [ ] Add developer documentation
-- [ ] Performance testing
-- [ ] Bug fixes
+- [x] ✅ **DONE** - Create example prompts (7 personas exist, 1 has external file)
+- [ ] ❌ **TODO** - Convert all personas to JSON format with multiple variants
+- [ ] ❌ **TODO** - Update user documentation
+- [ ] ❌ **TODO** - Add developer documentation
+- [ ] ❌ **TODO** - Performance testing
+- [ ] ❌ **TODO** - Bug fixes
 
 ---
 
