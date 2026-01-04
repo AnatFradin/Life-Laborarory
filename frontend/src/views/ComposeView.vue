@@ -339,44 +339,60 @@ const handleSaveExternalSummary = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-2xl);
+  gap: var(--space-md);
+  flex-wrap: wrap;
 }
 
 .view-header h2 {
   margin: 0;
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .privacy-badge {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-md);
-  background-color: var(--color-primary-light);
-  border-radius: var(--radius-md);
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary-surface) 100%);
+  border-radius: var(--radius-full);
   color: var(--color-primary);
+  border: 1.5px solid var(--color-success-border);
+  box-shadow: var(--shadow-xs);
 }
 
 .privacy-icon {
-  font-size: 1rem;
+  font-size: 1.125rem;
 }
 
 .privacy-text {
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .mode-selection {
   display: flex;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xl);
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xl);
   padding: var(--space-sm);
-  background-color: var(--color-background-secondary);
-  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg) 100%);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .mode-option {
   flex: 1;
   display: flex;
   cursor: pointer;
+  transition: transform var(--transition-base);
+}
+
+.mode-option:hover {
+  transform: scale(1.02);
 }
 
 .mode-option input[type="radio"] {
@@ -391,16 +407,17 @@ const handleSaveExternalSummary = async () => {
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
   background-color: transparent;
   border: 2px solid transparent;
-  border-radius: var(--radius-md);
-  transition: all 0.15s ease;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
 }
 
 .mode-option input[type="radio"]:checked + .mode-label {
-  background-color: var(--color-primary-light);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, white 100%);
   border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .mode-option input[type="radio"]:focus-visible + .mode-label {
@@ -409,24 +426,25 @@ const handleSaveExternalSummary = async () => {
 }
 
 .mode-icon {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
 }
 
 .mode-name {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: var(--text-lg);
   color: var(--color-text);
 }
 
 .compose-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  gap: var(--space-2xl);
 }
 
 .visual-compose {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-xl);
 }
 
 .visual-actions {
@@ -441,26 +459,39 @@ const handleSaveExternalSummary = async () => {
 }
 
 .error-message {
-  padding: var(--space-md);
-  background-color: var(--color-error-light);
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, var(--color-error-light) 0%, #fff5f5 100%);
   color: var(--color-error);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   border-left: 4px solid var(--color-error);
+  box-shadow: var(--shadow-sm);
+  font-weight: 500;
 }
 
 .external-ai-actions {
-  margin-top: var(--space-md);
+  margin-top: var(--space-lg);
 }
+
 .talk-chatgpt-btn {
-  padding: 0.75rem 1rem;
-  background: var(--color-primary);
+  padding: var(--space-md) var(--space-xl);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
 }
+
+.talk-chatgpt-btn:hover:not(:disabled) {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
 .talk-chatgpt-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 </style>
