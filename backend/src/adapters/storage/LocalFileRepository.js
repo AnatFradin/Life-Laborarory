@@ -104,11 +104,12 @@ class LocalFileRepository {
           const validation = safeValidateReflection(reflection);
           if (!validation.success) {
             console.error(`Data integrity error in ${filePath}:`, validation.error.message);
-            // Return the raw data with a flag indicating validation failed
+            // Return the raw data with a sanitized error flag
+            // Only include minimal error info to avoid exposing internal validation details
             return {
               ...reflection,
-              _validationError: validation.error.issues,
               _corrupted: true,
+              _validationError: 'Data validation failed. Please export for backup and contact support.',
             };
           }
           
@@ -153,11 +154,12 @@ class LocalFileRepository {
               const validation = safeValidateReflection(reflection);
               if (!validation.success) {
                 console.error(`Data integrity error in ${filePath}:`, validation.error.message);
-                // Include corrupted reflection with validation error flag for recovery/export
+                // Include corrupted reflection with sanitized error for recovery/export
+                // Only include minimal error info to avoid exposing internal validation details
                 reflections.push({
                   ...reflection,
-                  _validationError: validation.error.issues,
                   _corrupted: true,
+                  _validationError: 'Data validation failed. Please export for backup.',
                 });
               } else {
                 reflections.push(validation.data);

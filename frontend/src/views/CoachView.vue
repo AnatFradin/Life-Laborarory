@@ -242,11 +242,6 @@ onMounted(async () => {
 .retry-button:active {
   transform: translateY(0);
 }
-}
-
-.retry-button:hover {
-  background-color: var(--color-primary-hover, #357ABD);
-}
 
 .retry-button:focus-visible {
   outline: 3px solid var(--color-focus, #4A90E2);

@@ -46,10 +46,14 @@ export function validateConfig() {
 
   // Validate DATA_DIR is accessible
   try {
-    // Try to create data directory if it doesn't exist
-    if (!fs.existsSync(config.dataDir)) {
-      console.log(`[Config] Creating data directory: ${config.dataDir}`);
+    // Try to create data directory if it doesn't exist (handles race condition with try-catch)
+    try {
       fs.mkdirSync(config.dataDir, { recursive: true });
+    } catch (err) {
+      // Directory might already exist, check if it's accessible
+      if (err.code !== 'EEXIST') {
+        throw err;
+      }
     }
     
     // Check if we can write to the data directory
