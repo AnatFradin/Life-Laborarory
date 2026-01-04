@@ -1,10 +1,11 @@
 /**
  * PromptFileService - Service for loading and managing coach prompts from files
  * 
- * Handles loading prompts from JSON files, validation, caching, and fallback to defaults
+ * Handles loading prompts from JSON files (folder-based or single file), 
+ * validation, caching, saving new prompts, and fallback to defaults
  */
 
-import { readFile, watch } from 'fs/promises';
+import { readFile, writeFile, readdir, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -14,19 +15,33 @@ const __dirname = dirname(__filename);
 const DATA_DIR = join(__dirname, '../../../../data/coach-prompts');
 
 class PromptFileService {
-  constructor(promptFilePath = null) {
+  constructor(promptFilePath = null, useFolderBased = true) {
     this.promptFilePath = promptFilePath || join(DATA_DIR, 'prompts.json');
+    this.dataDir = promptFilePath ? dirname(promptFilePath) : DATA_DIR;
     this.prompts = null;
     this.lastLoadTime = null;
     this.watchEnabled = process.env.NODE_ENV !== 'production';
+    this.useFolderBased = useFolderBased && !promptFilePath; // Only use folder-based if no specific file is provided
   }
 
   /**
-   * Load prompts from file
+   * Load prompts from folder-based structure or single file
    * @returns {Promise<Object>} Loaded prompts object
    */
   async loadPrompts() {
     try {
+      // Try folder-based loading first
+      if (this.useFolderBased) {
+        const folderPrompts = await this.loadFromFolders();
+        if (folderPrompts && Object.keys(folderPrompts.personas).length > 0) {
+          this.prompts = folderPrompts;
+          this.lastLoadTime = Date.now();
+          console.log('[PromptFileService] Prompts loaded from folders successfully');
+          return this.prompts;
+        }
+      }
+
+      // Fall back to single file loading
       if (!existsSync(this.promptFilePath)) {
         console.log('[PromptFileService] Prompts file not found, using empty prompts');
         this.prompts = { version: '1.0.0', personas: {} };
@@ -45,7 +60,7 @@ class PromptFileService {
 
       this.prompts = promptData;
       this.lastLoadTime = Date.now();
-      console.log('[PromptFileService] Prompts loaded successfully');
+      console.log('[PromptFileService] Prompts loaded from single file successfully');
 
       return this.prompts;
     } catch (error) {
@@ -55,6 +70,155 @@ class PromptFileService {
       this.lastLoadTime = Date.now();
       return this.prompts;
     }
+  }
+
+  /**
+   * Load prompts from persona folders (stoic-coach/, compassionate-listener/, etc.)
+   * Each folder can contain multiple .json files with individual prompts
+   * @returns {Promise<Object>} Loaded prompts object
+   */
+  async loadFromFolders() {
+    try {
+      if (!existsSync(this.dataDir)) {
+        return null;
+      }
+
+      const entries = await readdir(this.dataDir, { withFileTypes: true });
+      const personas = {};
+
+      for (const entry of entries) {
+        if (!entry.isDirectory() || entry.name.startsWith('.')) {
+          continue;
+        }
+
+        const personaId = entry.name;
+        const personaDir = join(this.dataDir, personaId);
+        const promptFiles = await readdir(personaDir);
+
+        const prompts = [];
+        for (const file of promptFiles) {
+          if (!file.endsWith('.json')) {
+            continue;
+          }
+
+          try {
+            const filePath = join(personaDir, file);
+            const fileContent = await readFile(filePath, 'utf-8');
+            const promptData = JSON.parse(fileContent);
+
+            // Support both single prompt and array of prompts
+            if (Array.isArray(promptData)) {
+              prompts.push(...promptData);
+            } else if (promptData.id) {
+              prompts.push(promptData);
+            }
+          } catch (err) {
+            console.warn(`[PromptFileService] Error loading ${file} for ${personaId}:`, err.message);
+          }
+        }
+
+        if (prompts.length > 0) {
+          personas[personaId] = { prompts };
+        }
+      }
+
+      return {
+        version: '1.0.0',
+        personas
+      };
+    } catch (error) {
+      console.error('[PromptFileService] Error loading from folders:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Save a new prompt for a persona
+   * @param {string} personaId - Persona identifier
+   * @param {Object} promptData - Prompt data to save
+   * @returns {Promise<Object>} Saved prompt with validation
+   */
+  async savePrompt(personaId, promptData) {
+    try {
+      // Validate prompt data
+      const validation = this.validateSinglePrompt(promptData);
+      if (!validation.valid) {
+        throw new Error(`Invalid prompt data: ${validation.error}`);
+      }
+
+      // Create persona folder if it doesn't exist
+      const personaDir = join(this.dataDir, personaId);
+      if (!existsSync(personaDir)) {
+        await mkdir(personaDir, { recursive: true });
+      }
+
+      // Generate filename from prompt ID
+      const filename = `${promptData.id}.json`;
+      const filePath = join(personaDir, filename);
+
+      // Check if file already exists
+      if (existsSync(filePath)) {
+        throw new Error(`Prompt with ID "${promptData.id}" already exists`);
+      }
+
+      // Save the prompt
+      await writeFile(filePath, JSON.stringify(promptData, null, 2), 'utf-8');
+      console.log(`[PromptFileService] Saved prompt ${promptData.id} for ${personaId}`);
+
+      // Reload prompts to update cache
+      await this.reloadPrompts();
+
+      return promptData;
+    } catch (error) {
+      console.error('[PromptFileService] Error saving prompt:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate a single prompt object
+   * @param {Object} prompt - Prompt to validate
+   * @returns {Object} Validation result {valid: boolean, error: string}
+   */
+  validateSinglePrompt(prompt) {
+    const requiredFields = ['id', 'title', 'description', 'tags', 'isDefault', 'systemPrompt'];
+    for (const field of requiredFields) {
+      if (prompt[field] === undefined) {
+        return { valid: false, error: `Missing required field: ${field}` };
+      }
+    }
+
+    // Check ID format
+    if (!/^[a-z0-9-]+$/.test(prompt.id)) {
+      return { valid: false, error: `Invalid prompt ID format: ${prompt.id}. Use lowercase letters, numbers, and hyphens only.` };
+    }
+
+    // Check title
+    if (typeof prompt.title !== 'string' || prompt.title.trim().length === 0) {
+      return { valid: false, error: 'Title must be a non-empty string' };
+    }
+
+    // Check description
+    if (typeof prompt.description !== 'string' || prompt.description.trim().length === 0) {
+      return { valid: false, error: 'Description must be a non-empty string' };
+    }
+
+    // Check tags
+    if (!Array.isArray(prompt.tags) || prompt.tags.length === 0) {
+      return { valid: false, error: 'Tags must be a non-empty array' };
+    }
+
+    // Check isDefault
+    if (typeof prompt.isDefault !== 'boolean') {
+      return { valid: false, error: 'isDefault must be a boolean' };
+    }
+
+    // Check systemPrompt
+    if (typeof prompt.systemPrompt !== 'string' || prompt.systemPrompt.length < 50) {
+      return { valid: false, error: 'System prompt must be at least 50 characters long' };
+    }
+
+    return { valid: true };
   }
 
   /**

@@ -234,6 +234,67 @@ router.get('/:id/prompts/:promptId', (req, res) => {
 });
 
 /**
+ * POST /api/personas/:id/prompts
+ * Create a new prompt for a persona
+ * Body: { id, title, description, tags, isDefault, systemPrompt }
+ */
+router.post('/:id/prompts', async (req, res) => {
+  try {
+    const { id: personaId } = req.params;
+    const promptData = req.body;
+
+    // Check if persona exists
+    const persona = getPersonaById(personaId);
+    if (!persona) {
+      return res.status(404).json({
+        success: false,
+        error: `Coach persona "${personaId}" not found. Please check the persona ID and try again.`,
+      });
+    }
+
+    // Validate required fields
+    const requiredFields = ['id', 'title', 'description', 'tags', 'isDefault', 'systemPrompt'];
+    for (const field of requiredFields) {
+      if (promptData[field] === undefined) {
+        return res.status(400).json({
+          success: false,
+          error: `Missing required field: ${field}`,
+        });
+      }
+    }
+
+    // Save the prompt using PromptFileService
+    if (!promptFileService) {
+      return res.status(500).json({
+        success: false,
+        error: 'Prompt service not available.',
+      });
+    }
+
+    const savedPrompt = await promptFileService.savePrompt(personaId, promptData);
+
+    res.status(201).json({
+      success: true,
+      data: savedPrompt,
+      message: 'Prompt created successfully',
+    });
+  } catch (error) {
+    if (error.message.includes('already exists')) {
+      return res.status(409).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Unable to create prompt. Please try again.',
+      details: error.message,
+    });
+  }
+});
+
+/**
  * POST /api/personas/generate-link
  * Generate a ChatGPT URL with pre-filled prompt
  * Body: { reflectionText: string, personaId: string }

@@ -108,20 +108,29 @@
 
         <div class="dialog-actions">
           <button
-            @click="closeDialog"
-            class="button button-secondary"
+            @click="handleCreateNew"
+            class="button button-create"
             type="button"
           >
-            Cancel
+            ➕ Create New Prompt
           </button>
-          <button
-            @click="handleUseSelected"
-            class="button button-primary"
-            type="button"
-            :disabled="!selectedPromptId"
-          >
-            Use Selected Prompt
-          </button>
+          <div class="dialog-actions-right">
+            <button
+              @click="closeDialog"
+              class="button button-secondary"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              @click="handleUseSelected"
+              class="button button-primary"
+              type="button"
+              :disabled="!selectedPromptId"
+            >
+              Use Selected Prompt
+            </button>
+          </div>
         </div>
 
         <DialogClose class="dialog-close" aria-label="Close dialog">
@@ -137,6 +146,14 @@
     :message="toastMessage"
     :type="toastType"
     @close="showToast = false"
+  />
+
+  <!-- Create Prompt Dialog -->
+  <CreatePromptDialog
+    :persona="persona"
+    :open="showCreateDialog"
+    @update:open="showCreateDialog = $event"
+    @created="handlePromptCreated"
   />
 </template>
 
@@ -154,6 +171,7 @@ import {
 import { usePrompts } from '../composables/usePrompts.js';
 import { useClipboard } from '../composables/useClipboard.js';
 import Toast from './Toast.vue';
+import CreatePromptDialog from './CreatePromptDialog.vue';
 
 const props = defineProps({
   persona: {
@@ -172,6 +190,7 @@ const isOpen = ref(props.open);
 const selectedPromptId = ref(null);
 const previewPrompt = ref(null);
 const loadingPromptDetails = ref(false);
+const showCreateDialog = ref(false);
 
 // Toast state
 const showToast = ref(false);
@@ -298,6 +317,26 @@ function handleUseSelected() {
  */
 function closeDialog() {
   isOpen.value = false;
+}
+
+/**
+ * Handle create new prompt request
+ */
+function handleCreateNew() {
+  showCreateDialog.value = true;
+}
+
+/**
+ * Handle prompt created event
+ */
+async function handlePromptCreated(newPrompt) {
+  showToastMessage(`Prompt "${newPrompt.title}" created successfully!`, 'success');
+  
+  // Reload prompts to include the new one
+  await fetchPrompts();
+  
+  // Auto-select the new prompt
+  selectedPromptId.value = newPrompt.id;
 }
 
 /**
@@ -463,11 +502,17 @@ function showToastMessage(message, type = 'info') {
 
 .dialog-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 0.75rem;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--color-border-light, #e0e0e0);
+}
+
+.dialog-actions-right {
+  display: flex;
+  gap: 0.75rem;
 }
 
 .button {
@@ -478,6 +523,15 @@ function showToastMessage(message, type = 'info') {
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9375rem;
+}
+
+.button-create {
+  background-color: var(--color-success, #4caf50);
+  color: white;
+}
+
+.button-create:hover {
+  background-color: var(--color-success-hover, #45a049);
 }
 
 .button:disabled {
@@ -631,6 +685,19 @@ function showToastMessage(message, type = 'info') {
   }
 
   .button-text {
+    width: 100%;
+  }
+
+  .dialog-actions {
+    flex-direction: column;
+  }
+
+  .dialog-actions-right {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+
+  .button {
     width: 100%;
   }
 }
