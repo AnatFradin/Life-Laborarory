@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Coach Prompts Schema",
+  "description": "Schema for defining coach persona prompts in the Laboratory of Life",
+  "type": "object",
+  "required": ["version", "personas"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version for compatibility tracking",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["1.0.0"]
+    },
+    "personas": {
+      "type": "object",
+      "description": "Map of persona IDs to their prompt configurations",
+      "patternProperties": {
+        "^[a-z0-9-]+$": {
+          "type": "object",
+          "required": ["prompts"],
+          "properties": {
+            "prompts": {
+              "type": "array",
+              "description": "Array of prompt variants for this persona",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["id", "title", "description", "tags", "isDefault", "systemPrompt"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier for this prompt variant",
+                    "pattern": "^[a-z0-9-]+$",
+                    "examples": ["stoic-daily-reflection", "stoic-adversity"]
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Human-readable title for this prompt",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "examples": ["Daily Reflection", "Facing Adversity"]
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Brief description of when to use this prompt",
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "examples": ["General daily reflection focusing on Stoic principles"]
+                  },
+                  "tags": {
+                    "type": "array",
+                    "description": "Tags for categorizing and searching prompts",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9-]+$"
+                    },
+                    "minItems": 1,
+                    "examples": [["daily", "general", "virtue"]]
+                  },
+                  "isDefault": {
+                    "type": "boolean",
+                    "description": "Whether this is the default prompt for the persona"
+                  },
+                  "systemPrompt": {
+                    "type": "string",
+                    "description": "The full system prompt text for the AI",
+                    "minLength": 50,
+                    "examples": ["You are a Stoic coach inspired by Marcus Aurelius..."]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

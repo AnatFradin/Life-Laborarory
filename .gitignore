@@ -74,4 +74,6 @@ test-results/
 
 # User data (private, local-first per FR-014, FR-018)
 data/
+!data/coach-prompts/
+!data/coach-prompts/*.json
 *.json.backup
