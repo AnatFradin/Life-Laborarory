@@ -222,7 +222,7 @@ describe('Reflections API Integration Tests', () => {
         .expect(400);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.message).toContain('formatted correctly');
+      expect(response.body.message).toContain('Something went wrong with your request');
     });
   });
 
