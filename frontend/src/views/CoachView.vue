@@ -198,6 +198,19 @@ onMounted(async () => {
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .error-state {
@@ -218,6 +231,17 @@ onMounted(async () => {
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.retry-button:hover {
+  background-color: var(--color-primary-hover, #3a7bc8);
+  transform: translateY(-1px);
+}
+
+.retry-button:active {
+  transform: translateY(0);
+}
 }
 
 .retry-button:hover {

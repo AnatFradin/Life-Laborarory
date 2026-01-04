@@ -87,6 +87,19 @@ onMounted(() => {
 .error-state {
   text-align: center;
   padding: var(--space-xl);
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .error-message {
@@ -102,9 +115,15 @@ onMounted(() => {
   border-radius: var(--radius-md);
   font-size: 1rem;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .btn-retry:hover {
   background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-retry:active {
+  transform: translateY(0);
 }
 </style>
