@@ -109,7 +109,7 @@ class LocalFileRepository {
             return {
               ...reflection,
               _corrupted: true,
-              _validationError: 'Data validation failed. Please export for backup and contact support.',
+              _validationError: 'Data validation failed. Please export your data for backup and check the documentation for recovery options.',
             };
           }
           
@@ -159,7 +159,7 @@ class LocalFileRepository {
                 reflections.push({
                   ...reflection,
                   _corrupted: true,
-                  _validationError: 'Data validation failed. Please export for backup.',
+                  _validationError: 'Data validation failed. Please export your data for backup and check the documentation for recovery options.',
                 });
               } else {
                 reflections.push(validation.data);

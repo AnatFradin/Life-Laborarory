@@ -62,6 +62,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import '../styles/animations.css';
+
 .history-view {
   max-width: 1000px;
   margin: 0 auto;
@@ -87,19 +89,6 @@ onMounted(() => {
 .error-state {
   text-align: center;
   padding: var(--space-xl);
-  opacity: 0;
-  animation: fadeIn 0.3s ease forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .error-message {

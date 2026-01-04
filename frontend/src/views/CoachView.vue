@@ -167,6 +167,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+@import '../styles/animations.css';
+
 .coach-view {
   max-width: 1200px;
   margin: 0 auto;
@@ -198,19 +200,6 @@ onMounted(async () => {
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
-  opacity: 0;
-  animation: fadeIn 0.3s ease forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .error-state {
