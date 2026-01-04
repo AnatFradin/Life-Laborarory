@@ -273,9 +273,11 @@ describe('AIMirrorService', () => {
       });
 
       expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
-        expect.stringContaining('clear'),
         expect.stringContaining(originalText),
-        { model: 'llama2' }
+        expect.objectContaining({
+          model: 'llama2',
+          systemPrompt: expect.stringContaining('clear')
+        })
       );
     });
 
@@ -294,9 +296,11 @@ describe('AIMirrorService', () => {
       expect(result.style).toBe('more-positive');
       expect(result.suggestions).toEqual(mockSuggestions);
       expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
-        expect.stringContaining('positive'),
         expect.stringContaining(originalText),
-        { model: 'llama2' }
+        expect.objectContaining({
+          model: 'llama2',
+          systemPrompt: expect.stringContaining('positive')
+        })
       );
     });
 
@@ -315,9 +319,11 @@ describe('AIMirrorService', () => {
       expect(result.style).toBe('more-constructive');
       expect(result.suggestions).toEqual(mockSuggestions);
       expect(mockOllamaProvider.generateResponse).toHaveBeenCalledWith(
-        expect.stringContaining('constructive'),
         expect.stringContaining(originalText),
-        { model: 'llama2' }
+        expect.objectContaining({
+          model: 'llama2',
+          systemPrompt: expect.stringContaining('constructive')
+        })
       );
     });
 

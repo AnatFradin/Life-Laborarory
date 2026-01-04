@@ -167,6 +167,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+@import '../styles/animations.css';
+
 .coach-view {
   max-width: 1200px;
   margin: 0 auto;
@@ -218,10 +220,16 @@ onMounted(async () => {
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .retry-button:hover {
-  background-color: var(--color-primary-hover, #357ABD);
+  background-color: var(--color-primary-hover, #3a7bc8);
+  transform: translateY(-1px);
+}
+
+.retry-button:active {
+  transform: translateY(0);
 }
 
 .retry-button:focus-visible {

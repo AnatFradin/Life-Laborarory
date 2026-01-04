@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,5 +36,49 @@ const config = {
     return path.join(this.dataDir, 'preferences.json');
   },
 };
+
+/**
+ * Validate configuration on startup (T104)
+ * Ensures critical paths exist or can be created
+ */
+export function validateConfig() {
+  const errors = [];
+
+  // Validate DATA_DIR is accessible
+  try {
+    // Try to create data directory if it doesn't exist
+    // mkdirSync with recursive: true does not throw EEXIST, it succeeds silently
+    fs.mkdirSync(config.dataDir, { recursive: true });
+    
+    // Check if we can write to the data directory
+    fs.accessSync(config.dataDir, fs.constants.W_OK | fs.constants.R_OK);
+  } catch (err) {
+    errors.push(`DATA_DIR (${config.dataDir}) is not accessible or writable: ${err.message}`);
+  }
+
+  // Validate OLLAMA_URL format (should be valid URL)
+  try {
+    new URL(config.ollamaUrl);
+  } catch (err) {
+    errors.push(`OLLAMA_URL (${config.ollamaUrl}) is not a valid URL: ${err.message}`);
+  }
+
+  // Validate port is a number in valid range
+  const port = Number(config.port);
+  if (isNaN(port) || port < 1 || port > 65535) {
+    errors.push(`PORT (${config.port}) must be a number between 1 and 65535`);
+  }
+
+  if (errors.length > 0) {
+    console.error('[Config] Validation errors:');
+    errors.forEach(err => console.error(`  - ${err}`));
+    throw new Error('Configuration validation failed. Please check the errors above.');
+  }
+
+  console.log('[Config] Validation passed ✓');
+  console.log(`[Config] Data directory: ${config.dataDir}`);
+  console.log(`[Config] Ollama URL: ${config.ollamaUrl}`);
+  console.log(`[Config] Server port: ${config.port}`);
+}
 
 export default config;

@@ -62,6 +62,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import '../styles/animations.css';
+
 .history-view {
   max-width: 1000px;
   margin: 0 auto;
@@ -102,9 +104,15 @@ onMounted(() => {
   border-radius: var(--radius-md);
   font-size: 1rem;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .btn-retry:hover {
   background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-retry:active {
+  transform: translateY(0);
 }
 </style>
