@@ -169,13 +169,13 @@ onMounted(() => {
 .reflection-editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
 }
 
 .editor-header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
 }
 
 .header-top {
@@ -186,32 +186,41 @@ onMounted(() => {
 }
 
 .editor-label {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: 700;
   color: var(--color-text);
+  letter-spacing: -0.01em;
 }
 
 .toggle-switch {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
   cursor: pointer;
   position: relative;
   user-select: none;
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+}
+
+.toggle-switch:hover {
+  background-color: var(--color-bg-hover);
 }
 
 .toggle-label-left,
 .toggle-label-right {
-  font-size: 0.6875rem;
-  color: var(--color-text-tertiary, #a0aec0);
-  transition: color 150ms ease;
-  font-weight: 400;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  transition: all var(--transition-base);
+  font-weight: 500;
 }
 
 .toggle-label-left.active,
 .toggle-label-right.active {
-  color: var(--color-text-secondary, #5a6c7d);
-  font-weight: 500;
+  color: var(--color-text);
+  font-weight: 700;
 }
 
 .toggle-input {
@@ -223,66 +232,78 @@ onMounted(() => {
 
 .toggle-slider {
   position: relative;
-  width: 32px;
-  height: 16px;
-  background-color: var(--color-border, #e0e5eb);
-  border-radius: 16px;
-  transition: background-color 200ms ease;
+  width: 40px;
+  height: 20px;
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-slider::before {
   content: '';
   position: absolute;
-  height: 12px;
-  width: 12px;
+  height: 16px;
+  width: 16px;
   left: 2px;
   top: 2px;
   background-color: white;
   border-radius: 50%;
-  transition: transform 200ms ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-xs);
 }
 
 .toggle-input:checked + .toggle-slider {
-  background-color: var(--color-primary, #5a6c7d);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
 }
 
 .toggle-input:checked + .toggle-slider::before {
-  transform: translateX(16px);
+  transform: translateX(20px);
 }
 
 .toggle-input:focus + .toggle-slider {
-  box-shadow: 0 0 0 2px rgba(90, 108, 125, 0.2);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .toggle-switch:hover .toggle-slider {
-  background-color: var(--color-border-focus, #c5ced9);
+  background-color: var(--color-border-strong);
 }
 
 .toggle-input:checked + .toggle-slider:hover {
-  background-color: var(--color-primary-hover, #4a5c6d);
+  background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-primary) 100%);
 }
 
 .editor-hint {
   display: block;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
 }
 
 .reflection-textarea {
   width: 100%;
-  min-height: 300px;
-  padding: var(--space-md);
-  font-size: 1rem;
-  line-height: 1.6;
+  min-height: 350px;
+  padding: var(--space-lg);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
   border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   resize: vertical;
   font-family: var(--font-sans);
-  transition: border-color 0.2s;
+  transition: all var(--transition-base);
+  background: linear-gradient(to bottom, white 0%, var(--color-bg) 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.reflection-textarea:hover {
+  border-color: var(--color-border-strong);
 }
 
 .reflection-textarea:focus {
   outline: none;
   border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-focus-ring), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: white;
 }
 
 .reflection-textarea::placeholder {
@@ -298,48 +319,61 @@ onMounted(() => {
 
 .btn-save,
 .btn-ai {
-  padding: var(--space-sm) var(--space-lg);
-  font-size: 1rem;
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  transition: background-color 0.2s;
+  padding: var(--space-md) var(--space-2xl);
+  font-size: var(--text-base);
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-save {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: white;
   border: none;
 }
 
 .btn-save:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .btn-ai {
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-bg-elevated);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: 1.5px solid var(--color-border);
 }
 
 .btn-ai:hover:not(:disabled) {
-  background-color: var(--color-border);
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .btn-save:disabled,
 .btn-ai:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .save-status {
   margin-left: auto;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-weight: 500;
 }
 
 .error-message {
-  padding: var(--space-sm) var(--space-md);
-  background-color: #fee;
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, var(--color-error-light) 0%, #fff5f5 100%);
   color: var(--color-error);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-left: 4px solid var(--color-error);
+  box-shadow: var(--shadow-xs);
 }
 </style>

@@ -250,26 +250,47 @@ const getPersonaIcon = (personaId) => {
 .reflections-container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
 }
 
 .reflection-card {
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
+  background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-bg-secondary) 100%);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.reflection-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 
 .reflection-card:hover {
   border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.reflection-card:hover::before {
+  opacity: 1;
 }
 
 .reflection-card:focus {
   outline: none;
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 2px var(--color-primary-light);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .reflection-header {
@@ -288,26 +309,29 @@ const getPersonaIcon = (personaId) => {
 }
 
 .reflection-time {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
 }
 
 .delete-button {
   background: transparent;
-  border: 1px solid var(--color-border);
-  padding: var(--space-xs) var(--space-sm);
-  font-size: 1rem;
-  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 1.125rem;
+  border-radius: var(--radius-md);
   cursor: pointer;
   color: var(--color-text-muted);
-  transition: all 0.15s ease;
+  transition: all var(--transition-base);
   flex-shrink: 0;
 }
 
 .delete-button:hover {
   background: var(--color-danger-surface);
-  border-color: var(--color-danger-light);
+  border-color: var(--color-danger-border);
   color: var(--color-danger);
   transform: scale(1.05);
+  box-shadow: var(--shadow-xs);
 }
 
 .delete-button:focus-visible {
@@ -316,53 +340,64 @@ const getPersonaIcon = (personaId) => {
 }
 
 .delete-button:active {
-  transform: scale(0.98);
+  transform: scale(0.95);
 }
 
 .reflection-mode {
   text-transform: capitalize;
   background-color: var(--color-bg-secondary);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  border: 1px solid var(--color-border);
 }
 
 .reflection-content {
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 
 .reflection-text {
   color: var(--color-text);
-  line-height: 1.6;
+  line-height: var(--leading-relaxed);
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: var(--text-base);
 }
 
 .reflection-footer {
   display: flex;
   align-items: center;
-  padding-top: var(--space-sm);
+  padding-top: var(--space-md);
   border-top: 1px solid var(--color-border);
+  gap: var(--space-sm);
 }
 
 .ai-badge {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  font-weight: 500;
 }
 
 .persona-badge {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  background-color: var(--color-primary-light);
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  padding: var(--space-xs) var(--space-md);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary-surface) 100%);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
   color: var(--color-primary);
-  margin-left: var(--space-sm);
+  font-weight: 600;
+  border: 1.5px solid var(--color-success-border);
+  box-shadow: var(--shadow-xs);
 }
 
 .persona-badge span[aria-hidden] {
@@ -370,6 +405,6 @@ const getPersonaIcon = (personaId) => {
 }
 
 .persona-name {
-  font-weight: 500;
+  font-weight: 600;
 }
 </style>
