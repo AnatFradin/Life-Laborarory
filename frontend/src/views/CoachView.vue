@@ -190,8 +190,8 @@ const handleSelectPrompt = (persona) => {
  * Handle prompt selection
  */
 const handlePromptSelected = ({ personaId, promptId, prompt }) => {
-  console.log('Prompt selected:', { personaId, promptId, prompt });
-  // You can store this in preferences if needed
+  // Store selected prompt for future use if needed
+  // You can store this in preferences or state management
 };
 
 /**

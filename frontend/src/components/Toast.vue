@@ -7,9 +7,9 @@
       :aria-live="type === 'error' ? 'assertive' : 'polite'"
     >
       <div class="toast__icon">
-        <span v-if="type === 'success'">✓</span>
-        <span v-else-if="type === 'error'">✕</span>
-        <span v-else>ℹ️</span>
+        <span v-if="type === 'success'" aria-label="Success">✓</span>
+        <span v-else-if="type === 'error'" aria-label="Error">✕</span>
+        <span v-else aria-label="Info">ℹ</span>
       </div>
       <div class="toast__message">{{ message }}</div>
     </div>
