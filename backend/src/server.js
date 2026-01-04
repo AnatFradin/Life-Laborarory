@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import config, { validateConfig } from './config/index.js';
 import errorHandler from './adapters/http/middleware/errorHandler.js';
+import PromptFileService from './domain/services/PromptFileService.js';
 
 // Validate configuration on startup (T104)
 try {
@@ -10,6 +11,13 @@ try {
   console.error('[Server] Configuration validation failed:', err.message);
   process.exit(1);
 }
+
+// Initialize PromptFileService
+const promptFileService = new PromptFileService();
+promptFileService.loadPrompts().catch((err) => {
+  console.error('[Server] Warning: Failed to load prompts:', err.message);
+  console.error('[Server] Will fall back to hardcoded prompts');
+});
 
 const app = express();
 
@@ -34,16 +42,18 @@ import reflectionsRouter from './adapters/http/routes/reflections.js';
 import aiRouter from './adapters/http/routes/ai.js';
 import createExportRouter from './adapters/http/routes/export.js';
 import preferencesRouter from './adapters/http/routes/preferences.js';
-import personasRouter from './adapters/http/routes/personas.js';
+import createPersonasRouter from './adapters/http/routes/personas.js';
+import createChatRouter from './adapters/http/routes/ai-chat.js';
 import visualsRouter from './adapters/http/routes/visuals.js';
 import storageRouter from './adapters/http/routes/storage.js';
 
 // API routes
 app.use('/api/reflections', reflectionsRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/ai/chat', createChatRouter(promptFileService));
 app.use('/api/export', createExportRouter());
 app.use('/api/preferences', preferencesRouter);
-app.use('/api/personas', personasRouter);
+app.use('/api/personas', createPersonasRouter(promptFileService));
 app.use('/api/visuals', visualsRouter);
 app.use('/api/storage', storageRouter);
 

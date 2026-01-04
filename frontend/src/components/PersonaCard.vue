@@ -28,14 +28,24 @@
         </span>
       </div>
 
-      <button
-        @click.stop="handleViewPrompt"
-        class="persona-card__view-prompt-btn"
-        data-testid="view-prompt-button"
-        :aria-label="`View coaching prompt for ${persona.name}`"
-      >
-        👁️ View Prompt
-      </button>
+      <div class="persona-card__buttons">
+        <button
+          @click.stop="handleSelectPrompt"
+          class="persona-card__select-prompt-btn"
+          data-testid="select-prompt-button"
+          :aria-label="`Select prompt for ${persona.name}`"
+        >
+          📝 Select Prompt
+        </button>
+        <button
+          @click.stop="handleViewPrompt"
+          class="persona-card__view-prompt-btn"
+          data-testid="view-prompt-button"
+          :aria-label="`View coaching prompt for ${persona.name}`"
+        >
+          👁️ View Default
+        </button>
+      </div>
     </div>
 
     <div class="persona-card__check" v-if="props.selected" aria-hidden="true">
@@ -60,7 +70,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['select', 'view-prompt']);
+const emit = defineEmits(['select', 'view-prompt', 'select-prompt']);
 
 function handleSelect() {
   emit('select', props.persona.id);
@@ -68,6 +78,10 @@ function handleSelect() {
 
 function handleViewPrompt() {
   emit('view-prompt', props.persona);
+}
+
+function handleSelectPrompt() {
+  emit('select-prompt', props.persona);
 }
 </script>
 
@@ -150,9 +164,16 @@ function handleViewPrompt() {
   border-radius: 12px;
 }
 
-.persona-card__view-prompt-btn {
+.persona-card__buttons {
+  display: flex;
+  gap: 0.5rem;
   margin-top: 0.75rem;
-  padding: 0.5rem 1rem;
+}
+
+.persona-card__select-prompt-btn,
+.persona-card__view-prompt-btn {
+  flex: 1;
+  padding: 0.625rem 1rem;
   background-color: var(--color-bg-surface, #f9f9f9);
   border: 1px solid var(--persona-color, #8B7355);
   color: var(--persona-color, #8B7355);
@@ -163,14 +184,17 @@ function handleViewPrompt() {
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
 }
 
+.persona-card__select-prompt-btn:hover,
 .persona-card__view-prompt-btn:hover {
   background-color: var(--persona-color, #8B7355);
   color: white;
 }
 
+.persona-card__select-prompt-btn:focus-visible,
 .persona-card__view-prompt-btn:focus-visible {
   outline: 2px solid var(--color-focus, #4A90E2);
   outline-offset: 2px;

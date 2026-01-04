@@ -1,15 +1,21 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import personasRouter from '../../src/adapters/http/routes/personas.js';
+import createPersonasRouter from '../../src/adapters/http/routes/personas.js';
+import PromptFileService from '../../src/domain/services/PromptFileService.js';
 
 describe('Personas API Integration Tests', () => {
   let app;
+  let promptFileService;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    // Initialize PromptFileService with test data
+    promptFileService = new PromptFileService();
+    await promptFileService.loadPrompts();
+
     app = express();
     app.use(express.json());
-    app.use('/api/personas', personasRouter);
+    app.use('/api/personas', createPersonasRouter(promptFileService));
   });
 
   describe('GET /api/personas', () => {
@@ -261,6 +267,85 @@ describe('Personas API Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
       expect(response.body).toHaveProperty('error');
       expect(response.body.success).toBe(false);
+    });
+  });
+
+  describe('GET /api/personas/:id/prompts', () => {
+    it('should return all prompts for a persona', async () => {
+      const response = await request(app)
+        .get('/api/personas/stoic-coach/prompts')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.personaId).toBe('stoic-coach');
+      expect(Array.isArray(response.body.data.prompts)).toBe(true);
+      
+      // Should have multiple prompts from prompts.json
+      if (response.body.data.prompts.length > 0) {
+        const firstPrompt = response.body.data.prompts[0];
+        expect(firstPrompt).toHaveProperty('id');
+        expect(firstPrompt).toHaveProperty('title');
+        expect(firstPrompt).toHaveProperty('description');
+        expect(firstPrompt).toHaveProperty('tags');
+        expect(firstPrompt).toHaveProperty('isDefault');
+        // Should NOT include full systemPrompt in list view
+        expect(firstPrompt).not.toHaveProperty('systemPrompt');
+      }
+    });
+
+    it('should return 404 for non-existent persona', async () => {
+      const response = await request(app)
+        .get('/api/personas/non-existent-persona/prompts')
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('not found');
+    });
+
+    it('should return empty array for persona without prompts in file', async () => {
+      const response = await request(app)
+        .get('/api/personas/benjamin-franklin/prompts')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(Array.isArray(response.body.data.prompts)).toBe(true);
+      // May be empty if not in prompts.json
+    });
+  });
+
+  describe('GET /api/personas/:id/prompts/:promptId', () => {
+    it('should return specific prompt with full details', async () => {
+      const response = await request(app)
+        .get('/api/personas/stoic-coach/prompts/stoic-daily-reflection')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.id).toBe('stoic-daily-reflection');
+      expect(response.body.data.title).toBeDefined();
+      expect(response.body.data.description).toBeDefined();
+      expect(response.body.data.tags).toBeDefined();
+      expect(response.body.data.isDefault).toBeDefined();
+      // Should include full systemPrompt in detail view
+      expect(response.body.data.systemPrompt).toBeDefined();
+      expect(response.body.data.systemPrompt.length).toBeGreaterThan(50);
+    });
+
+    it('should return 404 for non-existent prompt ID', async () => {
+      const response = await request(app)
+        .get('/api/personas/stoic-coach/prompts/non-existent-prompt')
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('not found');
+    });
+
+    it('should return 404 for non-existent persona', async () => {
+      const response = await request(app)
+        .get('/api/personas/non-existent-persona/prompts/some-prompt')
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('not found');
     });
   });
 });
