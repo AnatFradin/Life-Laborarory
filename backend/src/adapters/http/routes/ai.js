@@ -2,6 +2,7 @@
  * AI routes - HTTP endpoints for AI mirror service
  * 
  * POST /api/ai/mirror - Generate AI mirror response
+ * POST /api/ai/chat - Interactive chat with coach personas
  * 
  * Per User Story 4 (T073):
  * - Supports multiple AI providers (Ollama, OpenAI, Anthropic)
@@ -17,6 +18,7 @@ import { OpenAIAdapter } from '../../ai/OpenAIAdapter.js';
 import { AnthropicAdapter } from '../../ai/AnthropicAdapter.js';
 import { LocalPreferencesRepository } from '../../storage/LocalPreferencesRepository.js';
 import { validateBody } from '../middleware/validation.js';
+import { getPersonaById } from '../../../domain/entities/predefined-personas.js';
 import config from '../../../config/index.js';
 
 const router = express.Router();

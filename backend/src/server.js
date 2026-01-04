@@ -43,12 +43,14 @@ import aiRouter from './adapters/http/routes/ai.js';
 import createExportRouter from './adapters/http/routes/export.js';
 import preferencesRouter from './adapters/http/routes/preferences.js';
 import createPersonasRouter from './adapters/http/routes/personas.js';
+import createChatRouter from './adapters/http/routes/ai-chat.js';
 import visualsRouter from './adapters/http/routes/visuals.js';
 import storageRouter from './adapters/http/routes/storage.js';
 
 // API routes
 app.use('/api/reflections', reflectionsRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/ai/chat', createChatRouter(promptFileService));
 app.use('/api/export', createExportRouter());
 app.use('/api/preferences', preferencesRouter);
 app.use('/api/personas', createPersonasRouter(promptFileService));
