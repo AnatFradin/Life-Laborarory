@@ -1,0 +1,55 @@
+/**
+ * Shared animations for Laboratory of Life
+ * 
+ * Gentle, calm animations following FR-006 (no attention-grabbing effects)
+ * All animations < 300ms for smooth but unobtrusive transitions
+ */
+
+/* Fade in with subtle upward movement */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide down for collapsible sections */
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 1000px;
+    opacity: 1;
+  }
+}
+
+/* Utility classes for applying animations */
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.slide-down {
+  animation: slideDown 0.2s ease forwards;
+}
+
+/* Loading state animation */
+.loading-state {
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.error-state {
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.empty-state {
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}

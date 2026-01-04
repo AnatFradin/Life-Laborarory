@@ -1,17 +1,14 @@
-# 🚀 Developer Quickstart - Laboratory of Life
+# Developer Quickstart
 
-Welcome! This guide will help you get up and running with Laboratory of Life development as quickly as possible.
+> Get Laboratory of Life up and running for development in minutes
 
-## 📋 Prerequisites
+## Prerequisites
 
-Before you start, make sure you have:
+- **Node.js** 18+ ([Download](https://nodejs.org/))
+- **Ollama** (for local AI) - [Install](https://ollama.ai/)
+- **Git** (for cloning the repository)
 
-- **Node.js 18+** ([Download](https://nodejs.org/))
-- **Ollama** (for local AI testing) - [Installation](https://ollama.ai/)
-- **Git** (for version control)
-- A code editor (VS Code recommended)
-
-## ⚡ Quick Setup (5 minutes)
+## Quick Setup
 
 ### 1. Clone and Install
 
@@ -32,363 +29,509 @@ npm install
 cd ..
 ```
 
-### 2. Setup Ollama (Local AI)
+### 2. Setup Ollama
 
 ```bash
-# Install Ollama from https://ollama.ai/
-# Then pull a model
+# Pull a model (llama2 is a good default)
 ollama pull llama2
 
 # Start Ollama (if not already running)
 ollama serve
 ```
 
-### 3. Start Development Servers
+### 3. Run Development Servers
 
-```bash
-# Terminal 1: Start backend (from backend/ directory)
-cd backend
-npm run dev
-# Backend runs on http://localhost:3000
+Open two terminal windows/tabs:
 
-# Terminal 2: Start frontend (from frontend/ directory)
-cd frontend
-npm run dev
-# Frontend runs on http://localhost:5173
-```
-
-### 4. Open Your Browser
-
-Navigate to `http://localhost:5173` and start developing!
-
-## 🏗️ Project Structure
-
-```
-Life-Laborarory/
-├── backend/                 # Node.js + Express API
-│   ├── src/
-│   │   ├── domain/         # Business logic (entities, services, ports)
-│   │   │   ├── entities/   # Data models with Zod validation
-│   │   │   ├── services/   # Core business logic
-│   │   │   └── ports/      # Interfaces for adapters
-│   │   ├── adapters/       # External integrations
-│   │   │   ├── http/       # Express routes & middleware
-│   │   │   ├── storage/    # File system storage
-│   │   │   ├── ai/         # AI providers (Ollama, OpenAI, Anthropic)
-│   │   │   └── export/     # Markdown export
-│   │   ├── config/         # Configuration & env vars
-│   │   └── server.js       # Express app entry point
-│   └── tests/              # Backend tests
-│       ├── unit/           # Unit tests
-│       ├── integration/    # Integration tests
-│       └── smoke/          # Smoke tests
-│
-├── frontend/               # Vue 3 + Vite
-│   ├── src/
-│   │   ├── components/    # Reusable Vue components
-│   │   ├── views/         # Page-level components
-│   │   ├── composables/   # Vue 3 composition functions
-│   │   ├── services/      # API client
-│   │   ├── router/        # Vue Router config
-│   │   ├── styles/        # CSS (calm palette, accessibility)
-│   │   └── utils/         # Helper functions
-│   └── tests/             # Frontend tests
-│       ├── unit/          # Vitest unit tests
-│       └── e2e/           # Playwright E2E tests
-│
-├── data/                  # Local storage (gitignored)
-│   ├── reflections/       # User reflections (by month)
-│   ├── visuals/           # Uploaded images
-│   └── preferences.json   # User settings
-│
-├── docs/                  # Documentation
-│   ├── user-guide.md      # User documentation
-│   ├── quickstart.md      # This file
-│   └── *.md               # Other guides
-│
-└── specs/                 # Feature specifications
-    └── 000-product-vision/
-        ├── spec.md        # Product requirements
-        ├── plan.md        # Technical architecture
-        ├── tasks.md       # Implementation tasks
-        └── data-model.md  # Data structures
-```
-
-## 🎯 Architecture Overview
-
-Laboratory of Life follows **Hexagonal Architecture** (Ports & Adapters):
-
-### Backend Layers
-
-1. **Domain** (`backend/src/domain/`)
-   - Pure business logic, no external dependencies
-   - Entities: Data models with validation
-   - Services: Business operations
-   - Ports: Interfaces that adapters must implement
-
-2. **Adapters** (`backend/src/adapters/`)
-   - HTTP: Express routes and middleware
-   - Storage: File system operations
-   - AI: Ollama and online AI providers
-   - Export: Markdown generation
-
-3. **Configuration** (`backend/src/config/`)
-   - Environment variables
-   - Application settings
-
-### Frontend Layers
-
-1. **Views** (`frontend/src/views/`)
-   - Page-level components
-   - Route targets
-
-2. **Components** (`frontend/src/components/`)
-   - Reusable UI elements
-   - Use Radix Vue for accessibility
-
-3. **Composables** (`frontend/src/composables/`)
-   - Reactive state management
-   - Business logic
-   - API integration
-
-4. **Services** (`frontend/src/services/`)
-   - API client (axios)
-   - External integrations
-
-## 🧪 Running Tests
-
-### Backend Tests
-
+**Terminal 1 - Backend:**
 ```bash
 cd backend
-
-# Run all tests
-npm test
-
-# Run specific test suites
-npm run test:unit          # Unit tests only
-npm run test:integration   # Integration tests
-npm run test:smoke         # Smoke tests
-
-# With coverage
-npm run test:coverage
+npm run dev
 ```
+Backend runs on `http://localhost:3000`
 
-### Frontend Tests
-
+**Terminal 2 - Frontend:**
 ```bash
 cd frontend
-
-# Run unit tests (Vitest)
-npm test
-
-# Run E2E tests (Playwright)
-npm run test:e2e
-npm run test:e2e:ui        # With UI
-
-# With coverage
-npm run test:coverage
+npm run dev
 ```
+Frontend runs on `http://localhost:5173`
 
-## 🔧 Development Workflow
+### 4. Open in Browser
 
-### 1. Pick a Task
+Navigate to `http://localhost:5173`
 
-Check `specs/000-product-vision/tasks.md` for the task list. Look for:
-- `[ ]` Incomplete tasks
-- `[P]` Parallel-safe tasks (can work independently)
-
-### 2. Create a Branch
-
-```bash
-git checkout -b feature/task-TXXX-description
-```
-
-### 3. Make Changes
-
-Follow these principles:
-- **Minimal changes**: Only modify what's necessary
-- **Test as you go**: Write/update tests for your changes
-- **Follow conventions**: Match existing code style
-- **Accessibility first**: All UI changes must be keyboard-accessible
-
-### 4. Test Your Changes
-
-```bash
-# Backend
-cd backend && npm test
-
-# Frontend
-cd frontend && npm test
-
-# Manual testing
-# Start both servers and test in browser
-```
-
-### 5. Commit
-
-```bash
-git add .
-git commit -m "feat(TXXX): Brief description of change"
-git push origin feature/task-TXXX-description
-```
-
-### 6. Create Pull Request
-
-- Reference the task number (TXXX)
-- Describe what you changed and why
-- Include screenshots for UI changes
-- Mark related task as `[X]` in tasks.md
-
-## 📝 Code Style Guidelines
-
-### General Principles
-
-1. **Plain Language**: No jargon, technical terms in user-facing text
-2. **Calm UX**: No animations, notifications, or time pressure
-3. **Accessibility**: All features keyboard-accessible, screen-reader compatible
-4. **Privacy**: No network calls for user data without explicit consent
-
-### Backend Conventions
-
-- Use ES modules (`import/export`)
-- Async/await for all async operations
-- Zod for validation (see `backend/src/domain/entities/`)
-- Gentle error messages (see error handler)
-- JSDoc comments for public APIs
-
-### Frontend Conventions
-
-- Vue 3 Composition API (not Options API)
-- Composables for shared logic
-- Radix Vue for accessible primitives
-- Scoped styles in components
-- Keyboard shortcuts for all actions
-
-### Accessibility Checklist
-
-Every UI component must:
-- [ ] Work with keyboard only (Tab, Enter, Escape, Arrows)
-- [ ] Have proper ARIA labels and roles
-- [ ] Show visible focus indicators
-- [ ] Pass WCAG 2.1 Level AA contrast
-- [ ] Be tested with a screen reader
-
-## 🐛 Debugging Tips
-
-### Backend Debugging
-
-```bash
-# Check if backend is running
-curl http://localhost:3000/health
-
-# View server logs
-# Logs appear in the terminal where you ran `npm run dev`
-
-# Check data directory
-ls -la data/reflections/
-
-# Verify Ollama connection
-curl http://localhost:11434/api/tags
-```
-
-### Frontend Debugging
-
-```bash
-# Open browser DevTools (F12)
-# Check Console for errors
-# Check Network tab for API calls
-
-# Vue DevTools
-# Install browser extension for better debugging
-```
-
-### Common Issues
-
-**Backend won't start**
-- Check port 3000 isn't in use: `lsof -i :3000`
-- Verify Node.js version: `node --version` (need 18+)
-
-**Frontend won't start**
-- Check port 5173 isn't in use: `lsof -i :5173`
-- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
-
-**Ollama connection fails**
-- Verify Ollama is running: `ollama list`
-- Check URL in settings (default: `http://localhost:11434`)
-
-**Tests failing**
-- Make sure both servers are stopped before running tests
-- Check if data directory has proper permissions
-
-## 🎨 UI Development
-
-### Calm Color Palette
-
-Laboratory of Life uses a calm, accessible color palette (see `frontend/src/styles/main.css`):
-
-- **Primary**: Muted blue-green
-- **Background**: Soft white/cream
-- **Text**: Dark gray (not pure black)
-- **Focus**: Clear, calm blue outline
-
-### Design Principles
-
-1. **Max 3 choices** per screen (FR-001)
-2. **No animations** that grab attention (FR-006)
-3. **High contrast** (WCAG 2.1 AA minimum)
-4. **Generous spacing** for calm feeling
-5. **Large click targets** (min 44x44px)
-
-## 🔐 Privacy Considerations
-
-When adding features, ensure:
-
-1. **Data stays local** by default
-2. **Clear warnings** before any data leaves device
-3. **No analytics** or tracking code
-4. **User control** over all data (export, delete)
-5. **Atomic writes** to prevent corruption
-
-## 📚 Key Resources
-
-- **Product Vision**: `specs/000-product-vision/spec.md`
-- **Architecture**: `specs/000-product-vision/plan.md`
-- **Data Models**: `specs/000-product-vision/data-model.md`
-- **API Contracts**: `specs/000-product-vision/contracts/`
-- **User Guide**: `docs/user-guide.md`
-
-## 💡 Pro Tips
-
-1. **Use git hooks** for linting (if available)
-2. **Test with keyboard only** regularly
-3. **Test with screen reader** (VoiceOver on Mac, NVDA on Windows)
-4. **Keep commits small** and focused
-5. **Write tests first** when fixing bugs
-6. **Ask questions** in issues/PRs
-
-## 🤝 Contributing
-
-1. Read the [Constitution](../specs/000-product-vision/constitution.md)
-2. Follow the task list in `tasks.md`
-3. Maintain hexagonal architecture
-4. Ensure accessibility (WCAG 2.1 AA)
-5. Keep user privacy as top priority
-
-## 🎓 Learning Resources
-
-### Vue 3
-- [Vue 3 Docs](https://vuejs.org/)
-- [Composition API Guide](https://vuejs.org/guide/extras/composition-api-faq.html)
-
-### Accessibility
-- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
-- [Radix Vue Docs](https://www.radix-vue.com/)
-
-### Architecture
-- [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
-- [Ports and Adapters Pattern](https://herbertograca.com/2017/09/14/ports-adapters-architecture/)
+You're ready to develop! 🎉
 
 ---
 
-**Need help?** Open an issue or check existing documentation. Happy coding! 🌱
+## Project Structure
+
+```
+Life-Laborarory/
+├── backend/              # Node.js + Express API
+│   ├── src/
+│   │   ├── domain/       # Core business logic
+│   │   │   ├── entities/ # Data models with Zod schemas
+│   │   │   ├── services/ # Business logic services
+│   │   │   └── ports/    # Interface definitions (Hexagonal Architecture)
+│   │   ├── adapters/     # External integrations
+│   │   │   ├── ai/       # Ollama, OpenAI, Anthropic adapters
+│   │   │   ├── storage/  # Local file storage
+│   │   │   ├── export/   # Markdown exporter
+│   │   │   └── http/     # Express routes & middleware
+│   │   └── config/       # Configuration & environment
+│   └── tests/            # Unit, integration, smoke tests
+│       ├── unit/         # Fast, isolated tests
+│       ├── integration/  # API endpoint tests
+│       └── smoke/        # Full system tests
+│
+├── frontend/             # Vue 3 + Vite
+│   ├── src/
+│   │   ├── components/   # Reusable Vue components
+│   │   ├── views/        # Page-level components
+│   │   ├── composables/  # Vue 3 composition functions
+│   │   ├── services/     # API client (axios)
+│   │   ├── router/       # Vue Router config
+│   │   ├── styles/       # Global styles, calm palette
+│   │   └── utils/        # Helpers (Markdown, sanitization)
+│   └── tests/            # Unit (Vitest) + E2E (Playwright)
+│       ├── unit/         # Component & composable tests
+│       └── e2e/          # End-to-end tests
+│
+├── data/                 # Local storage (gitignored)
+│   ├── reflections/      # User reflections (month-based folders)
+│   ├── visuals/          # Imported images
+│   └── preferences.json  # User settings
+│
+├── docs/                 # Documentation
+│   ├── user-guide.md     # End-user documentation
+│   └── quickstart.md     # This file
+│
+└── specs/                # Feature specifications
+    ├── 000-product-vision/
+    ├── 001-rich-text-editor/
+    └── 002-dynamic-coach-prompts/
+```
+
+---
+
+## Development Workflow
+
+### Running Tests
+
+**Backend:**
+```bash
+cd backend
+npm test                # All tests
+npm run test:unit       # Unit tests only
+npm run test:integration # Integration tests only
+npm run test:coverage   # With coverage report
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm test                # Unit tests (Vitest)
+npm run test:e2e        # E2E tests (Playwright)
+npm run test:coverage   # Coverage report
+```
+
+### Hot Reload
+
+Both backend and frontend support hot reload during development:
+
+- **Backend**: Uses `--watch` flag (Node.js 18+)
+- **Frontend**: Vite HMR (Hot Module Replacement)
+
+Make changes and see them instantly!
+
+### API Testing
+
+**Using cURL:**
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# Get all reflections
+curl http://localhost:3000/api/reflections
+
+# Create a reflection
+curl -X POST http://localhost:3000/api/reflections \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"text","content":"My first reflection"}'
+
+# Get user preferences
+curl http://localhost:3000/api/preferences
+```
+
+**Using Postman/Insomnia:**
+- Import the OpenAPI spec from `specs/000-product-vision/contracts/api.yaml`
+- Base URL: `http://localhost:3000/api`
+
+---
+
+## Architecture: Hexagonal (Ports & Adapters)
+
+### Why Hexagonal?
+
+1. **Testability**: Core domain logic is isolated from external dependencies
+2. **Flexibility**: Easy to swap implementations (e.g., different AI providers)
+3. **Parallel development**: Teams can work on adapters independently
+4. **Maintainability**: Clear separation of concerns
+
+### Key Concepts
+
+**Domain** (Inner hexagon):
+- Pure business logic
+- No dependencies on frameworks or external services
+- Defines **ports** (interfaces) for what it needs
+
+**Adapters** (Outer hexagon):
+- Implement the ports
+- Handle external services (AI, storage, HTTP)
+- Can be swapped without changing domain code
+
+**Example:**
+```javascript
+// Domain port (interface)
+// backend/src/domain/ports/IAIProvider.js
+export default class IAIProvider {
+  async generateResponse(prompt, content, options) {
+    throw new Error('Must implement generateResponse');
+  }
+}
+
+// Adapters (implementations)
+// backend/src/adapters/ai/OllamaAdapter.js
+// backend/src/adapters/ai/OpenAIAdapter.js
+// backend/src/adapters/ai/AnthropicAdapter.js
+```
+
+---
+
+## Common Tasks
+
+### Adding a New Feature
+
+1. **Write the spec** in `specs/<feature-number>-<name>/`
+2. **Define entities** in `backend/src/domain/entities/`
+3. **Create services** in `backend/src/domain/services/`
+4. **Implement adapters** in `backend/src/adapters/`
+5. **Add routes** in `backend/src/adapters/http/routes/`
+6. **Create composables** in `frontend/src/composables/`
+7. **Build components** in `frontend/src/components/`
+8. **Wire into views** in `frontend/src/views/`
+9. **Write tests** (unit, integration, E2E)
+10. **Update docs**
+
+### Adding a New AI Provider
+
+1. Create adapter in `backend/src/adapters/ai/<ProviderName>Adapter.js`
+2. Implement `IAIProvider` interface
+3. Add configuration in `backend/src/config/index.js`
+4. Update `AIMirrorService` to support new provider
+5. Add UI for selection in `frontend/src/views/SettingsView.vue`
+6. Write tests
+
+### Adding a New Route
+
+1. Create route file in `backend/src/adapters/http/routes/`
+2. Define endpoints with validation
+3. Call domain services (not adapters directly)
+4. Add error handling
+5. Register in `backend/src/server.js`
+6. Write integration tests in `backend/tests/integration/`
+
+---
+
+## Code Style & Conventions
+
+### JavaScript/Vue
+
+- **ES Modules**: Use `import/export` (not CommonJS)
+- **Async/await**: Prefer over `.then()` chains
+- **Named exports**: For better tree-shaking
+- **Vue 3 Composition API**: All new components use `<script setup>`
+- **Zod**: For all data validation
+
+### Naming
+
+- **Files**: kebab-case (`my-component.vue`, `my-service.js`)
+- **Components**: PascalCase (`MyComponent`)
+- **Composables**: camelCase starting with `use` (`useReflections`)
+- **Constants**: UPPER_SNAKE_CASE (`MAX_FILE_SIZE`)
+
+### Comments
+
+- **JSDoc**: For all public functions
+- **Inline**: Only for complex logic that isn't obvious
+- **Why over what**: Explain the reasoning, not the mechanics
+
+### Error Messages
+
+- **Plain language**: No jargon, no technical error codes
+- **Solution-focused**: Tell users what they can do
+- **Gentle tone**: Calm and reassuring (FR-028)
+
+Example:
+```javascript
+// ✅ Good
+throw new Error('The local AI assistant isn\'t available right now. Try starting Ollama with: ollama serve');
+
+// ❌ Bad
+throw new Error('ECONNREFUSED: Connection refused on port 11434');
+```
+
+---
+
+## Environment Variables
+
+All are optional (defaults provided):
+
+```bash
+# Backend
+PORT=3000                    # Server port
+DATA_DIR=./data              # Data storage location
+OLLAMA_URL=http://localhost:11434  # Ollama API URL
+OPENAI_API_KEY=              # OpenAI API key (optional)
+ANTHROPIC_API_KEY=           # Anthropic API key (optional)
+NODE_ENV=development         # Environment
+
+# Frontend
+# No environment variables needed - uses Vite defaults
+```
+
+Create a `.env` file in the backend directory to override defaults:
+
+```bash
+cd backend
+cat > .env << EOF
+PORT=3001
+OLLAMA_URL=http://192.168.1.100:11434
+EOF
+```
+
+---
+
+## Debugging
+
+### Backend
+
+**Using Node Debugger:**
+```bash
+cd backend
+node --inspect src/server.js
+```
+
+Then attach Chrome DevTools: `chrome://inspect`
+
+**Console logging:**
+```javascript
+console.log('[ServiceName] Debug info:', data);
+```
+
+Use prefixes like `[ServiceName]` to filter logs.
+
+### Frontend
+
+**Vue DevTools:**
+1. Install [Vue DevTools](https://devtools.vuejs.org/) browser extension
+2. Open DevTools → Vue tab
+3. Inspect components, state, and events
+
+**Browser Console:**
+```javascript
+console.log('[ComposableName] State:', state);
+```
+
+**Vitest:**
+```bash
+npm test -- --reporter=verbose
+```
+
+---
+
+## Performance Considerations
+
+### Backend
+
+- **Month-based storage**: Reflections organized by `YYYY-MM` folders
+- **Lazy loading**: Load only what's needed
+- **Atomic writes**: Temp file + rename pattern
+- **Caching**: Repository factory pattern for reuse
+
+### Frontend
+
+- **Debouncing**: Auto-save debounced to 500ms
+- **Virtual scrolling**: Not yet implemented (use for 1000+ reflections)
+- **Code splitting**: Vite automatically splits routes
+- **Markdown rendering**: Debounced to 200ms
+
+### Database Alternative
+
+Currently using JSON files for simplicity. If scaling beyond 10,000 reflections:
+- Consider SQLite for querying and indexing
+- Adapter pattern makes this swap easy
+- Keep file-based as default for transparency
+
+---
+
+## Security
+
+### XSS Protection
+
+- **DOMPurify**: Sanitizes all Markdown output
+- **Zod**: Validates all inputs
+- **CORS**: Restricted to `localhost:5173` in development
+
+### File Upload
+
+- **MIME type validation**: Only allow image types
+- **Size limits**: 10MB maximum
+- **Path traversal prevention**: Validate file paths
+- **Atomic writes**: Prevent partial writes
+
+### AI Prompts
+
+- **System prompts versioned**: Track which prompt version was used
+- **Input validation**: Max 5000 characters for rephrasing
+- **No code execution**: AI responses are text only
+
+---
+
+## Accessibility Testing
+
+### Automated
+
+```bash
+cd frontend
+npm run test:e2e -- --grep "accessibility"
+```
+
+Uses `@axe-core/playwright` for WCAG 2.1 Level AA checks.
+
+### Manual
+
+1. **Keyboard only**: Unplug mouse, navigate entire app
+2. **Screen reader**: Test with VoiceOver (macOS) or NVDA (Windows)
+3. **Zoom**: Test at 200% browser zoom
+4. **Color blindness**: Use browser DevTools to simulate
+
+---
+
+## Deployment
+
+### Production Build
+
+**Backend:**
+```bash
+cd backend
+npm start  # Uses node src/server.js
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm run build  # Outputs to dist/
+npm run preview  # Preview production build
+```
+
+### Environment
+
+- Set `NODE_ENV=production`
+- Configure `DATA_DIR` to persistent storage
+- Ensure Ollama is running if using local AI
+- Set up reverse proxy (nginx) for production
+
+### Docker (Future)
+
+Dockerfile not yet provided. Consider:
+- Multi-stage build for smaller images
+- Volume mount for `data/` directory
+- Health checks for Ollama and backend
+
+---
+
+## Troubleshooting Development Issues
+
+### "Cannot find module"
+
+```bash
+# Clear node_modules and reinstall
+cd backend && rm -rf node_modules package-lock.json && npm install
+cd ../frontend && rm -rf node_modules package-lock.json && npm install
+```
+
+### "Port already in use"
+
+```bash
+# Find and kill process on port 3000
+lsof -ti:3000 | xargs kill
+
+# Or use a different port
+PORT=3001 npm run dev
+```
+
+### "Ollama connection refused"
+
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# Start Ollama
+ollama serve
+
+# Verify model is available
+ollama list
+```
+
+### Tests failing after changes
+
+```bash
+# Clear test cache
+cd backend && npx vitest run --clearCache
+cd frontend && npx vitest run --clearCache
+```
+
+---
+
+## Contributing
+
+This is a personal project, but contributions are welcome:
+
+1. Fork the repository
+2. Create a feature branch
+3. Follow the existing code style
+4. Write tests for new features
+5. Update documentation
+6. Submit a pull request
+
+---
+
+## Resources
+
+- **Vue 3**: https://vuejs.org/guide/
+- **Vite**: https://vitejs.dev/guide/
+- **Radix Vue**: https://www.radix-vue.com/
+- **Zod**: https://zod.dev/
+- **Vitest**: https://vitest.dev/
+- **Playwright**: https://playwright.dev/
+- **Ollama**: https://ollama.ai/
+- **Hexagonal Architecture**: https://alistair.cockburn.us/hexagonal-architecture/
+
+---
+
+## Philosophy
+
+Read the manifesto in **О-чем-проект.md** (Russian) to understand the deeper purpose behind this tool. Key principles:
+
+1. **Local-first**: Privacy by design
+2. **Calm UX**: Max 3 choices, no animations
+3. **AI as mirror**: Reflective, non-directive
+4. **Accessible**: Full keyboard & screen reader support
+5. **Reversible**: Export and delete with zero friction
+
+---
+
+*Happy developing! The code is here to serve the reflection, not the other way around.* 🌿

@@ -8,10 +8,12 @@ Laboratory of Life is a calm, private tool for self-reflection. Write your thoug
 
 - **🔒 Complete Privacy**: All data stays on your device. No external servers, no tracking.
 - **🤖 AI Mirror**: Gentle, reflective feedback from local Ollama (default) or online AI (opt-in).
-- **📝 Multiple Expression Modes**: Write text reflections or import visual artifacts.
+- **📝 Rich Text Editing**: Markdown support with live preview and formatting toolbar.
+- **✨ AI Rephrasing**: Rephrase text to be clearer, more positive, or more constructive.
+- **🖼️ Multiple Expression Modes**: Write text reflections or import visual artifacts.
 - **♿ Fully Accessible**: Keyboard navigation, screen reader support, WCAG 2.1 AA compliant.
 - **📤 Data Sovereignty**: Export everything to Markdown anytime. Delete what you want.
-- **🎨 Calm Experience**: Max 3 choices on screen, no animations, no notifications.
+- **🎨 Calm Experience**: Max 3 choices on screen, gentle transitions, no distractions.
 
 ## 🏗️ Architecture
 
@@ -45,62 +47,7 @@ data/             # Local JSON storage (gitignored)
 ### Prerequisites
 
 - **Node.js** 18+ ([Download](https://nodejs.org/))
-- **Ollama** (for local AI) - See installation instructions below
-
-### Ollama Installation
-
-Ollama provides local AI models that run entirely on your device for complete privacy.
-
-#### macOS
-```bash
-# Download from https://ollama.ai/download/mac
-# Or use Homebrew
-brew install ollama
-
-# Start Ollama
-ollama serve
-
-# Pull a model (in a new terminal)
-ollama pull llama2
-```
-
-#### Linux
-```bash
-# Install Ollama
-curl -fsSL https://ollama.ai/install.sh | sh
-
-# Start Ollama (runs as a service)
-ollama serve
-
-# Pull a model
-ollama pull llama2
-```
-
-#### Windows
-```bash
-# Download from https://ollama.ai/download/windows
-# Run the installer
-# Ollama starts automatically
-
-# Pull a model (in Command Prompt or PowerShell)
-ollama pull llama2
-```
-
-#### Available Models
-```bash
-# Fast, lightweight (recommended for most users)
-ollama pull llama2
-
-# Larger, more capable
-ollama pull llama2:13b
-
-# Alternative models
-ollama pull mistral
-ollama pull neural-chat
-
-# List installed models
-ollama list
-```
+- **Ollama** (for local AI) - [Installation Guide](https://ollama.ai/)
 
 ### Installation
 
@@ -114,20 +61,59 @@ ollama list
    ```bash
    cd backend
    npm install
+   cd ..
    ```
 
 3. **Install frontend dependencies**
    ```bash
-   cd ../frontend
+   cd frontend
    npm install
+   cd ..
    ```
 
-4. **Verify Ollama is running**
+4. **Install Ollama and pull a model** (for local AI)
+   
+   **macOS:**
    ```bash
-   # Check Ollama status
+   # Download from https://ollama.ai/ or use Homebrew
+   brew install ollama
+   
+   # Start Ollama service
+   ollama serve
+   
+   # Pull a model (in a new terminal)
+   ollama pull llama2
+   ```
+   
+   **Linux:**
+   ```bash
+   # Install via curl
+   curl -fsSL https://ollama.ai/install.sh | sh
+   
+   # Start Ollama
+   ollama serve
+   
+   # Pull a model (in a new terminal)
+   ollama pull llama2
+   ```
+   
+   **Windows:**
+   ```bash
+   # Download installer from https://ollama.ai/download/windows
+   # Follow installation wizard
+   # Ollama starts automatically as a service
+   
+   # Pull a model in PowerShell/CMD
+   ollama pull llama2
+   ```
+   
+   **Verify installation:**
+   ```bash
+   # Check if Ollama is running
    curl http://localhost:11434/api/tags
    
-   # You should see a list of installed models
+   # List available models
+   ollama list
    ```
 
 ### Running the Application
@@ -147,59 +133,65 @@ ollama list
 3. **Open your browser**
    Navigate to `http://localhost:5173`
 
-### Troubleshooting Setup
-
-#### Ollama Connection Issues
-
-If the AI isn't responding:
-
-```bash
-# Check if Ollama is running
-curl http://localhost:11434/api/tags
-
-# If not running, start it
-ollama serve
-
-# Verify model is installed
-ollama list
-
-# Pull a model if needed
-ollama pull llama2
-```
-
-#### Port Conflicts
-
-If ports are already in use:
-
-```bash
-# Check what's using port 3000 (backend)
-lsof -i :3000  # macOS/Linux
-netstat -ano | findstr :3000  # Windows
-
-# Check what's using port 5173 (frontend)
-lsof -i :5173  # macOS/Linux
-netstat -ano | findstr :5173  # Windows
-
-# Kill the process or change ports in config
-```
-
-#### Node.js Version
-
-```bash
-# Check Node.js version (need 18+)
-node --version
-
-# Update if needed
-# Visit https://nodejs.org/ for latest version
-```
-
 ## 📖 Usage
 
 ### Writing a Reflection
 
 1. Click "Compose" or press `Cmd/Ctrl + N`
-2. Write your thoughts in the text area
-3. Press `Cmd/Ctrl + Enter` to save
+2. Choose your mode:
+   - **Plain Text**: Simple text entry
+   - **Markdown**: Rich text with formatting
+3. Write your thoughts
+4. Press `Cmd/Ctrl + Enter` to save
+5. Optionally, click "Ask AI Mirror" for gentle, reflective feedback
+
+### Using Markdown
+
+**Enable Markdown mode** in the Compose view to access rich text formatting:
+
+#### Live Editing with Toolbar
+- **Bold**: Select text and click **B** or press `Cmd/Ctrl+B`
+- **Italic**: Select text and click **I** or press `Cmd/Ctrl+I`
+- **Headings**: Click H1, H2, or H3 to add heading markers
+- **Lists**: Click the list button for bullets or numbers
+- **Links**: Click the link button or press `Cmd/Ctrl+K`
+- **Blockquote**: Click the quote button to add quote markers
+- **Preview**: Toggle between Edit and Preview modes with `Cmd/Ctrl+P`
+
+#### Markdown Syntax Quick Reference
+```markdown
+**bold text**          → bold text
+*italic text*          → italic text
+# Heading 1            → Large heading
+## Heading 2           → Medium heading
+### Heading 3          → Small heading
+- bullet item          → • bullet item
+1. numbered item       → 1. numbered item
+> quote                → Blockquote
+[link text](url)       → Hyperlink
+`code`                 → Inline code
+```
+
+#### AI Rephrasing
+Improve your writing with AI assistance:
+
+1. Write some text in your reflection
+2. Select the text you want to rephrase (or leave unselected to rephrase all text)
+3. Click the **Rephrase** button (purple) in the toolbar
+4. Choose a style:
+   - **Clearer**: Simplify complex language
+   - **More Positive**: Reframe with a hopeful tone
+   - **More Constructive**: Focus on growth and learning
+5. Review 2-3 AI-generated suggestions
+6. Click **Accept** on your preferred version, or **Cancel** to keep the original
+
+**Privacy Note**: Rephrasing uses your selected AI provider (local Ollama by default, or online AI if configured in Settings). Only the selected/all text is sent - no other reflection data.
+
+### Visual Reflections
+
+1. In Compose view, switch from "Text" to "Visual"
+2. Click to browse or drag and drop an image
+3. Supported: JPEG, PNG, GIF, WebP, PDF (max 10MB)
 4. Optionally, click "Ask AI Mirror" for gentle, reflective feedback
 
 ### Viewing History
@@ -251,12 +243,9 @@ npm run test:coverage # Coverage report
 
 ## 📚 Documentation
 
-### For Users
-- **[User Guide](./docs/user-guide.md)**: Complete guide to using Laboratory of Life
-- **README** (this file): Quick start and overview
-
-### For Developers
-- **[Developer Quickstart](./docs/quickstart.md)**: Get started developing in 5 minutes
+- **[User Guide](./docs/user-guide.md)**: Complete guide for end users
+- **[Developer Quickstart](./docs/quickstart.md)**: Get started developing in < 5 minutes
+- **[CHANGELOG](./CHANGELOG.md)**: Version history and release notes
 - **[Product Vision](./specs/000-product-vision/spec.md)**: What and why
 - **[Implementation Plan](./specs/000-product-vision/plan.md)**: Architecture and technical decisions
 - **[Data Model](./specs/000-product-vision/data-model.md)**: Entity definitions and validation

@@ -3,8 +3,13 @@ import cors from 'cors';
 import config, { validateConfig } from './config/index.js';
 import errorHandler from './adapters/http/middleware/errorHandler.js';
 
-// Validate configuration at startup (T104)
-validateConfig();
+// Validate configuration on startup (T104)
+try {
+  validateConfig();
+} catch (err) {
+  console.error('[Server] Configuration validation failed:', err.message);
+  process.exit(1);
+}
 
 const app = express();
 
