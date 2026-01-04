@@ -36,4 +36,44 @@ const config = {
   },
 };
 
+/**
+ * Validate configuration at startup (T104)
+ * Ensures critical environment variables are properly set
+ */
+export function validateConfig() {
+  const warnings = [];
+  const errors = [];
+
+  // Validate DATA_DIR
+  if (!config.dataDir) {
+    errors.push('DATA_DIR is not set. Application cannot store reflections.');
+  }
+
+  // Validate OLLAMA_URL format
+  if (!config.ollamaUrl) {
+    warnings.push('OLLAMA_URL is not set. Defaulting to http://localhost:11434');
+  } else if (!config.ollamaUrl.startsWith('http://') && !config.ollamaUrl.startsWith('https://')) {
+    errors.push(`OLLAMA_URL must start with http:// or https://. Got: ${config.ollamaUrl}`);
+  }
+
+  // Log warnings
+  if (warnings.length > 0) {
+    console.warn('[Config] Warnings:');
+    warnings.forEach((warning) => console.warn(`  - ${warning}`));
+  }
+
+  // Throw errors if critical config is missing
+  if (errors.length > 0) {
+    console.error('[Config] Critical errors:');
+    errors.forEach((error) => console.error(`  - ${error}`));
+    throw new Error('Configuration validation failed. Please check environment variables.');
+  }
+
+  // Log successful validation
+  console.log('[Config] Configuration validated successfully');
+  console.log(`  - Data directory: ${config.dataDir}`);
+  console.log(`  - Ollama URL: ${config.ollamaUrl}`);
+  console.log(`  - Environment: ${config.nodeEnv}`);
+}
+
 export default config;

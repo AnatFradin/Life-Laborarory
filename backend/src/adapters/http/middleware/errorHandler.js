@@ -26,21 +26,21 @@ const errorHandler = (err, req, res, next) => {
   // Ollama unavailable (FR-030)
   if (err.code === 'ECONNREFUSED' && err.message.includes('11434')) {
     statusCode = 503;
-    userMessage = 'The local AI assistant isn\'t available right now.';
+    userMessage = 'The local AI isn\'t available right now.';
     suggestions = [
-      'Check if Ollama is running on your computer',
-      'Try starting Ollama with: ollama serve',
+      'Make sure Ollama is running on your computer',
       'You can still write reflections without AI feedback',
+      'Need help? Check the user guide for setup instructions',
     ];
   }
   // Ollama model not found
   else if (err.message?.includes('model') && err.message?.includes('not found')) {
     statusCode = 404;
-    userMessage = 'The AI model you selected isn\'t available.';
+    userMessage = 'The AI model you chose isn\'t installed yet.';
     suggestions = [
-      'Try pulling the model: ollama pull llama2',
-      'Check available models: ollama list',
       'You can change models in Settings',
+      'Need a different model? Check the user guide for installation',
+      'You can still write reflections without AI feedback',
     ];
   }
   // Storage/file system errors (FR-031, FR-029)
@@ -54,19 +54,20 @@ const errorHandler = (err, req, res, next) => {
     ];
   } else if (err.code === 'EACCES' || err.code === 'EPERM') {
     statusCode = 500;
-    userMessage = 'We couldn\'t access the storage location.';
+    userMessage = 'We couldn\'t access your data folder.';
     suggestions = [
-      'Check file permissions in your data directory',
       'Your reflections are still safe',
+      'Try restarting the application',
+      'If this persists, check folder permissions',
     ];
   }
   // Malformed JSON in request (different from file corruption)
   else if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     statusCode = 400;
-    userMessage = 'The request data wasn\'t formatted correctly.';
-    suggestions = ['Please check the request format and try again'];
+    userMessage = 'Something went wrong with your request.';
+    suggestions = ['Please try again', 'If this keeps happening, try refreshing the page'];
   }
-  // Data corruption (FR-029)
+  // Data corruption (FR-029, FR-032)
   else if (err.name === 'SyntaxError' && err.message.includes('JSON')) {
     statusCode = 500;
     userMessage = 'Some stored data couldn\'t be read properly.';
@@ -74,6 +75,16 @@ const errorHandler = (err, req, res, next) => {
       'Your other reflections are safe',
       'Export your data to create a backup',
       'The problematic file will be skipped',
+    ];
+  }
+  // Data validation errors from corrupted files
+  else if (err.code === 'DATA_CORRUPTION' || err.message?.includes('corrupted')) {
+    statusCode = 500;
+    userMessage = 'We found a file that couldn\'t be read.';
+    suggestions = [
+      'Your other reflections are still accessible',
+      'Consider exporting your data as a backup',
+      'The damaged file will be skipped automatically',
     ];
   }
   // Validation errors (Zod or custom)
@@ -112,11 +123,11 @@ const errorHandler = (err, req, res, next) => {
   // Online AI provider errors
   else if (err.message?.includes('OpenAI') || err.message?.includes('Anthropic')) {
     statusCode = 503;
-    userMessage = 'The online AI service isn\'t responding right now.';
+    userMessage = 'The online AI service isn\'t responding.';
     suggestions = [
       'Check your internet connection',
-      'Verify your API key in Settings',
-      'Switch to local AI for complete privacy',
+      'You can switch to local AI in Settings',
+      'Try again in a few moments',
     ];
   }
 
