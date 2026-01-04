@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import config from '../../config/index.js';
+import { safeValidateReflection } from '../../domain/entities/Reflection.js';
 
 /**
  * LocalFileRepository - Implements IReflectionRepository
@@ -97,7 +98,21 @@ class LocalFileRepository {
         const filePath = path.join(monthDir, `${id}.json`);
         try {
           const data = await fs.readFile(filePath, 'utf8');
-          return JSON.parse(data);
+          const reflection = JSON.parse(data);
+          
+          // Validate data integrity (FR-032)
+          const validation = safeValidateReflection(reflection);
+          if (!validation.success) {
+            console.error(`Data integrity error in ${filePath}:`, validation.error.message);
+            // Return the raw data with a flag indicating validation failed
+            return {
+              ...reflection,
+              _validationError: validation.error.issues,
+              _corrupted: true,
+            };
+          }
+          
+          return validation.data;
         } catch (err) {
           // File not in this month, continue searching
           if (err.code !== 'ENOENT') {
@@ -133,7 +148,20 @@ class LocalFileRepository {
             try {
               const data = await fs.readFile(filePath, 'utf8');
               const reflection = JSON.parse(data);
-              reflections.push(reflection);
+              
+              // Validate data integrity (FR-032)
+              const validation = safeValidateReflection(reflection);
+              if (!validation.success) {
+                console.error(`Data integrity error in ${filePath}:`, validation.error.message);
+                // Include corrupted reflection with validation error flag for recovery/export
+                reflections.push({
+                  ...reflection,
+                  _validationError: validation.error.issues,
+                  _corrupted: true,
+                });
+              } else {
+                reflections.push(validation.data);
+              }
             } catch (err) {
               // Log corrupted file but continue (FR-029)
               console.error(`Skipping corrupted file ${filePath}:`, err.message);
