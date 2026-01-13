@@ -10,9 +10,9 @@
 
 | Phase | Tasks | Estimated Time | Status |
 |-------|-------|----------------|--------|
-| Phase 0: Planning | T001-T004 | 0.5 days | ✅ In Progress |
-| Phase 1: Backend | T005-T020 | 2 days | ⏳ Not Started |
-| Phase 2: Prompt Selection UI | T021-T035 | 2 days | ⏳ Not Started |
+| Phase 0: Planning | T001-T004 | 0.5 days | ✅ Completed |
+| Phase 1: Backend | T005-T020 | 2 days | ⚠️ Partially Started |
+| Phase 2: Prompt Selection UI | T021-T035 | 2 days | ⚠️ Partially Started |
 | Phase 3: Chat Window | T036-T050 | 2 days | ⏳ Not Started |
 | Phase 4: Polish & Docs | T051-T060 | 1 day | ⏳ Not Started |
 
@@ -29,8 +29,8 @@
 - UI design mockups created
 - Data models specified
 
-### T002: Create Implementation Plan 🔄
-**Status:** In Progress  
+### T002: Create Implementation Plan ✅
+**Status:** Completed  
 **Files:** `specs/002-dynamic-coach-prompts/tasks.md`  
 **Details:**
 - Break down into phases
@@ -38,8 +38,8 @@
 - Define dependencies
 - Create task checklist
 
-### T003: Create Development Plan
-**Status:** Not Started  
+### T003: Create Development Plan ✅
+**Status:** Completed  
 **Files:** `specs/002-dynamic-coach-prompts/plan.md`  
 **Details:**
 - Document development approach
@@ -47,8 +47,8 @@
 - Risk assessment
 - Timeline estimation
 
-### T004: Commit Specifications
-**Status:** Not Started  
+### T004: Commit Specifications ✅
+**Status:** Completed  
 **Command:** `git add specs/ && git commit -m "docs: add Dynamic Coach Prompts specification"`  
 **Details:**
 - Commit all spec files
@@ -60,11 +60,12 @@
 
 ### File Structure Setup
 
-#### T005: Create Prompt Data Directory
+#### T005: Create Prompt Data Directory ⚠️
 **Estimated Time:** 15 min  
+**Status:** Partially Complete (different structure)  
 **Files:**
-- `data/coach-prompts/` (directory)
-- `data/coach-prompts/.gitkeep`
+- `backend/src/domain/entities/persona-prompts/` (directory)
+- Implemented in different location
 
 **Implementation:**
 ```bash
@@ -187,14 +188,15 @@ class PromptFileService {
 }
 ```
 
-#### T013: Update Existing /api/personas/:id/prompt Endpoint
+#### T013: Update Existing /api/personas/:id/prompt Endpoint ✅
 **Estimated Time:** 30 min  
+**Status:** Completed  
 **Files:** `backend/src/adapters/http/routes/personas.js`
 
 **Changes:**
-- Use PromptFileService to get default prompt
+- Use prompt-loader.js to get prompt from file
 - Maintain backward compatibility
-- Add `loadedFromFile` flag in response
+- Falls back to inline prompt
 
 #### T014: Create POST /api/ai/chat Endpoint
 **Estimated Time:** 1.5 hours  
@@ -293,17 +295,26 @@ class PromptFileService {
 
 ### Component Creation
 
-#### T021: Create PromptSelectorDialog Component
+#### T021: Create PromptSelectorDialog Component ⚠️
 **Estimated Time:** 2 hours  
-**Files:** `frontend/src/components/PromptSelectorDialog.vue`
+**Status:** Partially Complete (PromptViewDialog exists - view only, no selection)  
+**Files:** `frontend/src/components/PromptViewDialog.vue` (exists)
 
-**Features:**
-- Modal dialog using Radix Vue
-- Props: `persona`, `open`, `modelValue` (selected prompt)
-- Emits: `update:open`, `update:modelValue`, `select`
-- Fetch prompts on open
-- Loading state
-- Error state
+**What exists:**
+- ✅ Modal dialog using Radix Vue
+- ✅ Props: `persona`, `open`
+- ✅ Emits: `update:open`
+- ✅ Fetch prompt on open
+- ✅ Loading state
+- ✅ Error state
+- ❌ No multi-prompt selection (shows single prompt only)
+- ❌ No modelValue for selection
+- ❌ No select emit
+
+**Still needed:**
+- Rename/refactor to support multiple prompts
+- Add selection logic
+- Emit selected prompt
 
 #### T022: Design Prompt Card Layout
 **Estimated Time:** 1.5 hours  
@@ -341,15 +352,15 @@ class PromptFileService {
 - Emit selection to parent
 - "Use Selected Prompt" button
 
-#### T024: Add Preview Functionality
+#### T024: Add Preview Functionality ✅
 **Estimated Time:** 1 hour  
-**Files:** `frontend/src/components/PromptSelectorDialog.vue`
+**Status:** Completed  
+**Files:** `frontend/src/components/PromptViewDialog.vue`
 
 **Implementation:**
-- Expand card to show full prompt
-- Or open nested dialog
-- Scrollable prompt text
-- Close preview button
+- ✅ Shows full prompt text in scrollable area
+- ✅ Displays file-loaded badge when loaded from external file
+- ✅ Clean modal presentation
 
 #### T025: Implement Copy to Clipboard
 **Estimated Time:** 1.5 hours  
@@ -403,15 +414,20 @@ export function useClipboard() {
 - Accessible focus states
 - Color scheme matches app theme
 
-#### T028: Update PersonaCard Component
+#### T028: Update PersonaCard Component ⚠️
 **Estimated Time:** 1 hour  
+**Status:** Partially Complete  
 **Files:** `frontend/src/components/PersonaCard.vue`
 
-**Changes:**
-- Add "Select Prompt" button
-- Replace "View Prompt" with "Select Prompt"
-- Open PromptSelectorDialog on click
-- Pass persona data to dialog
+**What exists:**
+- ✅ "View Prompt" button exists
+- ✅ Opens PromptViewDialog on click
+- ✅ Passes persona data to dialog
+
+**Still needed:**
+- Change to "Select Prompt" button
+- Open PromptSelectorDialog (once created)
+- Support multiple prompts per persona
 
 #### T029: Update CoachView Integration
 **Estimated Time:** 1 hour  
@@ -851,13 +867,23 @@ watch(messages, scrollToBottom, { deep: true });
 ## 📊 Progress Tracking
 
 ### Phase Completion
-- [ ] Phase 0: Planning (0.5 days)
-- [ ] Phase 1: Backend (2 days)
-- [ ] Phase 2: Prompt Selection UI (2 days)
+- [X] Phase 0: Planning (0.5 days) - COMPLETED
+- [~] Phase 1: Backend (2 days) - Partial: prompt-loader exists, single .txt file support
+- [~] Phase 2: Prompt Selection UI (2 days) - Partial: PromptViewDialog exists (view only, no selector)
 - [ ] Phase 3: Chat Window (2 days)
 - [ ] Phase 4: Polish & Docs (1 day)
 
-### Total Progress: 0 / 60 tasks completed
+### Total Progress: 6 / 60 tasks completed (~10%)
+
+**Completed:** T001, T002, T003, T004, T013, T024  
+**Partially Complete:** T005 (prompts dir), T021 (PromptViewDialog exists, needs selector), T028 (View button exists)  
+**In Progress:** None  
+**Blocked:** None
+
+**Note:** Several foundational pieces exist but need expansion:
+- Basic prompt loading from .txt files works (prompt-loader.js)
+- PromptViewDialog displays single prompts
+- Need to add multi-prompt support, selection UI, and chat features
 
 ---
 
