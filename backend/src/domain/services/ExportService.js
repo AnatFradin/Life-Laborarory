@@ -37,6 +37,40 @@ class ExportService {
 
     return result;
   }
+
+  /**
+   * Export a single reflection to Markdown format
+   * 
+   * @param {string} reflectionId - ID of the reflection to export
+   * @param {Object} options - Export options
+   * @param {boolean} options.includeMetadata - Include AI interaction metadata (default: true)
+   * @param {string} options.dataDir - Base directory for reading image files
+   * @returns {Promise<Object>} Export result
+   * @returns {string} return.content - Markdown content
+   * @returns {Array<Object>} return.attachments - Array of attachments (if visual reflection)
+   */
+  async exportSingleToMarkdown(reflectionId, options = {}) {
+    // Set default options
+    const exportOptions = {
+      format: 'single-file',
+      includeMetadata: true,
+      ...options,
+    };
+
+    // Fetch the specific reflection
+    const reflection = await this.repository.findById(reflectionId);
+    
+    if (!reflection) {
+      const error = new Error('Reflection not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Export to markdown using the exporter adapter (as single item array)
+    const result = await this.exporter.exportToMarkdown([reflection], exportOptions);
+
+    return result;
+  }
 }
 
 export default ExportService;

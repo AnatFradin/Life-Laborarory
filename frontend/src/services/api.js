@@ -93,6 +93,8 @@ export const aiAPI = {
 export const exportAPI = {
   exportToMarkdown: (format, includeMetadata = true) => 
     apiClient.post('/export', { format, includeMetadata }),
+  exportSingleToMarkdown: (reflectionId, includeMetadata = true) =>
+    apiClient.post(`/export/${reflectionId}`, { includeMetadata }),
 };
 
 export const preferencesAPI = {
