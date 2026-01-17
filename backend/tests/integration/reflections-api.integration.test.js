@@ -430,7 +430,7 @@ describe('Reflections API Integration Tests', () => {
         .expect(400);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.message).toContain('Image file is required');
+      expect(response.body.message).toContain('At least one image file is required');
     });
 
     it('should reject unsupported image types', async () => {
@@ -484,6 +484,210 @@ describe('Reflections API Integration Tests', () => {
       const savedBuffer = await readFile(fullPath);
       expect(savedBuffer).toBeTruthy();
       expect(savedBuffer.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('POST /api/reflections (mixed mode - text + images)', () => {
+    // Helper function to create a minimal PNG buffer
+    function createTestPngBuffer() {
+      return Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
+        0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, // IHDR chunk start
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // Width: 1, Height: 1
+        0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+        0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, // IDAT chunk
+        0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+        0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, // IEND chunk
+        0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+        0x42, 0x60, 0x82,
+      ]);
+    }
+
+    it('should create a mixed mode reflection with text and image', async () => {
+      const imageBuffer = createTestPngBuffer();
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'mixed')
+        .field('content', 'This is my text reflection with an attached image')
+        .attach('image', imageBuffer, {
+          filename: 'test-image.png',
+          contentType: 'image/png',
+        })
+        .expect('Content-Type', /json/)
+        .expect(201);
+
+      expect(response.body).toMatchObject({
+        id: expect.any(String),
+        timestamp: expect.any(String),
+        mode: 'mixed',
+        content: 'This is my text reflection with an attached image',
+        visualAttachments: expect.arrayContaining([
+          expect.objectContaining({
+            originalFilename: 'test-image.png',
+            mimeType: 'image/png',
+          })
+        ]),
+      });
+    });
+
+    it('should create mixed mode with multiple images', async () => {
+      const imageBuffer1 = createTestPngBuffer();
+      const imageBuffer2 = createTestPngBuffer();
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'mixed')
+        .field('content', 'Text with multiple images')
+        .attach('images', imageBuffer1, {
+          filename: 'image1.png',
+          contentType: 'image/png',
+        })
+        .attach('images', imageBuffer2, {
+          filename: 'image2.png',
+          contentType: 'image/png',
+        })
+        .expect('Content-Type', /json/)
+        .expect(201);
+
+      expect(response.body.mode).toBe('mixed');
+      expect(response.body.content).toBe('Text with multiple images');
+      expect(response.body.visualAttachments).toHaveLength(2);
+      expect(response.body.visualAttachments[0].originalFilename).toBe('image1.png');
+      expect(response.body.visualAttachments[1].originalFilename).toBe('image2.png');
+    });
+
+    it('should reject mixed mode without content', async () => {
+      const imageBuffer = createTestPngBuffer();
+
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'mixed')
+        .attach('image', imageBuffer, {
+          filename: 'test-image.png',
+          contentType: 'image/png',
+        })
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.message).toContain('Content is required');
+    });
+
+    it('should reject mixed mode without image', async () => {
+      const response = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'mixed')
+        .field('content', 'Text without image')
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.message).toContain('At least one image file is required');
+    });
+  });
+
+  describe('POST /api/reflections/:id/images (add images to existing reflection)', () => {
+    function createTestPngBuffer() {
+      return Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
+        0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, // IHDR chunk start
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // Width: 1, Height: 1
+        0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+        0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, // IDAT chunk
+        0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+        0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, // IEND chunk
+        0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+        0x42, 0x60, 0x82,
+      ]);
+    }
+
+    it('should add images to text reflection and convert to mixed mode', async () => {
+      // First create a text reflection
+      const textReflection = await request(global.testApp)
+        .post('/api/reflections')
+        .send({
+          mode: 'text',
+          content: 'Original text reflection',
+        })
+        .expect(201);
+
+      const reflectionId = textReflection.body.id;
+
+      // Now add images to it
+      const imageBuffer = createTestPngBuffer();
+      const response = await request(global.testApp)
+        .post(`/api/reflections/${reflectionId}/images`)
+        .attach('images', imageBuffer, {
+          filename: 'added-image.png',
+          contentType: 'image/png',
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.mode).toBe('mixed');
+      expect(response.body.data.content).toBe('Original text reflection');
+      expect(response.body.data.visualAttachments).toHaveLength(1);
+      expect(response.body.data.visualAttachments[0].originalFilename).toBe('added-image.png');
+    });
+
+    it('should add images to visual reflection and keep visual mode', async () => {
+      // First create a visual reflection
+      const imageBuffer1 = createTestPngBuffer();
+      const visualReflection = await request(global.testApp)
+        .post('/api/reflections')
+        .field('mode', 'visual')
+        .attach('image', imageBuffer1, {
+          filename: 'first-image.png',
+          contentType: 'image/png',
+        })
+        .expect(201);
+
+      const reflectionId = visualReflection.body.id;
+
+      // Now add more images to it
+      const imageBuffer2 = createTestPngBuffer();
+      const response = await request(global.testApp)
+        .post(`/api/reflections/${reflectionId}/images`)
+        .attach('images', imageBuffer2, {
+          filename: 'second-image.png',
+          contentType: 'image/png',
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.mode).toBe('visual');
+      expect(response.body.data.visualAttachments).toHaveLength(2);
+    });
+
+    it('should reject adding images without file', async () => {
+      // Create a text reflection first
+      const textReflection = await request(global.testApp)
+        .post('/api/reflections')
+        .send({
+          mode: 'text',
+          content: 'Text reflection',
+        })
+        .expect(201);
+
+      const response = await request(global.testApp)
+        .post(`/api/reflections/${textReflection.body.id}/images`)
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.message).toContain('At least one image file is required');
+    });
+
+    it('should return 404 for non-existent reflection', async () => {
+      const imageBuffer = createTestPngBuffer();
+      
+      const response = await request(global.testApp)
+        .post('/api/reflections/12345678-1234-1234-1234-123456789012/images')
+        .attach('images', imageBuffer, {
+          filename: 'test-image.png',
+          contentType: 'image/png',
+        })
+        .expect(404);
+
+      expect(response.body).toHaveProperty('error');
     });
   });
 });

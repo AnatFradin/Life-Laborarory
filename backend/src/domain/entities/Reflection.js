@@ -7,7 +7,7 @@ import { z } from 'zod';
 export const VisualAttachmentSchema = z.object({
   originalFilename: z.string().min(1, 'Original filename is required'),
   storedPath: z.string().min(1, 'Stored path is required'),
-  mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif', 'image/webp'], {
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'], {
     errorMap: () => ({ message: 'Unsupported image format' }),
   }),
   sizeBytes: z.number().positive('File size must be positive'),
@@ -55,11 +55,12 @@ export const ReflectionSchema = z
   .object({
     id: z.string().uuid('Invalid reflection ID'),
     timestamp: z.string().datetime('Invalid timestamp'),
-    mode: z.enum(['text', 'visual'], {
-      errorMap: () => ({ message: 'Mode must be text or visual' }),
+    mode: z.enum(['text', 'visual', 'mixed'], {
+      errorMap: () => ({ message: 'Mode must be text, visual, or mixed' }),
     }),
     content: z.string().optional(),
     visualAttachment: VisualAttachmentSchema.optional(),
+    visualAttachments: z.array(VisualAttachmentSchema).optional(),
     aiInteraction: AIInteractionSchema.optional(),
     externalAISession: ExternalAISessionSchema.optional(),
     metadata: z.record(z.unknown()).optional(),
@@ -70,14 +71,22 @@ export const ReflectionSchema = z
       if (data.mode === 'text') {
         return data.content && data.content.length > 0;
       }
-      // Visual mode requires visualAttachment
+      // Visual mode requires visualAttachment or visualAttachments
       if (data.mode === 'visual') {
-        return data.visualAttachment !== undefined;
+        return data.visualAttachment !== undefined || 
+               (data.visualAttachments !== undefined && data.visualAttachments.length > 0);
+      }
+      // Mixed mode requires both content and at least one visual
+      if (data.mode === 'mixed') {
+        const hasContent = data.content && data.content.length > 0;
+        const hasVisual = data.visualAttachment !== undefined || 
+                         (data.visualAttachments !== undefined && data.visualAttachments.length > 0);
+        return hasContent && hasVisual;
       }
       return false;
     },
     {
-      message: 'Text mode requires content, visual mode requires visualAttachment',
+      message: 'Text mode requires content, visual mode requires visualAttachment(s), mixed mode requires both',
     }
   );
 
