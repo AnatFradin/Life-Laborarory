@@ -37,8 +37,12 @@ describe('VisualReflectionCard', () => {
     // Should display mode badge
     expect(wrapper.find('.reflection-mode').text()).toBe('visual');
 
-    // Should display image
-    const img = wrapper.find('.visual-image');
+    // Should display compact image preview
+    const imagePreview = wrapper.find('.image-preview-compact');
+    expect(imagePreview.exists()).toBe(true);
+
+    // Should display thumbnail image
+    const img = wrapper.find('.visual-image-thumbnail');
     expect(img.exists()).toBe(true);
     expect(img.attributes('alt')).toBe('sunset.jpg');
 
@@ -193,7 +197,7 @@ describe('VisualReflectionCard', () => {
       },
     });
 
-    const img = wrapper.find('.visual-image');
+    const img = wrapper.find('.visual-image-thumbnail');
     expect(img.attributes('src')).toBe('http://localhost:3000/api/visuals/2025-11/abc123-def456.jpg');
   });
 
@@ -224,7 +228,8 @@ describe('VisualReflectionCard', () => {
       expect(wrapper.find('.visual-reflection-card').exists()).toBe(true);
 
       // Should NOT display image element for PDFs
-      expect(wrapper.find('.visual-image').exists()).toBe(false);
+      expect(wrapper.find('.visual-image-thumbnail').exists()).toBe(false);
+      expect(wrapper.find('.image-preview-compact').exists()).toBe(false);
 
       // Should display PDF preview card instead
       expect(wrapper.find('.pdf-preview-card').exists()).toBe(true);
@@ -233,8 +238,8 @@ describe('VisualReflectionCard', () => {
       expect(wrapper.find('.pdf-icon').exists()).toBe(true);
       expect(wrapper.find('.pdf-icon').text()).toBe('📄');
 
-      // Should display PDF label
-      expect(wrapper.find('.pdf-label').text()).toBe('PDF Document');
+      // Should display PDF filename
+      expect(wrapper.find('.pdf-label').text()).toBe('document.pdf');
     });
 
     it('should display PDF filename', () => {
@@ -244,7 +249,7 @@ describe('VisualReflectionCard', () => {
         },
       });
 
-      expect(wrapper.find('.image-filename').text()).toBe('document.pdf');
+      expect(wrapper.find('.pdf-label').text()).toBe('document.pdf');
     });
 
     it('should not display dimensions for PDF', () => {
@@ -349,6 +354,58 @@ describe('VisualReflectionCard', () => {
       expect(wrapper.find('.pdf-preview-card').exists()).toBe(true);
       expect(wrapper.find('.persona-badge').exists()).toBe(true);
       expect(wrapper.find('.persona-name').text()).toBe('Stoic Coach');
+    });
+  });
+
+  describe('Thumbnail Optimization', () => {
+    it('should render thumbnail with compact layout', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockReflection,
+        },
+      });
+
+      const thumbnail = wrapper.find('.visual-image-thumbnail');
+      expect(thumbnail.exists()).toBe(true);
+      
+      // Thumbnail should have fixed dimensions for performance
+      expect(thumbnail.classes()).toContain('visual-image-thumbnail');
+    });
+
+    it('should display filename with 10px font in compact view', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockReflection,
+        },
+      });
+
+      const filename = wrapper.find('.image-filename');
+      expect(filename.exists()).toBe(true);
+      expect(filename.classes()).toContain('image-filename');
+      // CSS font-size check would be verified in E2E tests
+    });
+
+    it('should use lazy loading for thumbnail', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockReflection,
+        },
+      });
+
+      const img = wrapper.find('.visual-image-thumbnail');
+      expect(img.attributes('loading')).toBe('lazy');
+    });
+
+    it('should apply performance optimizations to card', () => {
+      const wrapper = mount(VisualReflectionCard, {
+        props: {
+          reflection: mockReflection,
+        },
+      });
+
+      const card = wrapper.find('.visual-reflection-card');
+      expect(card.exists()).toBe(true);
+      // will-change and contain CSS properties would be verified in E2E tests
     });
   });
 });

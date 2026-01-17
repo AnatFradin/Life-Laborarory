@@ -31,24 +31,25 @@
       <!-- PDF Preview -->
       <div v-if="isPDF" class="pdf-preview-card">
         <span class="pdf-icon" aria-hidden="true">📄</span>
-        <span class="pdf-label text-sm text-tertiary">PDF Document</span>
+        <span class="pdf-label text-sm text-tertiary">{{ reflection.visualAttachment.originalFilename }}</span>
       </div>
-      <!-- Image Preview -->
-      <img
-        v-else
-        :src="imageUrl"
-        :alt="reflection.visualAttachment.originalFilename"
-        class="visual-image"
-        loading="lazy"
-        @error="handleImageError"
-      />
-      <div class="image-info">
-        <span class="image-filename text-sm">
-          {{ reflection.visualAttachment.originalFilename }}
-        </span>
-        <span v-if="reflection.visualAttachment.dimensions" class="image-dimensions text-xs text-tertiary">
-          {{ reflection.visualAttachment.dimensions.width }}×{{ reflection.visualAttachment.dimensions.height }}
-        </span>
+      <!-- Image Preview - Compact -->
+      <div v-else class="image-preview-compact">
+        <img
+          :src="imageUrl"
+          :alt="reflection.visualAttachment.originalFilename"
+          class="visual-image-thumbnail"
+          loading="lazy"
+          @error="handleImageError"
+        />
+        <div class="image-info">
+          <span class="image-filename text-sm">
+            {{ reflection.visualAttachment.originalFilename }}
+          </span>
+          <span v-if="reflection.visualAttachment.dimensions" class="image-dimensions text-xs text-tertiary">
+            {{ reflection.visualAttachment.dimensions.width }}×{{ reflection.visualAttachment.dimensions.height }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -170,6 +171,9 @@ const getPersonaIcon = (personaId) => {
   padding: var(--space-lg);
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
+  /* Performance optimizations */
+  will-change: transform;
+  contain: layout style paint;
 }
 
 .visual-reflection-card:hover {
@@ -241,25 +245,41 @@ const getPersonaIcon = (personaId) => {
   margin-bottom: var(--space-sm);
 }
 
+.image-preview-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
 .pdf-preview-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
+  gap: var(--space-sm);
+  padding: var(--space-md);
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-md);
-  min-height: 200px;
-  gap: var(--space-sm);
 }
 
 .pdf-icon {
-  font-size: 3rem;
+  font-size: 2rem;
   opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .pdf-label {
   font-weight: 500;
+  word-break: break-all;
+}
+
+.visual-image-thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-secondary);
+  flex-shrink: 0;
+  /* Performance optimization */
+  will-change: transform;
 }
 
 .visual-image {
@@ -276,16 +296,15 @@ const getPersonaIcon = (personaId) => {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  margin-top: var(--space-sm);
-  padding: var(--space-sm);
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-sm);
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
 }
 
 .image-filename {
   color: var(--color-text);
   font-weight: 500;
   word-break: break-all;
+  font-size: var(--text-2xs);
 }
 
 .image-dimensions {
