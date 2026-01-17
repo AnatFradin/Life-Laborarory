@@ -32,7 +32,7 @@ describe('ReflectionList - Optimized History View', () => {
 
   const mockMixedReflection = {
     id: 'mixed-123',
-    mode: 'text',
+    mode: 'mixed',
     content: 'Mixed reflection with text and visual',
     timestamp: '2025-11-19T14:00:00.000Z',
     visualAttachment: {
@@ -71,6 +71,9 @@ describe('ReflectionList - Optimized History View', () => {
         global: {
           stubs: {
             DeleteDialog: true,
+            VisualReflectionCard: {
+              template: '<div class="visual-reflection-card"><div class="reflection-type-icon" title="Mixed reflection">📋</div></div>',
+            },
           },
         },
       });
