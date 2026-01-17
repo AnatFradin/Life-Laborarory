@@ -97,7 +97,9 @@ export function useReflections() {
       let response;
       
       // Visual or mixed mode with images: use FormData
-      if ((reflectionData.mode === 'visual' || reflectionData.mode === 'mixed') && reflectionData.images) {
+      if ((reflectionData.mode === 'visual' || reflectionData.mode === 'mixed') && 
+          reflectionData.images && 
+          reflectionData.images.length > 0) {
         const formData = new FormData();
         formData.append('mode', reflectionData.mode);
         

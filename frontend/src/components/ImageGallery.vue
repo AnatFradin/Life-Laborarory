@@ -85,7 +85,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { API_BASE_URL } from '../services/api.js';
+import { getVisualUrl } from '../utils/url.js';
 
 const props = defineProps({
   images: {
@@ -108,9 +108,7 @@ const getImageUrl = (image) => {
     return image.url;
   }
   if (image.storedPath) {
-    const path = image.storedPath.replace('visuals/', '');
-    const baseUrl = API_BASE_URL.replace('/api', '');
-    return `${baseUrl}/api/visuals/${path}`;
+    return getVisualUrl(image.storedPath);
   }
   return '';
 };

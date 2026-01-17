@@ -105,7 +105,7 @@
 
 <script setup>
 import { computed, ref } from 'vue';
-import { API_BASE_URL } from '../services/api.js';
+import { getVisualUrl } from '../utils/url.js';
 
 const props = defineProps({
   reflection: {
@@ -160,10 +160,8 @@ const isPDFAttachment = (attachment) => {
  * Get image URL from attachment
  */
 const getImageUrl = (attachment) => {
-  if (!attachment) return '';
-  const storedPath = attachment.storedPath;
-  const baseUrl = API_BASE_URL.replace('/api', '');
-  return `${baseUrl}/api/visuals/${storedPath.replace('visuals/', '')}`;
+  if (!attachment || !attachment.storedPath) return '';
+  return getVisualUrl(attachment.storedPath);
 };
 
 /**
