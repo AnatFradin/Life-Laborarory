@@ -87,50 +87,84 @@ router.get('/:id', async (req, res, next) => {
  */
 router.post(
   '/',
-  upload.single('image'),
+  upload.fields([
+    { name: 'image', maxCount: 1 },  // Backward compatibility
+    { name: 'images', maxCount: 10 } // Multiple images
+  ]),
   async (req, res, next) => {
     try {
       const reflectionService = await getReflectionService();
-      const { mode } = req.body;
+      const { mode, content } = req.body;
 
-      // Handle visual mode (image upload)
-      if (mode === 'visual') {
-        if (!req.file) {
-          const error = new Error('Image file is required for visual mode');
+      // Get files from either field
+      const files = (req.files?.images || []).concat(req.files?.image || []);
+
+      // Handle visual or mixed mode (image upload)
+      if (mode === 'visual' || mode === 'mixed') {
+        if (!files || files.length === 0) {
+          const error = new Error('At least one image file is required for visual/mixed mode');
           error.statusCode = 400;
           throw error;
         }
 
-        // Validate MIME type
+        // Validate MIME types
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
-        if (!allowedTypes.includes(req.file.mimetype)) {
-          const error = new Error(
-            `Invalid file type. Allowed types: ${allowedTypes.join(', ')}`
-          );
+        for (const file of files) {
+          if (!allowedTypes.includes(file.mimetype)) {
+            const error = new Error(
+              `Invalid file type. Allowed types: ${allowedTypes.join(', ')}`
+            );
+            error.statusCode = 400;
+            throw error;
+          }
+        }
+
+        // For mixed mode, content is required
+        if (mode === 'mixed' && (!content || content.trim().length === 0)) {
+          const error = new Error('Content is required for mixed mode');
           error.statusCode = 400;
           throw error;
         }
 
-        // Extract dimensions if provided
-        const dimensions = req.body.width && req.body.height
-          ? { width: parseInt(req.body.width), height: parseInt(req.body.height) }
-          : undefined;
+        // Handle single image (backward compatible with visual mode)
+        if (files.length === 1 && mode === 'visual') {
+          const file = files[0];
+          // Extract dimensions if provided
+          const dimensions = req.body.width && req.body.height
+            ? { width: parseInt(req.body.width), height: parseInt(req.body.height) }
+            : undefined;
 
-        // Create visual reflection using importVisual service method
-        const imageData = {
-          buffer: req.file.buffer,
-          originalFilename: req.file.originalname,
-          mimeType: req.file.mimetype,
-          sizeBytes: req.file.size,
-          dimensions,
-        };
+          const imageData = {
+            buffer: file.buffer,
+            originalFilename: file.originalname,
+            mimeType: file.mimetype,
+            sizeBytes: file.size,
+            dimensions,
+          };
 
-        const created = await reflectionService.importVisual(
-          imageData,
-          config.dataDir
-        );
+          const created = await reflectionService.importVisual(
+            imageData,
+            config.dataDir
+          );
 
-        res.status(201).json(created);
+          res.status(201).json(created);
+        } else {
+          // Handle multiple images or mixed mode
+          const imagesData = files.map(file => ({
+            buffer: file.buffer,
+            originalFilename: file.originalname,
+            mimeType: file.mimetype,
+            sizeBytes: file.size,
+          }));
+
+          const created = await reflectionService.createWithImages(
+            { mode, content },
+            imagesData,
+            config.dataDir
+          );
+
+          res.status(201).json(created);
+        }
       } 
       // Handle text mode (JSON)
       else {
@@ -196,6 +230,54 @@ router.post('/delete-all', async (req, res, next) => {
     res.json({
       message: `All reflections deleted successfully`,
       deletedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/reflections/:id/images
+ * Add images to an existing reflection (converts to mixed mode if text exists)
+ * Content-Type: multipart/form-data
+ * Fields: images (array of files)
+ */
+router.post('/:id/images', upload.array('images', 10), async (req, res, next) => {
+  try {
+    const reflectionService = await getReflectionService();
+    const { id } = req.params;
+
+    if (!req.files || req.files.length === 0) {
+      const error = new Error('At least one image file is required');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Validate MIME types
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    for (const file of req.files) {
+      if (!allowedTypes.includes(file.mimetype)) {
+        const error = new Error(
+          `Invalid file type. Allowed types: ${allowedTypes.join(', ')}`
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+    // Prepare image data
+    const imagesData = req.files.map(file => ({
+      buffer: file.buffer,
+      originalFilename: file.originalname,
+      mimeType: file.mimetype,
+      sizeBytes: file.size,
+    }));
+
+    const updated = await reflectionService.addImagesToReflection(id, imagesData, config.dataDir);
+
+    res.json({
+      success: true,
+      data: updated,
     });
   } catch (error) {
     next(error);

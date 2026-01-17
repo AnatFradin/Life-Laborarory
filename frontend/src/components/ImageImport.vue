@@ -18,9 +18,10 @@
         ref="fileInput"
         type="file"
         accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+        :multiple="multiple"
         @change="handleFileSelect"
         class="file-input"
-        aria-label="Select image or PDF file"
+        :aria-label="multiple ? 'Select one or more image files' : 'Select image or PDF file'"
       />
 
       <div v-if="!previewUrl" class="drop-zone-content">
@@ -76,9 +77,9 @@
         class="btn-secondary"
         @click.stop="clearImage"
         type="button"
-        aria-label="Remove selected image"
+        :aria-label="multiple ? 'Remove selected images' : 'Remove selected image'"
       >
-        Remove Image
+        {{ multiple ? 'Remove Images' : 'Remove Image' }}
       </button>
     </div>
   </div>
@@ -89,12 +90,16 @@ import { ref, watch } from 'vue';
 
 const props = defineProps({
   modelValue: {
-    type: [File, null],
+    type: [File, Array, null],
     default: null,
   },
   maxSizeBytes: {
     type: Number,
     default: 10 * 1024 * 1024, // 10MB
+  },
+  multiple: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -109,6 +114,7 @@ const fileSize = ref(0);
 const imageDimensions = ref(null);
 const errorMessage = ref('');
 const isPDF = ref(false);
+const selectedFiles = ref([]);
 
 // Allowed MIME types
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
@@ -152,9 +158,13 @@ const handleDragLeave = (event) => {
 const handleDrop = (event) => {
   isDragging.value = false;
   
-  const files = event.dataTransfer.files;
+  const files = Array.from(event.dataTransfer.files);
   if (files.length > 0) {
-    processFile(files[0]);
+    if (props.multiple) {
+      processMultipleFiles(files);
+    } else {
+      processFile(files[0]);
+    }
   }
 };
 
@@ -162,9 +172,13 @@ const handleDrop = (event) => {
  * Handle file selection from input
  */
 const handleFileSelect = (event) => {
-  const files = event.target.files;
+  const files = Array.from(event.target.files);
   if (files.length > 0) {
-    processFile(files[0]);
+    if (props.multiple) {
+      processMultipleFiles(files);
+    } else {
+      processFile(files[0]);
+    }
   }
 };
 
@@ -227,6 +241,52 @@ const loadImageDimensions = (file) => {
 };
 
 /**
+ * Process multiple files
+ */
+const processMultipleFiles = (files) => {
+  errorMessage.value = '';
+  const validFiles = [];
+  
+  for (const file of files) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      errorMessage.value = `Skipped ${file.name}: Invalid file type`;
+      continue;
+    }
+    if (file.size > props.maxSizeBytes) {
+      errorMessage.value = `Skipped ${file.name}: File too large`;
+      continue;
+    }
+    validFiles.push(file);
+  }
+  
+  if (validFiles.length === 0) {
+    return;
+  }
+  
+  selectedFiles.value = validFiles;
+  
+  // For preview, show first file
+  const firstFile = validFiles[0];
+  isPDF.value = firstFile.type === 'application/pdf';
+  
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value);
+  }
+  previewUrl.value = URL.createObjectURL(firstFile);
+  fileName.value = validFiles.length > 1 ? `${validFiles.length} files selected` : firstFile.name;
+  fileSize.value = validFiles.reduce((sum, f) => sum + f.size, 0);
+  
+  if (!isPDF.value && validFiles.length === 1) {
+    loadImageDimensions(firstFile);
+  } else {
+    imageDimensions.value = null;
+    emit('dimensions-loaded', null);
+  }
+  
+  emit('update:modelValue', validFiles);
+};
+
+/**
  * Clear the selected file
  */
 const clearImage = () => {
@@ -240,6 +300,7 @@ const clearImage = () => {
   imageDimensions.value = null;
   errorMessage.value = '';
   isPDF.value = false;
+  selectedFiles.value = [];
   
   if (fileInput.value) {
     fileInput.value.value = '';

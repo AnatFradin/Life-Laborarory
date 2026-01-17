@@ -55,8 +55,11 @@ class MarkdownExporter extends IExporter {
       markdown += result.markdown;
       markdown += '\n---\n\n';
 
-      // Collect attachments for folder export
-      if (result.attachment) {
+      // Collect all attachments for folder export (from new attachments array)
+      if (result.attachments && result.attachments.length > 0) {
+        attachments.push(...result.attachments);
+      } else if (result.attachment) {
+        // Backward compatibility: single attachment
         attachments.push(result.attachment);
       }
     }
@@ -89,20 +92,18 @@ class MarkdownExporter extends IExporter {
    */
   async _formatReflection(reflection, includeMetadata, format, dataDir) {
     let markdown = '';
-    let attachment = null;
+    const attachments = [];
 
     // Add timestamp as header
     markdown += `## ${this._formatTimestamp(reflection.timestamp)}\n\n`;
 
-    // Handle text mode
-    if (reflection.mode === 'text' && reflection.content) {
+    // Handle text content (for text and mixed modes)
+    if ((reflection.mode === 'text' || reflection.mode === 'mixed') && reflection.content) {
       markdown += `${reflection.content}\n\n`;
     }
 
-    // Handle visual mode
-    if (reflection.mode === 'visual' && reflection.visualAttachment) {
-      const visual = reflection.visualAttachment;
-      
+    // Helper function to format a single visual
+    const formatVisual = async (visual) => {
       if (format === 'single-file' && dataDir) {
         // Embed image as base64 data URL
         try {
@@ -111,31 +112,53 @@ class MarkdownExporter extends IExporter {
           const base64 = imageBuffer.toString('base64');
           const dataUrl = `data:${visual.mimeType};base64,${base64}`;
           
-          markdown += `![${visual.originalFilename}](${dataUrl})\n\n`;
+          return `![${visual.originalFilename}](${dataUrl})\n\n`;
         } catch (error) {
-          markdown += `*[Image: ${visual.originalFilename} - file not found]*\n\n`;
+          return `*[Image: ${visual.originalFilename} - file not found]*\n\n`;
         }
       } else {
         // Reference external image file for folder export
         const imageFilename = path.basename(visual.storedPath);
-        markdown += `![${visual.originalFilename}](images/${imageFilename})\n\n`;
+        const markdownLink = `![${visual.originalFilename}](images/${imageFilename})\n\n`;
         
         // Collect attachment info for folder export
         if (dataDir) {
-          attachment = {
+          attachments.push({
             sourcePath: path.join(dataDir, visual.storedPath),
             targetPath: `images/${imageFilename}`,
             originalFilename: visual.originalFilename,
-          };
+          });
         }
+        
+        return markdownLink;
+      }
+    };
+
+    // Handle visual content (for visual and mixed modes)
+    const visuals = [];
+    if (reflection.visualAttachment) {
+      visuals.push(reflection.visualAttachment);
+    }
+    if (reflection.visualAttachments && reflection.visualAttachments.length > 0) {
+      visuals.push(...reflection.visualAttachments);
+    }
+
+    if (visuals.length > 0) {
+      // Add images section for mixed mode
+      if (reflection.mode === 'mixed') {
+        markdown += `### Images\n\n`;
       }
 
-      // Add image metadata
-      markdown += `*Image: ${visual.originalFilename}*`;
-      if (visual.dimensions) {
-        markdown += ` (${visual.dimensions.width}×${visual.dimensions.height})`;
+      for (const visual of visuals) {
+        markdown += await formatVisual(visual);
+
+        // Add image metadata
+        markdown += `*Image: ${visual.originalFilename}*`;
+        if (visual.dimensions) {
+          markdown += ` (${visual.dimensions.width}×${visual.dimensions.height})`;
+        }
+        markdown += `\n\n`;
       }
-      markdown += `\n\n`;
     }
 
     // Add AI interaction if present and metadata is included
@@ -153,7 +176,12 @@ class MarkdownExporter extends IExporter {
       markdown += `*Session: ${this._formatTimestamp(session.timestamp)}*\n\n`;
     }
 
-    return { markdown, attachment };
+    // Return first attachment for backward compatibility, but include all in attachments array
+    return { 
+      markdown, 
+      attachment: attachments.length > 0 ? attachments[0] : null,
+      attachments 
+    };
   }
 
   /**

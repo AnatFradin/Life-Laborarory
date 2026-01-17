@@ -86,7 +86,7 @@ export function useReflections() {
 
   /**
    * Create new reflection
-   * @param {Object} reflectionData - Reflection data (text mode) or { mode, image, dimensions } (visual mode)
+   * @param {Object} reflectionData - Reflection data
    * @returns {Promise<Object>} Created reflection
    */
   const createReflection = async (reflectionData) => {
@@ -96,11 +96,23 @@ export function useReflections() {
     try {
       let response;
       
-      // Visual mode: use FormData for file upload
-      if (reflectionData.mode === 'visual' && reflectionData.image) {
+      // Visual or mixed mode with images: use FormData
+      if ((reflectionData.mode === 'visual' || reflectionData.mode === 'mixed') && 
+          reflectionData.images && 
+          reflectionData.images.length > 0) {
         const formData = new FormData();
-        formData.append('mode', 'visual');
-        formData.append('image', reflectionData.image);
+        formData.append('mode', reflectionData.mode);
+        
+        // Add content for mixed mode
+        if (reflectionData.mode === 'mixed' && reflectionData.content) {
+          formData.append('content', reflectionData.content);
+        }
+        
+        // Add multiple images
+        const images = Array.isArray(reflectionData.images) ? reflectionData.images : [reflectionData.images];
+        images.forEach((image) => {
+          formData.append('images', image);
+        });
         
         if (reflectionData.dimensions) {
           formData.append('dimensions', JSON.stringify(reflectionData.dimensions));
@@ -122,6 +134,40 @@ export function useReflections() {
     } catch (err) {
       error.value = err.message;
       console.error('Failed to create reflection:', err);
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  /**
+   * Add images to an existing reflection
+   * @param {string} id - Reflection ID
+   * @param {Array<File>} images - Array of image files
+   * @returns {Promise<Object>} Updated reflection
+   */
+  const addImagesToReflection = async (id, images) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const formData = new FormData();
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
+
+      const response = await reflectionsAPI.addImages(id, formData);
+      
+      // Update local state
+      const reflection = reflections.value.find((r) => r.id === id);
+      if (reflection) {
+        Object.assign(reflection, response.data);
+      }
+
+      return response.data;
+    } catch (err) {
+      error.value = err.message;
+      console.error(`Failed to add images to reflection ${id}:`, err);
       throw err;
     } finally {
       loading.value = false;
@@ -265,6 +311,7 @@ export function useReflections() {
     loadReflections,
     loadReflectionsLazy,
     createReflection,
+    addImagesToReflection,
     getReflectionById,
     updateReflectionAI,
     deleteReflection,
