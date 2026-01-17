@@ -122,11 +122,10 @@ const emit = defineEmits(['select', 'delete', 'keydown']);
 const imageError = ref(false);
 
 /**
- * Check if reflection is mixed mode
+ * Check if reflection is mixed mode (explicit mode only)
  */
 const isMixed = computed(() => {
-  return props.reflection.mode === 'mixed' || 
-         (props.reflection.content && (props.reflection.visualAttachment || props.reflection.visualAttachments));
+  return props.reflection.mode === 'mixed';
 });
 
 /**

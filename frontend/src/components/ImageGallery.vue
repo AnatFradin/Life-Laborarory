@@ -10,11 +10,11 @@
         @keydown.space.prevent="openLightbox(index)"
         tabindex="0"
         role="button"
-        :aria-label="`View ${image.filename || 'image'} full size`"
+        :aria-label="`View ${image.originalFilename || 'image'} full size`"
       >
         <img
           :src="getImageUrl(image)"
-          :alt="image.filename || `Image ${index + 1}`"
+          :alt="image.originalFilename || `Image ${index + 1}`"
           class="gallery-image"
           loading="lazy"
           @error="handleImageError(index)"
@@ -56,11 +56,11 @@
       <div class="lightbox-content" @click.stop>
         <img
           :src="getImageUrl(images[currentIndex])"
-          :alt="images[currentIndex].filename || `Image ${currentIndex + 1}`"
+          :alt="images[currentIndex].originalFilename || `Image ${currentIndex + 1}`"
           class="lightbox-image"
         />
         <div class="lightbox-info">
-          <span class="lightbox-filename">{{ images[currentIndex].filename }}</span>
+          <span class="lightbox-filename">{{ images[currentIndex].originalFilename }}</span>
           <span v-if="images[currentIndex].size" class="lightbox-size text-tertiary text-sm">
             {{ formatFileSize(images[currentIndex].size) }}
           </span>

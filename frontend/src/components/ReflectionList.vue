@@ -233,10 +233,6 @@ const getTypeIcon = (reflection) => {
   if (reflection.mode === 'mixed') {
     return '📋';
   }
-  // Legacy check: has both content and visual
-  if (reflection.content && (reflection.visualAttachment || reflection.visualAttachments)) {
-    return '📋';
-  }
   if (reflection.mode === 'visual') {
     return '📷';
   }
@@ -249,10 +245,6 @@ const getTypeIcon = (reflection) => {
 // Get type label for reflection
 const getTypeLabel = (reflection) => {
   if (reflection.mode === 'mixed') {
-    return 'Mixed reflection';
-  }
-  // Legacy check: has both content and visual
-  if (reflection.content && (reflection.visualAttachment || reflection.visualAttachments)) {
     return 'Mixed reflection';
   }
   if (reflection.mode === 'visual') {

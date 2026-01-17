@@ -136,11 +136,11 @@
             @dimensions-loaded="handleDimensionsLoaded"
           />
           
-          <div v-if="currentContent || (selectedImages && selectedImages.length > 0)" class="mixed-actions">
+          <div v-if="canSaveMixed" class="mixed-actions">
             <button
               class="btn-primary"
               @click="handleSaveMixed"
-              :disabled="saving || (!currentContent && (!selectedImages || selectedImages.length === 0))"
+              :disabled="saving || !canSaveMixed"
               :aria-label="saving ? 'Saving...' : 'Save mixed reflection'"
             >
               {{ saving ? 'Saving...' : 'Save' }}
@@ -205,6 +205,13 @@ const privacyStatus = computed(() => {
     return { text: `Online AI active (${provider})`, icon: '🌐' };
   }
   return { text: 'Local processing only', icon: '🔒' };
+});
+
+/**
+ * Check if mixed mode reflection can be saved
+ */
+const canSaveMixed = computed(() => {
+  return currentContent.value || (selectedImages.value && selectedImages.value.length > 0);
 });
 
 // Mode state
