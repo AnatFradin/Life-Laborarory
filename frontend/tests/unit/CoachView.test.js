@@ -78,7 +78,15 @@ describe('CoachView Component', () => {
 
   describe('Rendering', () => {
     it('should render view title', () => {
-      const wrapper = mount(CoachView);
+      const wrapper = mount(CoachView, {
+        global: {
+          mocks: {
+            $route: {
+              query: {}
+            }
+          }
+        }
+      });
 
       expect(wrapper.text()).toContain('AI Coach');
     });
@@ -137,13 +145,29 @@ describe('CoachView Component', () => {
         personas: { value: [] },
       });
 
-      const wrapper = mount(CoachView);
+      const wrapper = mount(CoachView, {
+        global: {
+          mocks: {
+            $route: {
+              query: {}
+            }
+          }
+        }
+      });
 
       expect(wrapper.text()).toContain('Loading');
     });
 
     it('should call loadPersonas on mount', () => {
-      mount(CoachView);
+      mount(CoachView, {
+        global: {
+          mocks: {
+            $route: {
+              query: {}
+            }
+          }
+        }
+      });
 
       expect(mockUsePersonas.loadPersonas).toHaveBeenCalled();
     });
@@ -316,7 +340,15 @@ describe('CoachView Component', () => {
 
   describe('Accessibility', () => {
     it('should have main heading', () => {
-      const wrapper = mount(CoachView);
+      const wrapper = mount(CoachView, {
+        global: {
+          mocks: {
+            $route: {
+              query: {}
+            }
+          }
+        }
+      });
 
       const heading = wrapper.find('h1');
       expect(heading.exists()).toBe(true);
@@ -381,7 +413,15 @@ describe('CoachView Component', () => {
     });
 
     it('should mention ChatGPT Plus subscription', () => {
-      const wrapper = mount(CoachView);
+      const wrapper = mount(CoachView, {
+        global: {
+          mocks: {
+            $route: {
+              query: {}
+            }
+          }
+        }
+      });
 
       expect(wrapper.text()).toContain('ChatGPT');
       expect(wrapper.text()).toContain('subscription');

@@ -2,9 +2,9 @@
   <div class="reflection-editor">
     <div class="editor-header">
       <div class="header-top">
-        <label for="reflection-input" class="editor-label">
+        <div class="editor-label">
           Your Reflection
-        </label>
+        </div>
         
         <!-- Editor mode toggle switch -->
         <label class="toggle-switch">

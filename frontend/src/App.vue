@@ -2,46 +2,30 @@
   <div id="app" class="app-container">
     <a href="#main-content" class="skip-to-main">Skip to main content</a>
     
-    <header class="app-header">
-      <div class="header-top">
-        <h1 class="app-title">Laboratory of Life</h1>
-        <div class="header-status" role="status" aria-live="polite">
-          <span v-if="isUsingLocalAI" class="status-badge local" title="All processing happens locally on your device">
-            <span class="status-icon" aria-hidden="true">🔒</span>
-            <span class="status-text">Local-only</span>
-          </span>
-          <span v-else-if="isUsingOnlineAI" class="status-badge online" title="AI processing uses external services">
-            <span class="status-icon" aria-hidden="true">🌐</span>
-            <span class="status-text">Online AI Active</span>
-          </span>
-        </div>
-      </div>
-      <nav class="app-nav" aria-label="Main navigation">
-        <RouterLink to="/" class="nav-link">Compose</RouterLink>
-        <RouterLink to="/history" class="nav-link">History</RouterLink>
-        <RouterLink to="/coach" class="nav-link">AI Coach</RouterLink>
-        <RouterLink to="/settings" class="nav-link">Settings</RouterLink>
-        <RouterLink to="/export" class="nav-link">Export</RouterLink>
-      </nav>
-    </header>
+    <!-- Left Sidebar Navigation -->
+    <AppSidebar />
 
-    <main id="main-content" class="app-main">
-      <RouterView />
-    </main>
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <main id="main-content" class="app-main">
+        <RouterView />
+      </main>
 
-    <footer class="app-footer">
-      <p class="privacy-indicator">
-        <span class="privacy-icon" aria-hidden="true">🔒</span>
-        <span>Your reflections stay on your device</span>
-      </p>
-      <KeyboardShortcutsHelp />
-    </footer>
+      <footer class="app-footer">
+        <p class="privacy-indicator">
+          <span class="privacy-icon" aria-hidden="true">🔒</span>
+          <span>Your reflections stay on your device</span>
+        </p>
+        <KeyboardShortcutsHelp />
+      </footer>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
-import { RouterLink, RouterView } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { RouterView } from 'vue-router';
+import AppSidebar from './components/AppSidebar.vue';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp.vue';
 import { usePreferences } from './composables/usePreferences.js';
 
@@ -55,42 +39,51 @@ onMounted(async () => {
 
 <style scoped>
 .app-container {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  min-height: 100vh;
+  background: var(--color-bg);
+  overflow-x: hidden;
+}
+
+/* Main content wrapper */
+.main-wrapper {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  width: 100%;
 }
 
+/* Header - streamlined */
 .app-header {
-  padding: var(--space-xl) 0 var(--space-lg);
+  padding: var(--space-xl) 0;
   border-bottom: 1px solid var(--color-border);
-  background: linear-gradient(to bottom, var(--color-bg) 0%, var(--color-bg-secondary) 100%);
-  margin: 0 calc(-1 * var(--space-lg));
-  padding-left: var(--space-lg);
-  padding-right: var(--space-lg);
 }
 
-.header-top {
+.header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-lg);
   gap: var(--space-md);
-  flex-wrap: wrap;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.header-logo svg {
+  color: var(--color-accent-purple);
 }
 
 .app-title {
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--color-text);
   margin: 0;
-  letter-spacing: -0.03em;
-  background: linear-gradient(135deg, var(--color-text) 0%, var(--color-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
 .header-status {
@@ -132,50 +125,13 @@ onMounted(async () => {
   letter-spacing: 0.01em;
 }
 
-.app-nav {
-  display: flex;
-  gap: var(--space-xl);
-  flex-wrap: wrap;
-}
-
-.nav-link {
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  padding: var(--space-sm) var(--space-xs);
-  border-bottom: 2px solid transparent;
-  transition: all var(--transition-base);
-  font-weight: 500;
-  font-size: var(--text-base);
-  position: relative;
-}
-
-.nav-link:hover {
-  color: var(--color-primary);
-  transform: translateY(-1px);
-}
-
-.nav-link.router-link-active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: 600;
-}
-
-.nav-link.router-link-active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(45, 90, 61, 0.3);
-}
-
+/* Main content */
 .app-main {
   flex: 1;
   padding: var(--space-2xl) 0;
 }
 
+/* Footer */
 .app-footer {
   padding: var(--space-lg) 0;
   border-top: 1px solid var(--color-border);
@@ -203,14 +159,14 @@ onMounted(async () => {
   font-size: 1rem;
 }
 
-/* Skip to main content link - visible only on focus */
+/* Skip to main content link */
 .skip-to-main {
   position: fixed;
   left: -9999px;
   top: var(--space-md);
   z-index: 9999;
   padding: var(--space-md) var(--space-lg);
-  background-color: var(--color-primary);
+  background-color: var(--color-accent-purple);
   color: white;
   text-decoration: none;
   border-radius: var(--radius-md);
@@ -222,5 +178,23 @@ onMounted(async () => {
   left: var(--space-md);
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .app-container {
+    grid-template-columns: 280px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+
+  .main-wrapper {
+    padding: 0 var(--space-md);
+  }
 }
 </style>
