@@ -69,6 +69,10 @@ export const reflectionsAPI = {
     apiClient.post('/reflections', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
+  addImages: (id, formData) =>
+    apiClient.post(`/reflections/${id}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
   delete: (id) => apiClient.delete(`/reflections/${id}`),
   deleteAll: (confirmation) =>
     apiClient.post('/reflections/delete-all', { confirmation }),

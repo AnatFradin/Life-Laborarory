@@ -6,9 +6,9 @@
 
     <div v-else class="reflections-container" role="list" aria-label="Reflections">
       <template v-for="(reflection, index) in reflections" :key="reflection.id">
-        <!-- Visual Reflection Card -->
+        <!-- Visual or Mixed Reflection Card -->
         <VisualReflectionCard
-          v-if="reflection.mode === 'visual'"
+          v-if="reflection.mode === 'visual' || reflection.mode === 'mixed'"
           :ref="el => setCardRef(el, index)"
           :reflection="reflection"
           role="listitem"
@@ -230,8 +230,11 @@ const getFirstLines = (reflection) => {
 
 // Get type icon for reflection
 const getTypeIcon = (reflection) => {
-  // Mixed mode (if it has both content and visual) - check first
-  if (reflection.content && reflection.visualAttachment) {
+  if (reflection.mode === 'mixed') {
+    return '📋';
+  }
+  // Legacy check: has both content and visual
+  if (reflection.content && (reflection.visualAttachment || reflection.visualAttachments)) {
     return '📋';
   }
   if (reflection.mode === 'visual') {
@@ -245,8 +248,11 @@ const getTypeIcon = (reflection) => {
 
 // Get type label for reflection
 const getTypeLabel = (reflection) => {
-  // Mixed mode (if it has both content and visual) - check first
-  if (reflection.content && reflection.visualAttachment) {
+  if (reflection.mode === 'mixed') {
+    return 'Mixed reflection';
+  }
+  // Legacy check: has both content and visual
+  if (reflection.content && (reflection.visualAttachment || reflection.visualAttachments)) {
     return 'Mixed reflection';
   }
   if (reflection.mode === 'visual') {
