@@ -61,7 +61,7 @@ class ExportService {
     const reflection = await this.repository.findById(reflectionId);
     
     if (!reflection) {
-      const error = new Error('Reflection not found');
+      const error = new Error(`Reflection with ID ${reflectionId} not found`);
       error.statusCode = 404;
       throw error;
     }
