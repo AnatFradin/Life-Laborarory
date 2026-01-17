@@ -131,7 +131,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { usePersonas } from '../composables/usePersonas.js';
 import { usePreferences } from '../composables/usePreferences.js';
 import PersonaCard from '../components/PersonaCard.vue';
@@ -139,8 +140,12 @@ import PromptViewDialog from '../components/PromptViewDialog.vue';
 import PromptSelectorDialog from '../components/PromptSelectorDialog.vue';
 import CoachChatDialog from '../components/CoachChatDialog.vue';
 
+const route = useRoute();
 const { personas, selectedPersona, loading, error, loadPersonas, selectPersona } = usePersonas();
 const { preferences, updatePreferences } = usePreferences();
+
+// Guard against undefined route in test environments
+const safeRoute = route || { query: {} };
 
 // Prompt view dialog state
 const showPromptDialog = ref(false);
@@ -219,9 +224,32 @@ const closePromptDialog = () => {
 onMounted(async () => {
   await loadPersonas();
   
-  // If preferences have a selected persona, sync it
-  if (preferences.value?.selectedPersonaId) {
+  // Check if there's a persona query parameter (from sidebar navigation)
+  const personaIdFromQuery = safeRoute.query?.persona;
+  if (personaIdFromQuery) {
+    // Select the persona from the query
+    handleSelectPersona(personaIdFromQuery);
+    // Automatically open the prompt selector for this persona
+    const persona = personas.value.find(p => p.id === personaIdFromQuery);
+    if (persona) {
+      handleSelectPrompt(persona);
+    }
+  } else if (preferences.value?.selectedPersonaId) {
+    // If preferences have a selected persona, sync it
     selectPersona(preferences.value.selectedPersonaId);
+  }
+});
+
+// Watch for changes to the persona query parameter
+watch(() => safeRoute.query?.persona, (newPersonaId) => {
+  if (newPersonaId && personas.value.length > 0) {
+    // Select the persona
+    handleSelectPersona(newPersonaId);
+    // Automatically open the prompt selector
+    const persona = personas.value.find(p => p.id === newPersonaId);
+    if (persona) {
+      handleSelectPrompt(persona);
+    }
   }
 });
 </script>

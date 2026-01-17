@@ -27,6 +27,13 @@
   --color-primary-surface: #d4ebe0; /* Medium mint for surfaces */
   --color-primary-dark: #1a3d26; /* Very dark green */
 
+  /* Purple accent color for UI elements and highlights */
+  --color-accent-purple: #6366f1; /* Indigo-blue purple */
+  --color-accent-purple-hover: #4f46e5; /* Deeper purple on hover */
+  --color-accent-purple-light: #eef2ff; /* Very light purple background */
+  --color-accent-purple-surface: #ddd6fe; /* Light purple for surfaces */
+  --color-accent-purple-dark: #4338ca; /* Dark purple */
+
   /* Border and divider colors - softer, more elegant */
   --color-border: #e5e1d9; /* Warm gray border */
   --color-border-focus: #2d5a3d; /* Primary color for focused elements */

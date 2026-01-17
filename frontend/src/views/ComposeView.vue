@@ -1,68 +1,43 @@
 <template>
   <div class="compose-view">
-    <header class="view-header">
-      <h2 tabindex="-1">Compose</h2>
-      <div class="privacy-badge" role="status" aria-live="polite">
-        <span class="privacy-icon" aria-hidden="true">{{ privacyStatus.icon }}</span>
-        <span class="privacy-text text-sm">{{ privacyStatus.text }}</span>
+    <!-- Compact Header -->
+    <header class="compose-header">
+      <div class="header-left">
+        <span class="current-date">{{ currentDate }}</span>
+        <span v-if="saveStatusText" class="save-status">{{ saveStatusText }}</span>
+      </div>
+
+      <!-- Mode Selection - Compact -->
+      <div class="mode-selection-compact" role="group" aria-label="Expression mode">
+        <button
+          v-for="mode in modes"
+          :key="mode.value"
+          :class="['mode-pill', { active: currentMode === mode.value }]"
+          @click="currentMode = mode.value; handleModeChange()"
+          :aria-pressed="currentMode === mode.value"
+          :aria-label="`${mode.name} mode`"
+        >
+          <span class="mode-icon">{{ mode.icon }}</span>
+        </button>
       </div>
     </header>
-
-    <!-- Mode Selection -->
-    <div class="mode-selection" role="group" aria-label="Expression mode">
-      <label class="mode-option">
-        <input
-          type="radio"
-          name="mode"
-          value="text"
-          v-model="currentMode"
-          @change="handleModeChange"
-        />
-        <span class="mode-label">
-          <span class="mode-icon" aria-hidden="true">✍️</span>
-          <span class="mode-name">Text</span>
-        </span>
-      </label>
-      <label class="mode-option">
-        <input
-          type="radio"
-          name="mode"
-          value="visual"
-          v-model="currentMode"
-          @change="handleModeChange"
-        />
-        <span class="mode-label">
-          <span class="mode-icon" aria-hidden="true">🖼️</span>
-          <span class="mode-name">Visual</span>
-        </span>
-      </label>
-      <label class="mode-option">
-        <input
-          type="radio"
-          name="mode"
-          value="mixed"
-          v-model="currentMode"
-          @change="handleModeChange"
-        />
-        <span class="mode-label">
-          <span class="mode-icon" aria-hidden="true">📋</span>
-          <span class="mode-name">Mixed</span>
-        </span>
-      </label>
-    </div>
 
     <div class="compose-content" role="region" aria-label="Reflection composition area">
       <!-- Text Mode -->
       <template v-if="currentMode === 'text'">
-        <ReflectionEditor
-          :initial-content="currentContent"
-          :saving="saving"
-          :generating-a-i="generating"
-          :error="error"
-          :last-saved="lastSaved"
-          @save="handleSave"
-          @request-ai-feedback="handleAIFeedback"
-        />
+        <div class="editor-layout">
+          <div class="editor-main">
+            <ReflectionEditor
+              :initial-content="currentContent"
+              :saving="saving"
+              :generating-a-i="generating"
+              :error="error"
+              :last-saved="lastSaved"
+              @save="handleSave"
+              @request-ai-feedback="handleAIFeedback"
+            />
+          </div>
+        </div>
 
         <AIMirrorPanel
           v-if="currentAIResponse || generating"
@@ -82,6 +57,17 @@
             <span v-else>Talk in ChatGPT</span>
           </button>
         </div>
+
+        <!-- Complete Entry Button for Text Mode -->
+        <button
+          class="complete-entry-btn"
+          @click="handleSave(currentContent)"
+          :disabled="saving || !hasContent"
+          :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+        >
+          <span v-if="saving">Saving...</span>
+          <span v-else>Complete Entry</span>
+        </button>
       </template>
 
       <!-- Visual Mode -->
@@ -93,17 +79,6 @@
             @dimensions-loaded="handleDimensionsLoaded"
           />
           
-          <div v-if="selectedImages && selectedImages.length > 0" class="visual-actions">
-            <button
-              class="btn-primary"
-              @click="handleSaveVisual"
-              :disabled="saving"
-              :aria-label="saving ? 'Saving...' : 'Save visual reflection'"
-            >
-              {{ saving ? 'Saving...' : 'Save' }}
-            </button>
-          </div>
-
           <div v-if="error" class="error-message" role="alert">
             {{ error }}
           </div>
@@ -111,6 +86,17 @@
           <p v-if="lastSaved" class="last-saved text-tertiary text-sm">
             Last saved: {{ lastSaved.toLocaleString() }}
           </p>
+
+          <!-- Complete Entry Button for Visual Mode -->
+          <button
+            class="complete-entry-btn"
+            @click="handleSaveVisual"
+            :disabled="saving || !hasContent"
+            :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+          >
+            <span v-if="saving">Saving...</span>
+            <span v-else>Complete Entry</span>
+          </button>
         </div>
       </template>
 
@@ -136,17 +122,6 @@
             @dimensions-loaded="handleDimensionsLoaded"
           />
           
-          <div v-if="canSaveMixed" class="mixed-actions">
-            <button
-              class="btn-primary"
-              @click="handleSaveMixed"
-              :disabled="saving || !canSaveMixed"
-              :aria-label="saving ? 'Saving...' : 'Save mixed reflection'"
-            >
-              {{ saving ? 'Saving...' : 'Save' }}
-            </button>
-          </div>
-
           <div v-if="error" class="error-message" role="alert">
             {{ error }}
           </div>
@@ -154,6 +129,17 @@
           <p v-if="lastSaved" class="last-saved text-tertiary text-sm">
             Last saved: {{ lastSaved.toLocaleString() }}
           </p>
+
+          <!-- Complete Entry Button for Mixed Mode -->
+          <button
+            class="complete-entry-btn"
+            @click="handleSaveMixed"
+            :disabled="saving || !canSaveMixed"
+            :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+          >
+            <span v-if="saving">Saving...</span>
+            <span v-else>Complete Entry</span>
+          </button>
         </div>
       </template>
 
@@ -184,6 +170,40 @@ const { createReflection, updateReflectionAI, saveExternalAIResponse } = useRefl
 const { generateMirrorResponse, generating, error: aiError } = useAIMirror();
 const { preferences, loadPreferences, isUsingLocalAI, isUsingOnlineAI, getPrivacyLevel } = usePreferences();
 const { personas, selectedPersona, loadPersonas, generateChatGPTLink, loading: personasLoading } = usePersonas();
+
+// Header data
+const currentDate = computed(() => {
+  const now = new Date();
+  return now.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+});
+
+const modes = [
+  { value: 'text', name: 'Text', icon: '✍️' },
+  { value: 'visual', name: 'Visual', icon: '🖼️' },
+  { value: 'mixed', name: 'Mixed', icon: '📋' }
+];
+
+const hasContent = computed(() => {
+  if (currentMode.value === 'text' || currentMode.value === 'mixed') {
+    return currentContent.value && currentContent.value.trim().length > 0;
+  }
+  if (currentMode.value === 'visual') {
+    return selectedImages.value && selectedImages.value.length > 0;
+  }
+  return false;
+});
+
+const saveStatusText = computed(() => {
+  if (saving.value) return 'Saving...';
+  if (lastSaved.value) return 'All changes saved';
+  return '';
+});
+
+defineEmits(['toggle-formatting-guide']);
 
 // Local state for external AI dialog
 const showExternalDialog = ref(false);
@@ -449,10 +469,102 @@ const handleSaveExternalSummary = async () => {
 
 <style scoped>
 .compose-view {
-  max-width: 900px;
-  margin: 0 auto;
+  width: 100%;
 }
 
+/* New Header Styles - Compact */
+.compose-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) 0;
+  margin-bottom: var(--space-md);
+  gap: var(--space-md);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.current-date {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.save-status {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+/* Compact Mode Selection - Small Icons Only */
+.mode-selection-compact {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  width: fit-content;
+}
+
+.mode-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.mode-pill:hover {
+  background: var(--color-bg-hover);
+}
+
+.mode-pill.active {
+  background: white;
+  box-shadow: var(--shadow-xs);
+}
+
+.mode-pill .mode-icon {
+  line-height: 1;
+}
+
+/* Complete Entry Button - Moved to bottom */
+.complete-entry-btn {
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-accent-purple) 0%, var(--color-accent-purple-hover) 100%);
+  color: white;
+  font-weight: 600;
+  font-size: var(--text-base);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  margin-top: var(--space-xl);
+}
+
+.complete-entry-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.complete-entry-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Old header - keep for backward compatibility */
 .view-header {
   display: flex;
   justify-content: space-between;
@@ -557,6 +669,23 @@ const handleSaveExternalSummary = async () => {
   display: flex;
   flex-direction: column;
   gap: var(--space-2xl);
+}
+
+/* Editor Layout - Side by Side */
+.editor-layout {
+  display: flex;
+  gap: var(--space-md);
+  height: 100%;
+}
+
+.editor-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-toolbar-sidebar {
+  width: 220px;
+  flex-shrink: 0;
 }
 
 .visual-compose {
