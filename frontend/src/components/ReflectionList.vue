@@ -249,29 +249,30 @@ const getFirstLines = (reflection) => {
 
 // Get type icon for reflection
 const getTypeIcon = (reflection) => {
+  // Mixed mode (if it has both content and visual) - check first
+  if (reflection.content && reflection.visualAttachment) {
+    return '📋';
+  }
   if (reflection.mode === 'visual') {
     return '📷';
   }
   if (reflection.mode === 'text') {
     return '📝';
   }
-  // Mixed mode (if it has both content and visual)
-  if (reflection.content && reflection.visualAttachment) {
-    return '📋';
-  }
   return '📄';
 };
 
 // Get type label for reflection
 const getTypeLabel = (reflection) => {
+  // Mixed mode (if it has both content and visual) - check first
+  if (reflection.content && reflection.visualAttachment) {
+    return 'Mixed reflection';
+  }
   if (reflection.mode === 'visual') {
     return 'Visual reflection';
   }
   if (reflection.mode === 'text') {
     return 'Text reflection';
-  }
-  if (reflection.content && reflection.visualAttachment) {
-    return 'Mixed reflection';
   }
   return 'Reflection';
 };
