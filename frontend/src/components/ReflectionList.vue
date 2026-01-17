@@ -31,12 +31,17 @@
         >
           <div class="reflection-header">
             <div class="reflection-meta">
-              <time class="reflection-time text-tertiary text-sm" :datetime="reflection.timestamp">
-                {{ formatTimestamp(reflection.timestamp) }}
-              </time>
-              <span v-if="reflection.mode" class="reflection-mode text-tertiary text-xs">
-                {{ reflection.mode }}
-              </span>
+              <div class="reflection-type-icon" :title="getTypeLabel(reflection)" aria-hidden="true">
+                {{ getTypeIcon(reflection) }}
+              </div>
+              <div class="reflection-info">
+                <time class="reflection-time text-tertiary text-sm" :datetime="reflection.timestamp">
+                  {{ formatTimestamp(reflection.timestamp) }}
+                </time>
+                <span v-if="reflection.mode" class="reflection-mode text-tertiary text-xs">
+                  {{ reflection.mode }}
+                </span>
+              </div>
             </div>
             <button
               class="delete-button"
@@ -50,7 +55,7 @@
           </div>
 
           <div class="reflection-content">
-            <p class="reflection-text">{{ getPreview(reflection) }}</p>
+            <p class="reflection-text">{{ getFirstLines(reflection) }}</p>
           </div>
 
           <div v-if="reflection.aiInteraction || reflection.externalAISession" class="reflection-footer">
@@ -222,6 +227,55 @@ const getPreview = (reflection) => {
   return 'Empty reflection';
 };
 
+// Get first 3 lines of text (optimized preview)
+const getFirstLines = (reflection) => {
+  if (reflection.mode === 'text' && reflection.content) {
+    const text = reflection.content.trim();
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    const firstThreeLines = lines.slice(0, 3).join('\n');
+    
+    // If there are more lines, add ellipsis
+    if (lines.length > 3) {
+      return firstThreeLines + '...';
+    }
+    
+    return firstThreeLines;
+  }
+  if (reflection.mode === 'visual' && reflection.visualAttachment) {
+    return reflection.visualAttachment.originalFilename;
+  }
+  return 'Empty reflection';
+};
+
+// Get type icon for reflection
+const getTypeIcon = (reflection) => {
+  if (reflection.mode === 'visual') {
+    return '📷';
+  }
+  if (reflection.mode === 'text') {
+    return '📝';
+  }
+  // Mixed mode (if it has both content and visual)
+  if (reflection.content && reflection.visualAttachment) {
+    return '📋';
+  }
+  return '📄';
+};
+
+// Get type label for reflection
+const getTypeLabel = (reflection) => {
+  if (reflection.mode === 'visual') {
+    return 'Visual reflection';
+  }
+  if (reflection.mode === 'text') {
+    return 'Text reflection';
+  }
+  if (reflection.content && reflection.visualAttachment) {
+    return 'Mixed reflection';
+  }
+  return 'Reflection';
+};
+
 // Add helper to get persona icon
 const getPersonaIcon = (personaId) => {
   // Basic mapping; prefer emoji in persona definitions
@@ -263,6 +317,9 @@ const getPersonaIcon = (personaId) => {
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  /* Performance optimizations */
+  will-change: transform;
+  contain: layout style paint;
 }
 
 .reflection-card::before {
@@ -302,6 +359,19 @@ const getPersonaIcon = (personaId) => {
 }
 
 .reflection-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.reflection-type-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.reflection-info {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -359,11 +429,17 @@ const getPersonaIcon = (personaId) => {
 
 .reflection-text {
   color: var(--color-text);
-  line-height: var(--leading-relaxed);
+  line-height: 1.4;
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: var(--text-base);
+  font-size: 10px;
+  max-height: 3.6em; /* Limit to approximately 3 lines (1.2 * 3) */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
 }
 
 .reflection-footer {
