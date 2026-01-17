@@ -16,15 +16,26 @@
           {{ isMixed ? 'mixed' : 'visual' }}
         </span>
       </div>
-      <button
-        class="delete-button"
-        @click="handleDelete"
-        @keydown.enter.stop="handleDelete"
-        aria-label="Delete this reflection"
-        title="Delete"
-      >
-        <span aria-hidden="true">🗑️</span>
-      </button>
+      <div class="action-buttons">
+        <button
+          class="export-button"
+          @click="handleExport"
+          @keydown.enter.stop="handleExport"
+          aria-label="Export this reflection"
+          title="Export"
+        >
+          <span aria-hidden="true">📤</span>
+        </button>
+        <button
+          class="delete-button"
+          @click="handleDelete"
+          @keydown.enter.stop="handleDelete"
+          aria-label="Delete this reflection"
+          title="Delete"
+        >
+          <span aria-hidden="true">🗑️</span>
+        </button>
+      </div>
     </div>
 
     <!-- Text content for mixed mode -->
@@ -118,7 +129,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['select', 'delete', 'keydown']);
+const emit = defineEmits(['select', 'delete', 'export', 'keydown']);
 
 const imageError = ref(false);
 
@@ -228,6 +239,14 @@ const getPersonaIcon = (personaId) => {
   };
   return mapping[personaId] || '🧑‍🏫';
 };
+
+/**
+ * Handle export button click
+ */
+const handleExport = (event) => {
+  event.stopPropagation();
+  emit('export', props.reflection, event);
+};
 </script>
 
 <style scoped>
@@ -280,6 +299,13 @@ const getPersonaIcon = (personaId) => {
   width: fit-content;
 }
 
+.action-buttons {
+  display: flex;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.export-button,
 .delete-button {
   background: transparent;
   border: 1px solid var(--color-border);
@@ -289,7 +315,22 @@ const getPersonaIcon = (personaId) => {
   cursor: pointer;
   color: var(--color-text-muted);
   transition: all 0.15s ease;
-  flex-shrink: 0;
+}
+
+.export-button:hover {
+  background: var(--color-primary-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+.export-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.export-button:active {
+  transform: scale(0.95);
 }
 
 .delete-button:hover {

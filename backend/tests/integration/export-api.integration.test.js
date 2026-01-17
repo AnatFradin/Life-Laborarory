@@ -175,4 +175,109 @@ describe('Export API Integration', () => {
       expect(response.body).toHaveProperty('filename');
     });
   });
+
+  describe('POST /api/export/:id', () => {
+    it('should export a single reflection by id', async () => {
+      // Create a reflection
+      const createResponse = await request(global.testExportApp)
+        .post('/api/reflections')
+        .send({
+          mode: 'text',
+          content: 'Single reflection for export test',
+        })
+        .expect(201);
+
+      const reflectionId = createResponse.body.id;
+
+      // Export the single reflection
+      const response = await request(global.testExportApp)
+        .post(`/api/export/${reflectionId}`)
+        .send({
+          includeMetadata: true,
+        })
+        .expect(200);
+
+      expect(response.body).toHaveProperty('markdown');
+      expect(response.body).toHaveProperty('filename');
+      expect(response.body.markdown).toContain('Single reflection for export test');
+      expect(response.body.filename).toContain(reflectionId);
+      expect(response.body).toHaveProperty('attachments');
+    });
+
+    it('should return 404 for non-existent reflection', async () => {
+      const response = await request(global.testExportApp)
+        .post('/api/export/non-existent-id')
+        .send({
+          includeMetadata: true,
+        })
+        .expect(404);
+
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should use default includeMetadata when not provided', async () => {
+      // Create a reflection
+      const createResponse = await request(global.testExportApp)
+        .post('/api/reflections')
+        .send({
+          mode: 'text',
+          content: 'Test reflection with default metadata',
+        })
+        .expect(201);
+
+      const reflectionId = createResponse.body.id;
+
+      // Export without specifying includeMetadata
+      const response = await request(global.testExportApp)
+        .post(`/api/export/${reflectionId}`)
+        .send({})
+        .expect(200);
+
+      expect(response.body).toHaveProperty('markdown');
+      expect(response.body.markdown).toContain('Test reflection with default metadata');
+    });
+
+    it('should respect includeMetadata=false option', async () => {
+      // Create a reflection
+      const createResponse = await request(global.testExportApp)
+        .post('/api/reflections')
+        .send({
+          mode: 'text',
+          content: 'Test reflection without metadata',
+        })
+        .expect(201);
+
+      const reflectionId = createResponse.body.id;
+
+      // Export with metadata disabled
+      const response = await request(global.testExportApp)
+        .post(`/api/export/${reflectionId}`)
+        .send({
+          includeMetadata: false,
+        })
+        .expect(200);
+
+      expect(response.body).toHaveProperty('markdown');
+      expect(response.body.markdown).toContain('Test reflection without metadata');
+    });
+
+    it('should return proper content type', async () => {
+      // Create a reflection
+      const createResponse = await request(global.testExportApp)
+        .post('/api/reflections')
+        .send({
+          mode: 'text',
+          content: 'Test reflection',
+        })
+        .expect(201);
+
+      const reflectionId = createResponse.body.id;
+
+      await request(global.testExportApp)
+        .post(`/api/export/${reflectionId}`)
+        .send({})
+        .expect(200)
+        .expect('Content-Type', /json/);
+    });
+  });
 });

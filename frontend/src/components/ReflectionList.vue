@@ -16,6 +16,7 @@
           @click="$emit('select', reflection)"
           @keydown="handleKeyDown($event, index, reflection)"
           @delete="openDeleteDialog(reflection, $event)"
+          @export="openExportDialog(reflection, $event)"
         />
 
         <!-- Text Reflection Card -->
@@ -43,15 +44,26 @@
                 </span>
               </div>
             </div>
-            <button
-              class="delete-button"
-              @click="openDeleteDialog(reflection, $event)"
-              @keydown.enter.stop="openDeleteDialog(reflection, $event)"
-              aria-label="Delete this reflection"
-              title="Delete"
-            >
-              <span aria-hidden="true">🗑️</span>
-            </button>
+            <div class="action-buttons">
+              <button
+                class="export-button"
+                @click="openExportDialog(reflection, $event)"
+                @keydown.enter.stop="openExportDialog(reflection, $event)"
+                aria-label="Export this reflection"
+                title="Export"
+              >
+                <span aria-hidden="true">📤</span>
+              </button>
+              <button
+                class="delete-button"
+                @click="openDeleteDialog(reflection, $event)"
+                @keydown.enter.stop="openDeleteDialog(reflection, $event)"
+                aria-label="Delete this reflection"
+                title="Delete"
+              >
+                <span aria-hidden="true">🗑️</span>
+              </button>
+            </div>
           </div>
 
           <div class="reflection-content">
@@ -84,13 +96,23 @@
       @delete="handleDelete"
       @update:open="showDeleteDialog = $event"
     />
+
+    <!-- Export Dialog -->
+    <SingleReflectionExportDialog
+      :open="showExportDialog"
+      :reflection-id="reflectionToExport?.id"
+      @export="handleExport"
+      @update:open="showExportDialog = $event"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import DeleteDialog from './DeleteDialog.vue';
+import SingleReflectionExportDialog from './SingleReflectionExportDialog.vue';
 import VisualReflectionCard from './VisualReflectionCard.vue';
+import { exportAPI } from '../services/api.js';
 
 const props = defineProps({
   reflections: {
@@ -117,6 +139,21 @@ const setCardRef = (el, index) => {
 // Delete dialog state
 const showDeleteDialog = ref(false);
 const reflectionToDelete = ref(null);
+
+// Export dialog state
+const showExportDialog = ref(false);
+const reflectionToExport = ref(null);
+
+/**
+ * Open export dialog
+ */
+const openExportDialog = (reflection, event) => {
+  // Stop propagation to prevent card selection
+  event.stopPropagation();
+  
+  reflectionToExport.value = reflection;
+  showExportDialog.value = true;
+};
 
 /**
  * Open delete confirmation dialog
@@ -189,6 +226,35 @@ const handleDelete = () => {
     // Close dialog and reset state
     showDeleteDialog.value = false;
     reflectionToDelete.value = null;
+  }
+};
+
+/**
+ * Handle export request
+ */
+const handleExport = async ({ reflectionId, includeMetadata }) => {
+  try {
+    // Request export from backend
+    const response = await exportAPI.exportSingleToMarkdown(reflectionId, includeMetadata);
+    const { markdown, filename } = response.data;
+
+    // Trigger browser download
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // Close dialog and reset state
+    showExportDialog.value = false;
+    reflectionToExport.value = null;
+  } catch (err) {
+    console.error('Export failed:', err);
+    // Keep dialog open on error so user can retry
   }
 };
 
@@ -364,6 +430,13 @@ const getPersonaIcon = (personaId) => {
   color: var(--color-text-secondary);
 }
 
+.action-buttons {
+  display: flex;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.export-button,
 .delete-button {
   background: transparent;
   border: 1.5px solid var(--color-border);
@@ -373,7 +446,23 @@ const getPersonaIcon = (personaId) => {
   cursor: pointer;
   color: var(--color-text-muted);
   transition: all var(--transition-base);
-  flex-shrink: 0;
+}
+
+.export-button:hover {
+  background: var(--color-primary-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-xs);
+}
+
+.export-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.export-button:active {
+  transform: scale(0.95);
 }
 
 .delete-button:hover {
