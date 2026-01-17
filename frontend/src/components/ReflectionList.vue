@@ -215,18 +215,6 @@ const formatTimestamp = (timestamp) => {
   });
 };
 
-// Get preview text (first 150 characters)
-const getPreview = (reflection) => {
-  if (reflection.mode === 'text' && reflection.content) {
-    const text = reflection.content.trim();
-    return text.length > 150 ? text.substring(0, 150) + '...' : text;
-  }
-  if (reflection.mode === 'visual' && reflection.visualAttachment) {
-    return `📷 ${reflection.visualAttachment.originalFilename}`;
-  }
-  return 'Empty reflection';
-};
-
 // Get first 3 lines of text (optimized preview)
 const getFirstLines = (reflection) => {
   if (reflection.mode === 'text' && reflection.content) {
