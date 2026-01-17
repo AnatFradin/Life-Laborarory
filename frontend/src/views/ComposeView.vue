@@ -209,9 +209,12 @@ const privacyStatus = computed(() => {
 
 /**
  * Check if mixed mode reflection can be saved
+ * Mixed mode requires BOTH text content AND at least one image
  */
 const canSaveMixed = computed(() => {
-  return currentContent.value || (selectedImages.value && selectedImages.value.length > 0);
+  const hasContent = currentContent.value && currentContent.value.trim().length > 0;
+  const hasImages = selectedImages.value && selectedImages.value.length > 0;
+  return hasContent && hasImages;
 });
 
 // Mode state
@@ -313,8 +316,18 @@ const handleMixedContentUpdate = (content) => {
  * Save mixed reflection
  */
 const handleSaveMixed = async () => {
-  if (!currentContent.value && (!selectedImages.value || selectedImages.value.length === 0)) {
-    error.value = 'Please add text or images to save';
+  // Mixed mode requires both text and images
+  const hasContent = currentContent.value && currentContent.value.trim().length > 0;
+  const hasImages = selectedImages.value && selectedImages.value.length > 0;
+  
+  if (!hasContent || !hasImages) {
+    if (!hasContent && !hasImages) {
+      error.value = 'Please add both text and images to save a mixed reflection';
+    } else if (!hasContent) {
+      error.value = 'Please add text content to save a mixed reflection';
+    } else {
+      error.value = 'Please add at least one image to save a mixed reflection';
+    }
     return;
   }
 
