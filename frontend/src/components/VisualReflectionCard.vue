@@ -3,7 +3,7 @@
     class="visual-reflection-card"
     role="listitem"
     :tabindex="tabindex"
-    :aria-label="`Visual reflection from ${formatTimestamp(reflection.timestamp)}`"
+    :aria-label="`${isMixed ? 'Mixed' : 'Visual'} reflection from ${formatTimestamp(reflection.timestamp)}`"
     @click="$emit('select', reflection)"
     @keydown="$emit('keydown', $event)"
   >
@@ -13,7 +13,7 @@
           {{ formatTimestamp(reflection.timestamp) }}
         </time>
         <span class="reflection-mode text-tertiary text-xs">
-          visual
+          {{ isMixed ? 'mixed' : 'visual' }}
         </span>
       </div>
       <button
@@ -27,28 +27,61 @@
       </button>
     </div>
 
+    <!-- Text content for mixed mode -->
+    <div v-if="isMixed && reflection.content" class="text-content">
+      <p class="reflection-text">{{ getFirstLines(reflection.content) }}</p>
+    </div>
+
     <div class="visual-content">
-      <!-- PDF Preview -->
-      <div v-if="isPDF" class="pdf-preview-card">
-        <span class="pdf-icon" aria-hidden="true">📄</span>
-        <span class="pdf-label text-sm text-tertiary">PDF Document</span>
+      <!-- Multiple images -->
+      <div v-if="hasMultipleImages" class="image-grid">
+        <div
+          v-for="(attachment, index) in visualAttachments.slice(0, 4)"
+          :key="index"
+          class="grid-image-wrapper"
+        >
+          <img
+            v-if="!isPDFAttachment(attachment)"
+            :src="getImageUrl(attachment)"
+            :alt="attachment.originalFilename"
+            class="grid-image"
+            loading="lazy"
+            @error="handleImageError"
+          />
+          <div v-else class="pdf-preview-small">
+            <span class="pdf-icon-small" aria-hidden="true">📄</span>
+          </div>
+        </div>
+        <div v-if="visualAttachments.length > 4" class="more-images">
+          +{{ visualAttachments.length - 4 }} more
+        </div>
       </div>
-      <!-- Image Preview -->
-      <img
-        v-else
-        :src="imageUrl"
-        :alt="reflection.visualAttachment.originalFilename"
-        class="visual-image"
-        loading="lazy"
-        @error="handleImageError"
-      />
-      <div class="image-info">
-        <span class="image-filename text-sm">
-          {{ reflection.visualAttachment.originalFilename }}
-        </span>
-        <span v-if="reflection.visualAttachment.dimensions" class="image-dimensions text-xs text-tertiary">
-          {{ reflection.visualAttachment.dimensions.width }}×{{ reflection.visualAttachment.dimensions.height }}
-        </span>
+
+      <!-- Single image -->
+      <div v-else-if="visualAttachments.length === 1" class="single-image">
+        <!-- PDF Preview -->
+        <div v-if="isPDFAttachment(visualAttachments[0])" class="pdf-preview-card">
+          <span class="pdf-icon" aria-hidden="true">📄</span>
+          <span class="pdf-label text-sm text-tertiary">{{ visualAttachments[0].originalFilename }}</span>
+        </div>
+        <!-- Image Preview -->
+        <div v-else class="image-preview-compact">
+          <img
+            :src="getImageUrl(visualAttachments[0])"
+            :alt="visualAttachments[0].originalFilename"
+            class="visual-image-thumbnail"
+            loading="lazy"
+            @error="handleImageError"
+          />
+          <div class="image-info">
+            <span class="image-filename text-sm">
+              {{ visualAttachments[0].originalFilename }}
+            </span>
+            <span v-if="visualAttachments[0].dimensions" class="image-dimensions text-xs text-tertiary">
+              {{ visualAttachments[0].dimensions.width }}×{{ visualAttachments[0].dimensions.height }}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -72,6 +105,7 @@
 
 <script setup>
 import { computed, ref } from 'vue';
+import { getVisualUrl } from '../utils/url.js';
 
 const props = defineProps({
   reflection: {
@@ -89,22 +123,56 @@ const emit = defineEmits(['select', 'delete', 'keydown']);
 const imageError = ref(false);
 
 /**
- * Check if the attachment is a PDF
+ * Check if reflection is mixed mode (explicit mode only)
  */
-const isPDF = computed(() => {
-  return props.reflection.visualAttachment?.mimeType === 'application/pdf';
+const isMixed = computed(() => {
+  return props.reflection.mode === 'mixed';
 });
 
 /**
- * Compute the full image URL
+ * Get all visual attachments (support both single and array)
  */
-const imageUrl = computed(() => {
-  if (!props.reflection.visualAttachment) return '';
-  
-  const storedPath = props.reflection.visualAttachment.storedPath;
-  // Construct URL to backend (assumes backend serves images from /api/visuals)
-  return `http://localhost:3000/api/visuals/${storedPath.replace('visuals/', '')}`;
+const visualAttachments = computed(() => {
+  if (props.reflection.visualAttachments && Array.isArray(props.reflection.visualAttachments)) {
+    return props.reflection.visualAttachments;
+  }
+  if (props.reflection.visualAttachment) {
+    return [props.reflection.visualAttachment];
+  }
+  return [];
 });
+
+/**
+ * Check if there are multiple images
+ */
+const hasMultipleImages = computed(() => {
+  return visualAttachments.value.length > 1;
+});
+
+/**
+ * Check if attachment is a PDF
+ */
+const isPDFAttachment = (attachment) => {
+  return attachment?.mimeType === 'application/pdf';
+};
+
+/**
+ * Get image URL from attachment
+ */
+const getImageUrl = (attachment) => {
+  if (!attachment || !attachment.storedPath) return '';
+  return getVisualUrl(attachment.storedPath);
+};
+
+/**
+ * Get first lines of text content
+ */
+const getFirstLines = (content) => {
+  if (!content) return '';
+  const text = content.trim();
+  const lines = text.split('\n').slice(0, 3);
+  return lines.join('\n');
+};
 
 /**
  * Handle delete button click
@@ -170,6 +238,9 @@ const getPersonaIcon = (personaId) => {
   padding: var(--space-lg);
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
+  /* Performance optimizations */
+  will-change: transform;
+  contain: layout style paint;
 }
 
 .visual-reflection-card:hover {
@@ -241,25 +312,112 @@ const getPersonaIcon = (personaId) => {
   margin-bottom: var(--space-sm);
 }
 
-.pdf-preview-card {
+.text-content {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.reflection-text {
+  color: var(--color-text);
+  line-height: 1.4;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--text-2xs);
+  max-height: 4.2em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+  position: relative;
+}
+
+.grid-image-wrapper {
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-bg-secondary);
+}
+
+.grid-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pdf-preview-small {
+  width: 100%;
+  height: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-xl);
+  background-color: var(--color-bg-secondary);
+}
+
+.pdf-icon-small {
+  font-size: 2rem;
+  opacity: 0.6;
+}
+
+.more-images {
+  position: absolute;
+  bottom: var(--space-sm);
+  right: var(--space-sm);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.single-image {
+  width: 100%;
+}
+
+.image-preview-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pdf-preview-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-md);
-  min-height: 200px;
-  gap: var(--space-sm);
 }
 
 .pdf-icon {
-  font-size: 3rem;
+  font-size: 2rem;
   opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .pdf-label {
   font-weight: 500;
+  word-break: break-all;
+}
+
+.visual-image-thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-secondary);
+  flex-shrink: 0;
+  /* Performance optimization */
+  will-change: transform;
 }
 
 .visual-image {
@@ -276,16 +434,15 @@ const getPersonaIcon = (personaId) => {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  margin-top: var(--space-sm);
-  padding: var(--space-sm);
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-sm);
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
 }
 
 .image-filename {
   color: var(--color-text);
   font-weight: 500;
   word-break: break-all;
+  font-size: var(--text-2xs);
 }
 
 .image-dimensions {

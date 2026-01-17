@@ -7,8 +7,10 @@ import axios from 'axios';
  * All requests go through this instance for consistent error handling
  */
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -67,6 +69,10 @@ export const reflectionsAPI = {
   create: (reflection) => apiClient.post('/reflections', reflection),
   createVisual: (formData) => 
     apiClient.post('/reflections', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+  addImages: (id, formData) =>
+    apiClient.post(`/reflections/${id}/images`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
   delete: (id) => apiClient.delete(`/reflections/${id}`),

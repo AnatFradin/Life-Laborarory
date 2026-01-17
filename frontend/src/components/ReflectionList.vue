@@ -6,9 +6,9 @@
 
     <div v-else class="reflections-container" role="list" aria-label="Reflections">
       <template v-for="(reflection, index) in reflections" :key="reflection.id">
-        <!-- Visual Reflection Card -->
+        <!-- Visual or Mixed Reflection Card -->
         <VisualReflectionCard
-          v-if="reflection.mode === 'visual'"
+          v-if="reflection.mode === 'visual' || reflection.mode === 'mixed'"
           :ref="el => setCardRef(el, index)"
           :reflection="reflection"
           role="listitem"
@@ -31,12 +31,17 @@
         >
           <div class="reflection-header">
             <div class="reflection-meta">
-              <time class="reflection-time text-tertiary text-sm" :datetime="reflection.timestamp">
-                {{ formatTimestamp(reflection.timestamp) }}
-              </time>
-              <span v-if="reflection.mode" class="reflection-mode text-tertiary text-xs">
-                {{ reflection.mode }}
-              </span>
+              <div class="reflection-type-icon" :title="getTypeLabel(reflection)" aria-hidden="true">
+                {{ getTypeIcon(reflection) }}
+              </div>
+              <div class="reflection-info">
+                <time class="reflection-time text-tertiary text-sm" :datetime="reflection.timestamp">
+                  {{ formatTimestamp(reflection.timestamp) }}
+                </time>
+                <span v-if="reflection.mode" class="reflection-mode text-tertiary text-xs">
+                  {{ reflection.mode }}
+                </span>
+              </div>
             </div>
             <button
               class="delete-button"
@@ -50,7 +55,7 @@
           </div>
 
           <div class="reflection-content">
-            <p class="reflection-text">{{ getPreview(reflection) }}</p>
+            <p class="reflection-text">{{ getFirstLines(reflection) }}</p>
           </div>
 
           <div v-if="reflection.aiInteraction || reflection.externalAISession" class="reflection-footer">
@@ -210,16 +215,45 @@ const formatTimestamp = (timestamp) => {
   });
 };
 
-// Get preview text (first 150 characters)
-const getPreview = (reflection) => {
+// Get first 3 lines of text (optimized preview)
+const getFirstLines = (reflection) => {
   if (reflection.mode === 'text' && reflection.content) {
     const text = reflection.content.trim();
-    return text.length > 150 ? text.substring(0, 150) + '...' : text;
+    // Return full text - CSS line-clamp will handle truncation
+    return text;
   }
   if (reflection.mode === 'visual' && reflection.visualAttachment) {
-    return `📷 ${reflection.visualAttachment.originalFilename}`;
+    return reflection.visualAttachment.originalFilename;
   }
   return 'Empty reflection';
+};
+
+// Get type icon for reflection
+const getTypeIcon = (reflection) => {
+  if (reflection.mode === 'mixed') {
+    return '📋';
+  }
+  if (reflection.mode === 'visual') {
+    return '📷';
+  }
+  if (reflection.mode === 'text') {
+    return '📝';
+  }
+  return '📄';
+};
+
+// Get type label for reflection
+const getTypeLabel = (reflection) => {
+  if (reflection.mode === 'mixed') {
+    return 'Mixed reflection';
+  }
+  if (reflection.mode === 'visual') {
+    return 'Visual reflection';
+  }
+  if (reflection.mode === 'text') {
+    return 'Text reflection';
+  }
+  return 'Reflection';
 };
 
 // Add helper to get persona icon
@@ -263,6 +297,9 @@ const getPersonaIcon = (personaId) => {
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  /* Performance optimizations */
+  will-change: transform;
+  contain: layout style paint;
 }
 
 .reflection-card::before {
@@ -302,6 +339,19 @@ const getPersonaIcon = (personaId) => {
 }
 
 .reflection-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.reflection-type-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.reflection-info {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -359,11 +409,17 @@ const getPersonaIcon = (personaId) => {
 
 .reflection-text {
   color: var(--color-text);
-  line-height: var(--leading-relaxed);
+  line-height: 1.4;
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: var(--text-base);
+  font-size: var(--text-2xs);
+  max-height: 4.2em; /* 3 lines with 1.4 line-height: 1.4 * 3 = 4.2em */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
 }
 
 .reflection-footer {

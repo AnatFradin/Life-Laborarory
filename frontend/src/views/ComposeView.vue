@@ -36,6 +36,19 @@
           <span class="mode-name">Visual</span>
         </span>
       </label>
+      <label class="mode-option">
+        <input
+          type="radio"
+          name="mode"
+          value="mixed"
+          v-model="currentMode"
+          @change="handleModeChange"
+        />
+        <span class="mode-label">
+          <span class="mode-icon" aria-hidden="true">📋</span>
+          <span class="mode-name">Mixed</span>
+        </span>
+      </label>
     </div>
 
     <div class="compose-content" role="region" aria-label="Reflection composition area">
@@ -75,16 +88,60 @@
       <template v-else-if="currentMode === 'visual'">
         <div class="visual-compose">
           <ImageImport
-            v-model="selectedImage"
+            v-model="selectedImages"
+            :multiple="true"
             @dimensions-loaded="handleDimensionsLoaded"
           />
           
-          <div v-if="selectedImage" class="visual-actions">
+          <div v-if="selectedImages && selectedImages.length > 0" class="visual-actions">
             <button
               class="btn-primary"
               @click="handleSaveVisual"
               :disabled="saving"
               :aria-label="saving ? 'Saving...' : 'Save visual reflection'"
+            >
+              {{ saving ? 'Saving...' : 'Save' }}
+            </button>
+          </div>
+
+          <div v-if="error" class="error-message" role="alert">
+            {{ error }}
+          </div>
+
+          <p v-if="lastSaved" class="last-saved text-tertiary text-sm">
+            Last saved: {{ lastSaved.toLocaleString() }}
+          </p>
+        </div>
+      </template>
+
+      <!-- Mixed Mode -->
+      <template v-else-if="currentMode === 'mixed'">
+        <div class="mixed-compose">
+          <ReflectionEditor
+            :initial-content="currentContent"
+            :saving="saving"
+            :generating-a-i="false"
+            :error="error"
+            :last-saved="null"
+            @save="handleMixedContentUpdate"
+          />
+
+          <div class="mixed-divider">
+            <span class="divider-text text-tertiary text-sm">Add Images</span>
+          </div>
+
+          <ImageImport
+            v-model="selectedImages"
+            :multiple="true"
+            @dimensions-loaded="handleDimensionsLoaded"
+          />
+          
+          <div v-if="canSaveMixed" class="mixed-actions">
+            <button
+              class="btn-primary"
+              @click="handleSaveMixed"
+              :disabled="saving || !canSaveMixed"
+              :aria-label="saving ? 'Saving...' : 'Save mixed reflection'"
             >
               {{ saving ? 'Saving...' : 'Save' }}
             </button>
@@ -150,16 +207,26 @@ const privacyStatus = computed(() => {
   return { text: 'Local processing only', icon: '🔒' };
 });
 
+/**
+ * Check if mixed mode reflection can be saved
+ * Mixed mode requires BOTH text content AND at least one image
+ */
+const canSaveMixed = computed(() => {
+  const hasContent = currentContent.value && currentContent.value.trim().length > 0;
+  const hasImages = selectedImages.value && selectedImages.value.length > 0;
+  return hasContent && hasImages;
+});
+
 // Mode state
-const currentMode = ref('text'); // 'text' or 'visual'
+const currentMode = ref('text'); // 'text', 'visual', or 'mixed'
 
 // Text mode state
 const currentContent = ref('');
 const currentReflectionId = ref(null);
 const currentAIResponse = ref(null);
 
-// Visual mode state
-const selectedImage = ref(null);
+// Visual/mixed mode state
+const selectedImages = ref(null);
 const imageDimensions = ref(null);
 
 // Common state
@@ -213,7 +280,7 @@ const handleSave = async (content) => {
  * Save visual reflection
  */
 const handleSaveVisual = async () => {
-  if (!selectedImage.value) return;
+  if (!selectedImages.value || selectedImages.value.length === 0) return;
 
   saving.value = true;
   error.value = null;
@@ -221,15 +288,66 @@ const handleSaveVisual = async () => {
   try {
     const reflection = await createReflection({
       mode: 'visual',
-      image: selectedImage.value,
+      images: selectedImages.value,
       dimensions: imageDimensions.value,
     });
 
     currentReflectionId.value = reflection.id;
     lastSaved.value = new Date();
     
-    // Clear the image after successful save
-    selectedImage.value = null;
+    // Clear the images after successful save
+    selectedImages.value = null;
+    imageDimensions.value = null;
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    saving.value = false;
+  }
+};
+
+/**
+ * Handle content update in mixed mode
+ */
+const handleMixedContentUpdate = (content) => {
+  currentContent.value = content;
+};
+
+/**
+ * Save mixed reflection
+ */
+const handleSaveMixed = async () => {
+  // Mixed mode requires both text and images
+  const hasContent = currentContent.value && currentContent.value.trim().length > 0;
+  const hasImages = selectedImages.value && selectedImages.value.length > 0;
+  
+  if (!hasContent || !hasImages) {
+    if (!hasContent && !hasImages) {
+      error.value = 'Please add both text and images to save a mixed reflection';
+    } else if (!hasContent) {
+      error.value = 'Please add text content to save a mixed reflection';
+    } else {
+      error.value = 'Please add at least one image to save a mixed reflection';
+    }
+    return;
+  }
+
+  saving.value = true;
+  error.value = null;
+
+  try {
+    const reflection = await createReflection({
+      mode: 'mixed',
+      content: currentContent.value,
+      images: selectedImages.value || [],
+      dimensions: imageDimensions.value,
+    });
+
+    currentReflectionId.value = reflection.id;
+    lastSaved.value = new Date();
+    
+    // Clear after successful save
+    currentContent.value = '';
+    selectedImages.value = null;
     imageDimensions.value = null;
   } catch (err) {
     error.value = err.message;
@@ -445,6 +563,38 @@ const handleSaveExternalSummary = async () => {
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
+}
+
+.mixed-compose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.mixed-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin: var(--space-md) 0;
+}
+
+.mixed-divider::before,
+.mixed-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+}
+
+.divider-text {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mixed-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
 }
 
 .visual-actions {

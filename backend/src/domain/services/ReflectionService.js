@@ -169,12 +169,46 @@ class ReflectionService {
     const id = randomUUID();
     const timestamp = new Date().toISOString();
     
+    // Save the visual file and get the attachment
+    const visualAttachment = await this._saveVisualFile(
+      { buffer, originalFilename, mimeType, sizeBytes, dimensions },
+      dataDir,
+      timestamp
+    );
+
+    // Create reflection with visual mode
+    const reflectionData = {
+      id,
+      timestamp,
+      mode: 'visual',
+      visualAttachment,
+    };
+
+    // Validate and save reflection
+    const validatedReflection = validateReflection(reflectionData);
+    const savedReflection = await this.repository.save(validatedReflection);
+
+    return savedReflection;
+  }
+
+  /**
+   * Save a visual file to disk and return VisualAttachment object
+   * @param {Object} imageData - Image file data
+   * @param {string} dataDir - Base data directory path
+   * @param {string} timestamp - ISO timestamp for the file
+   * @returns {Promise<Object>} VisualAttachment object
+   * @private
+   */
+  async _saveVisualFile(imageData, dataDir, timestamp) {
+    const { buffer, originalFilename, mimeType, sizeBytes, dimensions } = imageData;
+    
     // Determine file extension based on MIME type
     const extMap = {
       'image/jpeg': 'jpg',
       'image/png': 'png',
       'image/gif': 'gif',
       'image/webp': 'webp',
+      'application/pdf': 'pdf',
     };
     const ext = extMap[mimeType] || 'jpg';
 
@@ -187,7 +221,8 @@ class ReflectionService {
     await fs.mkdir(visualsDir, { recursive: true });
 
     // Generate filename: UUID + original extension
-    const filename = `${id}.${ext}`;
+    const fileId = randomUUID();
+    const filename = `${fileId}.${ext}`;
     const filePath = path.join(visualsDir, filename);
     
     // Write file to disk
@@ -196,8 +231,8 @@ class ReflectionService {
     // Create stored path relative to data directory
     const storedPath = `visuals/${yearMonth}/${filename}`;
 
-    // Create VisualAttachment entity
-    const visualAttachment = createVisualAttachment({
+    // Create and return VisualAttachment entity
+    return createVisualAttachment({
       originalFilename,
       storedPath,
       mimeType,
@@ -205,17 +240,93 @@ class ReflectionService {
       dimensions,
       importTimestamp: timestamp,
     });
+  }
 
-    // Create reflection with visual mode
-    const reflectionData = {
+  /**
+   * Add images to an existing reflection (creates mixed mode)
+   * @param {string} reflectionId - Reflection ID
+   * @param {Array<Object>} imagesData - Array of image file data
+   * @param {string} dataDir - Base data directory path
+   * @returns {Promise<Object>} Updated reflection
+   */
+  async addImagesToReflection(reflectionId, imagesData, dataDir) {
+    const reflection = await this.repository.findById(reflectionId);
+    if (!reflection) {
+      const error = new Error('Reflection not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const timestamp = new Date().toISOString();
+    const visualAttachments = [];
+
+    // Save all image files
+    for (const imageData of imagesData) {
+      const visualAttachment = await this._saveVisualFile(imageData, dataDir, timestamp);
+      visualAttachments.push(visualAttachment);
+    }
+
+    // Get existing visuals
+    const existingVisuals = reflection.visualAttachments || [];
+    if (reflection.visualAttachment) {
+      existingVisuals.push(reflection.visualAttachment);
+    }
+
+    // Update reflection with new visuals
+    reflection.visualAttachments = [...existingVisuals, ...visualAttachments];
+    
+    // Update mode to mixed if there's text content
+    if (reflection.content && reflection.content.length > 0) {
+      reflection.mode = 'mixed';
+    } else {
+      reflection.mode = 'visual';
+    }
+
+    // Remove old single visualAttachment field to use array
+    delete reflection.visualAttachment;
+
+    // Validate and save
+    const validated = validateReflection(reflection);
+    return await this.repository.save(validated);
+  }
+
+  /**
+   * Create a reflection with multiple images (visual or mixed mode)
+   * @param {Object} reflectionData - Reflection data
+   * @param {string} reflectionData.mode - 'visual' or 'mixed'
+   * @param {string} reflectionData.content - Text content (required for mixed mode)
+   * @param {Array<Object>} imagesData - Array of image file data
+   * @param {string} dataDir - Base data directory path
+   * @returns {Promise<Object>} Created reflection
+   */
+  async createWithImages(reflectionData, imagesData, dataDir) {
+    const { mode, content } = reflectionData;
+
+    // Generate unique ID and timestamp
+    const id = randomUUID();
+    const timestamp = new Date().toISOString();
+    
+    // Save all image files
+    const visualAttachments = [];
+    for (const imageData of imagesData) {
+      const visualAttachment = await this._saveVisualFile(imageData, dataDir, timestamp);
+      visualAttachments.push(visualAttachment);
+    }
+
+    // Create reflection data
+    const newReflectionData = {
       id,
       timestamp,
-      mode: 'visual',
-      visualAttachment,
+      mode,
+      visualAttachments,
     };
 
+    if (mode === 'mixed' && content) {
+      newReflectionData.content = content;
+    }
+
     // Validate and save reflection
-    const validatedReflection = validateReflection(reflectionData);
+    const validatedReflection = validateReflection(newReflectionData);
     const savedReflection = await this.repository.save(validatedReflection);
 
     return savedReflection;
