@@ -60,9 +60,9 @@
           class="lightbox-image"
         />
         <div class="lightbox-info">
-          <span class="lightbox-filename">{{ images[currentIndex].originalFilename }}</span>
-          <span v-if="images[currentIndex].size" class="lightbox-size text-tertiary text-sm">
-            {{ formatFileSize(images[currentIndex].size) }}
+          <span class="lightbox-filename">{{ images[currentIndex].originalFilename || 'Image' }}</span>
+          <span v-if="images[currentIndex].sizeBytes" class="lightbox-size text-tertiary text-sm">
+            {{ formatFileSize(images[currentIndex].sizeBytes) }}
           </span>
           <span v-if="images.length > 1" class="lightbox-counter text-tertiary text-sm">
             {{ currentIndex + 1 }} / {{ images.length }}
@@ -85,6 +85,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { API_BASE_URL } from '../services/api.js';
 
 const props = defineProps({
   images: {
@@ -108,7 +109,8 @@ const getImageUrl = (image) => {
   }
   if (image.storedPath) {
     const path = image.storedPath.replace('visuals/', '');
-    return `http://localhost:3000/api/visuals/${path}`;
+    const baseUrl = API_BASE_URL.replace('/api', '');
+    return `${baseUrl}/api/visuals/${path}`;
   }
   return '';
 };
