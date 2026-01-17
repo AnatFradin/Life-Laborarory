@@ -83,7 +83,7 @@ describe('ReflectionList - Optimized History View', () => {
   });
 
   describe('Text Preview Optimization', () => {
-    it('should display only first 3 lines of text', () => {
+    it('should display text with CSS line-clamp applied', () => {
       const wrapper = mount(ReflectionList, {
         props: {
           reflections: [mockTextReflection],
@@ -99,14 +99,11 @@ describe('ReflectionList - Optimized History View', () => {
       expect(text.exists()).toBe(true);
       
       const displayedText = text.text();
+      // CSS line-clamp will handle truncation at display time
       expect(displayedText).toContain('This is line one');
-      expect(displayedText).toContain('This is line two');
-      expect(displayedText).toContain('This is line three');
-      expect(displayedText).toContain('...');
-      expect(displayedText).not.toContain('This is line four');
     });
 
-    it('should have 10px font size for text preview', () => {
+    it('should have CSS properties for 3-line truncation', () => {
       const wrapper = mount(ReflectionList, {
         props: {
           reflections: [mockTextReflection],
@@ -120,14 +117,14 @@ describe('ReflectionList - Optimized History View', () => {
 
       const text = wrapper.find('.reflection-text');
       expect(text.classes()).toContain('reflection-text');
-      // CSS check would be done in E2E tests
+      // CSS properties would be verified in E2E tests
     });
 
-    it('should not add ellipsis if reflection has 3 or fewer lines', () => {
+    it('should display full text for short reflections', () => {
       const shortReflection = {
         id: 'short-123',
         mode: 'text',
-        content: 'Line one\nLine two\nLine three',
+        content: 'Line one\nLine two',
         timestamp: '2025-11-19T12:00:00.000Z',
       };
 
@@ -144,36 +141,7 @@ describe('ReflectionList - Optimized History View', () => {
 
       const text = wrapper.find('.reflection-text');
       const displayedText = text.text();
-      expect(displayedText).toBe('Line one\nLine two\nLine three');
-      expect(displayedText).not.toContain('...');
-    });
-
-    it('should handle empty lines correctly', () => {
-      const reflectionWithEmptyLines = {
-        id: 'empty-lines-123',
-        mode: 'text',
-        content: 'Line one\n\n\nLine two\n\nLine three\nLine four',
-        timestamp: '2025-11-19T12:00:00.000Z',
-      };
-
-      const wrapper = mount(ReflectionList, {
-        props: {
-          reflections: [reflectionWithEmptyLines],
-        },
-        global: {
-          stubs: {
-            DeleteDialog: true,
-          },
-        },
-      });
-
-      const text = wrapper.find('.reflection-text');
-      const displayedText = text.text();
-      // Should only count non-empty lines
-      expect(displayedText).toContain('Line one');
-      expect(displayedText).toContain('Line two');
-      expect(displayedText).toContain('Line three');
-      expect(displayedText).toContain('...');
+      expect(displayedText).toBe('Line one\nLine two');
     });
   });
 

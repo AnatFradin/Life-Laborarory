@@ -304,7 +304,7 @@ const getPersonaIcon = (personaId) => {
   color: var(--color-text);
   font-weight: 500;
   word-break: break-all;
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .image-dimensions {

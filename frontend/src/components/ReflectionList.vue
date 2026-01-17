@@ -231,15 +231,8 @@ const getPreview = (reflection) => {
 const getFirstLines = (reflection) => {
   if (reflection.mode === 'text' && reflection.content) {
     const text = reflection.content.trim();
-    const lines = text.split('\n').filter(line => line.trim().length > 0);
-    const firstThreeLines = lines.slice(0, 3).join('\n');
-    
-    // If there are more lines, add ellipsis
-    if (lines.length > 3) {
-      return firstThreeLines + '...';
-    }
-    
-    return firstThreeLines;
+    // Return full text - CSS line-clamp will handle truncation
+    return text;
   }
   if (reflection.mode === 'visual' && reflection.visualAttachment) {
     return reflection.visualAttachment.originalFilename;
@@ -434,8 +427,8 @@ const getPersonaIcon = (personaId) => {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 10px;
-  max-height: 3.6em; /* Limit to approximately 3 lines (1.2 * 3) */
+  font-size: var(--text-2xs);
+  max-height: 4.2em; /* 3 lines with 1.4 line-height: 1.4 * 3 = 4.2em */
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 3;
