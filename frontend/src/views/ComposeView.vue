@@ -35,6 +35,7 @@
               :last-saved="lastSaved"
               @save="handleSave"
               @request-ai-feedback="handleAIFeedback"
+              @update:content="currentContent = $event"
             />
           </div>
         </div>
@@ -46,27 +47,42 @@
         />
 
         <div v-if="currentContent && currentContent.trim().length > 0" class="external-ai-actions">
+          <label class="coach-select">
+            <span class="coach-select-label">Coach</span>
+            <select
+              v-model="selectedPersonaId"
+              class="coach-select-input"
+              :disabled="personasLoading || personas.length === 0"
+              aria-label="Select a coach persona"
+            >
+              <option value="" disabled>Select coach</option>
+              <option v-for="persona in personas" :key="persona.id" :value="persona.id">
+                {{ persona.name }}
+              </option>
+            </select>
+          </label>
+
           <button
             class="talk-chatgpt-btn"
             @click="handleTalkInChatGPT"
             :disabled="personasLoading || !selectedPersona"
-            :aria-label="`Open ChatGPT with this reflection and persona ${selectedPersona?.name ?? ''}`"
+            :aria-label="selectedPersona
+              ? `Open ChatGPT with ${selectedPersona.name}`
+              : 'Open ChatGPT with selected coach'"
           >
-            <!-- show persona name when selected -->
-            <span v-if="selectedPersona">Talk to {{ selectedPersona.name }} in ChatGPT</span>
-            <span v-else>Talk in ChatGPT</span>
+            Talk in ChatGPT
           </button>
         </div>
 
-        <!-- Complete Entry Button for Text Mode -->
+        <!-- Save Reflection Button for Text Mode -->
         <button
           class="complete-entry-btn"
           @click="handleSave(currentContent)"
           :disabled="saving || !hasContent"
-          :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+          :aria-label="saving ? 'Saving reflection...' : 'Save reflection'"
         >
           <span v-if="saving">Saving...</span>
-          <span v-else>Complete Entry</span>
+          <span v-else>Save Reflection</span>
         </button>
       </template>
 
@@ -87,15 +103,15 @@
             Last saved: {{ lastSaved.toLocaleString() }}
           </p>
 
-          <!-- Complete Entry Button for Visual Mode -->
+          <!-- Save Reflection Button for Visual Mode -->
           <button
             class="complete-entry-btn"
             @click="handleSaveVisual"
             :disabled="saving || !hasContent"
-            :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+            :aria-label="saving ? 'Saving reflection...' : 'Save reflection'"
           >
             <span v-if="saving">Saving...</span>
-            <span v-else>Complete Entry</span>
+            <span v-else>Save Reflection</span>
           </button>
         </div>
       </template>
@@ -130,15 +146,15 @@
             Last saved: {{ lastSaved.toLocaleString() }}
           </p>
 
-          <!-- Complete Entry Button for Mixed Mode -->
+          <!-- Save Reflection Button for Mixed Mode -->
           <button
             class="complete-entry-btn"
             @click="handleSaveMixed"
             :disabled="saving || !canSaveMixed"
-            :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+            :aria-label="saving ? 'Saving reflection...' : 'Save reflection'"
           >
             <span v-if="saving">Saving...</span>
-            <span v-else>Complete Entry</span>
+            <span v-else>Save Reflection</span>
           </button>
         </div>
       </template>
@@ -169,7 +185,7 @@ import { usePersonas } from '../composables/usePersonas.js';
 const { createReflection, updateReflectionAI, saveExternalAIResponse } = useReflections();
 const { generateMirrorResponse, generating, error: aiError } = useAIMirror();
 const { preferences, loadPreferences, isUsingLocalAI, isUsingOnlineAI, getPrivacyLevel } = usePreferences();
-const { personas, selectedPersona, loadPersonas, generateChatGPTLink, loading: personasLoading } = usePersonas();
+const { personas, selectedPersona, loadPersonas, generateChatGPTLink, loading: personasLoading, selectPersona } = usePersonas();
 
 // Header data
 const currentDate = computed(() => {
@@ -201,6 +217,11 @@ const saveStatusText = computed(() => {
   if (saving.value) return 'Saving...';
   if (lastSaved.value) return 'All changes saved';
   return '';
+});
+
+const selectedPersonaId = computed({
+  get: () => selectedPersona.value?.id || '',
+  set: (id) => selectPersona(id),
 });
 
 defineEmits(['toggle-formatting-guide']);
@@ -538,29 +559,32 @@ const handleSaveExternalSummary = async () => {
   line-height: 1;
 }
 
-/* Complete Entry Button - Moved to bottom */
+/* Save Reflection Button - Moved to bottom */
 .complete-entry-btn {
-  padding: var(--space-md) var(--space-xl);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--color-accent-purple) 0%, var(--color-accent-purple-hover) 100%);
+  min-height: 34px;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-purple);
   color: white;
-  font-weight: 600;
-  font-size: var(--text-base);
+  font-weight: 500;
+  font-size: var(--text-sm);
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
-  width: 100%;
-  margin-top: var(--space-xl);
+  box-shadow: none;
+  width: auto;
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
 .complete-entry-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  background: var(--color-accent-purple-hover);
+  transform: none;
+  box-shadow: none;
 }
 
 .complete-entry-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -668,7 +692,7 @@ const handleSaveExternalSummary = async () => {
 .compose-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xl);
+  gap: var(--space-sm);
 }
 
 /* Editor Layout - Side by Side */
@@ -748,29 +772,55 @@ const handleSaveExternalSummary = async () => {
 }
 
 .external-ai-actions {
-  margin-top: var(--space-lg);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.coach-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.coach-select-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.coach-select-input {
+  min-height: 34px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: var(--text-sm);
 }
 
 .talk-chatgpt-btn {
-  padding: var(--space-md) var(--space-xl);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: white;
-  border: none;
-  border-radius: var(--radius-lg);
+  min-height: 34px;
+  padding: 0 var(--space-lg);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border: 1px solid var(--color-primary-surface);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  box-shadow: none;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
 }
 
 .talk-chatgpt-btn:hover:not(:disabled) {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  background: var(--color-primary-surface);
+  border-color: var(--color-primary);
 }
 
 .talk-chatgpt-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
-  transform: none;
 }
 </style>

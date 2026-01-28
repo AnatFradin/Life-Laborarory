@@ -375,9 +375,9 @@ onMounted(async () => {
 .coach-card {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   cursor: pointer;
@@ -399,17 +399,17 @@ onMounted(async () => {
 }
 
 .coach-avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 16px;
   color: white;
   flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .coach-info {
