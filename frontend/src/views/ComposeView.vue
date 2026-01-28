@@ -106,16 +106,28 @@
           </button>
         </div>
 
-        <!-- Save Reflection Button for Text Mode -->
-        <button
-          class="complete-entry-btn"
-          @click="handleSave(currentContent)"
-          :disabled="saving || !hasContent"
-          :aria-label="saving ? 'Saving reflection...' : 'Save reflection'"
-        >
-          <span v-if="saving">Saving...</span>
-          <span v-else>Save Reflection</span>
-        </button>
+        <!-- Action buttons for Text Mode -->
+        <div class="reflection-actions">
+          <button
+            class="save-template-btn"
+            type="button"
+            @click="showSaveTemplateDialog = true"
+            :disabled="!hasContent"
+            :aria-label="'Save current content as template'"
+          >
+            Save as Template
+          </button>
+
+          <button
+            class="complete-entry-btn"
+            @click="handleSave(currentContent)"
+            :disabled="saving || !hasContent"
+            :aria-label="saving ? 'Saving reflection...' : 'Save reflection'"
+          >
+            <span v-if="saving">Saving...</span>
+            <span v-else>Save Reflection</span>
+          </button>
+        </div>
       </template>
 
       <!-- Visual Mode -->
@@ -200,6 +212,14 @@
       @update:open="showExternalDialog = $event"
       @save="handleSaveExternalSummary"
     />
+
+    <!-- Save Template Dialog -->
+    <SaveTemplateDialog
+      :is-open="showSaveTemplateDialog"
+      :content="currentContent"
+      @close="showSaveTemplateDialog = false"
+      @save="handleSaveAsTemplate"
+    />
   </div>
 </template>
 
@@ -211,16 +231,19 @@ import AIMirrorPanel from '../components/AIMirrorPanel.vue';
 import ExternalAIDialog from '../components/ExternalAIDialog.vue';
 import ImageImport from '../components/ImageImport.vue';
 import TemplateSelector from '../components/TemplateSelector.vue';
+import SaveTemplateDialog from '../components/SaveTemplateDialog.vue';
 import { useReflections } from '../composables/useReflections.js';
 import { useAIMirror } from '../composables/useAIMirror.js';
 import { usePreferences } from '../composables/usePreferences.js';
 import { usePersonas } from '../composables/usePersonas.js';
 import { usePrompts } from '../composables/usePrompts.js';
+import { useTemplates } from '../composables/useTemplates.js';
 
 const { createReflection, updateReflectionAI, saveExternalAIResponse } = useReflections();
 const { generateMirrorResponse, generating, error: aiError } = useAIMirror();
 const { preferences, loadPreferences, updatePreferences, isUsingLocalAI, isUsingOnlineAI, getPrivacyLevel } = usePreferences();
 const { personas, selectedPersona, loadPersonas, generateChatGPTLink, loading: personasLoading, selectPersona } = usePersonas();
+const { createTemplate } = useTemplates();
 const router = useRouter();
 
 // Header data
@@ -300,6 +323,9 @@ const externalSummary = ref('');
 // store last generated URL so we can persist it with the session
 const lastGeneratedUrl = ref(null);
 
+// Local state for save template dialog
+const showSaveTemplateDialog = ref(false);
+
 // Load preferences and personas on mount
 onMounted(async () => {
   await loadPreferences();
@@ -373,6 +399,22 @@ const handleTemplateSelected = (template) => {
 const handleTemplateCleared = () => {
   // Optionally clear content or just do nothing
   // For now, we'll keep the content
+};
+
+/**
+ * Handle save as template
+ * @param {Object} templateData - Template data from dialog
+ */
+const handleSaveAsTemplate = async (templateData) => {
+  try {
+    await createTemplate(templateData);
+    showSaveTemplateDialog.value = false;
+    // Show success message (could add a toast notification here)
+    console.log('Template saved successfully:', templateData.name);
+  } catch (err) {
+    console.error('Failed to save template:', err);
+    // Error will be shown in the dialog
+  }
 };
 
 /**
@@ -680,6 +722,38 @@ const handleSaveExternalSummary = async () => {
 }
 
 .complete-entry-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Reflection action buttons container */
+.reflection-actions {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  margin-top: 2px;
+}
+
+/* Save as Template button */
+.save-template-btn {
+  min-height: 34px;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-template-btn:hover:not(:disabled) {
+  background: var(--border-hover);
+  border-color: var(--border-hover);
+}
+
+.save-template-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
