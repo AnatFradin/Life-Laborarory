@@ -388,6 +388,16 @@ const handleModeChange = () => {
  * @param {Object} template - Selected template object
  */
 const handleTemplateSelected = (template) => {
+  // Check if there's unsaved content
+  if (currentContent.value && currentContent.value.trim().length > 0) {
+    const confirmed = confirm(
+      'You have unsaved content. Loading this template will replace it. Continue?'
+    );
+    if (!confirmed) {
+      return;
+    }
+  }
+  
   // Load template content into editor
   currentContent.value = template.content;
   error.value = null;
@@ -413,7 +423,8 @@ const handleSaveAsTemplate = async (templateData) => {
     console.log('Template saved successfully:', templateData.name);
   } catch (err) {
     console.error('Failed to save template:', err);
-    // Error will be shown in the dialog
+    // Error should be handled in the dialog, don't close it
+    throw err;
   }
 };
 

@@ -15,11 +15,9 @@ import path from 'path';
 
 const router = express.Router();
 
-// Helper function to get template service
-function getTemplateService() {
-  const templatesDir = path.join(config.dataDir, 'reflection-templates');
-  return new TemplateService(templatesDir);
-}
+// Create a shared TemplateService instance to maintain cache
+const templatesDir = path.join(config.dataDir, 'reflection-templates');
+const templateService = new TemplateService(templatesDir);
 
 /**
  * GET /api/templates
@@ -27,7 +25,6 @@ function getTemplateService() {
  */
 router.get('/', async (req, res, next) => {
   try {
-    const templateService = getTemplateService();
     const templates = await templateService.getAllTemplates();
     
     res.json({
@@ -45,7 +42,6 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
-    const templateService = getTemplateService();
     const { id } = req.params;
     const template = await templateService.getTemplateById(id);
 
@@ -77,7 +73,6 @@ router.get('/:id', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
   try {
-    const templateService = getTemplateService();
     const { id, name, description, content, tags, isDefault } = req.body;
 
     // Validate required fields
@@ -120,7 +115,6 @@ router.post('/', async (req, res, next) => {
  */
 router.put('/:id', async (req, res, next) => {
   try {
-    const templateService = getTemplateService();
     const { id } = req.params;
     const updates = req.body;
 
@@ -138,7 +132,6 @@ router.put('/:id', async (req, res, next) => {
  */
 router.delete('/:id', async (req, res, next) => {
   try {
-    const templateService = getTemplateService();
     const { id } = req.params;
     
     const deleted = await templateService.deleteTemplate(id);

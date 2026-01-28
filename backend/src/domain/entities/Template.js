@@ -5,7 +5,9 @@ import { z } from 'zod';
  * Defines a reflection structure template that can be loaded from markdown files
  */
 export const TemplateSchema = z.object({
-  id: z.string().min(1, 'Template ID is required'),
+  id: z.string()
+    .min(1, 'Template ID is required')
+    .regex(/^[a-z0-9-]+$/, 'ID must contain only lowercase letters, numbers, and hyphens'),
   name: z.string().min(1, 'Template name is required'),
   description: z.string().optional(),
   content: z.string().min(1, 'Template content is required'),

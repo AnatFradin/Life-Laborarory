@@ -206,17 +206,22 @@ class TemplateService {
    * @private
    */
   _generateMarkdownFile(template) {
+    // Escape special YAML characters in values
+    const escapeName = this._escapeYamlValue(template.name);
+    const escapeDescription = template.description ? this._escapeYamlValue(template.description) : '';
+    
     const frontmatter = [
       '---',
-      `name: ${template.name}`,
+      `name: ${escapeName}`,
     ];
 
     if (template.description) {
-      frontmatter.push(`description: ${template.description}`);
+      frontmatter.push(`description: ${escapeDescription}`);
     }
 
     if (template.tags && template.tags.length > 0) {
-      frontmatter.push(`tags: ${template.tags.join(', ')}`);
+      const escapedTags = template.tags.map(t => this._escapeYamlValue(t));
+      frontmatter.push(`tags: ${escapedTags.join(', ')}`);
     }
 
     if (template.isDefault) {
@@ -228,6 +233,21 @@ class TemplateService {
     frontmatter.push(template.content);
 
     return frontmatter.join('\n');
+  }
+
+  /**
+   * Escape YAML special characters in a value
+   * @param {string} value - Value to escape
+   * @returns {string} Escaped value
+   * @private
+   */
+  _escapeYamlValue(value) {
+    // If value contains special characters, quote it
+    if (value.match(/[:\n\r"'#\[\]{}]/) || value.trim() !== value) {
+      // Escape double quotes and wrap in quotes
+      return `"${value.replace(/"/g, '\\"')}"`;
+    }
+    return value;
   }
 
   /**
@@ -270,7 +290,6 @@ class TemplateService {
     const updated = {
       ...existing,
       ...updates,
-      id: existing.id, // Preserve ID
       createdAt: existing.createdAt, // Preserve creation timestamp
       updatedAt: now,
     };
@@ -278,14 +297,9 @@ class TemplateService {
     // Validate updated template
     const validated = validateTemplate(updated);
 
-    // Delete old file if ID changed
-    if (updates.id && updates.id !== existing.id) {
-      await this.deleteTemplate(existing.id);
-    }
-
-    // Save updated template
+    // Save updated template (use the current id, not the potentially updated one)
     const markdown = this._generateMarkdownFile(validated);
-    const filename = `${validated.id}.md`;
+    const filename = `${id}.md`;
     const filePath = join(this.templatesDir, filename);
 
     await writeFile(filePath, markdown, 'utf-8');

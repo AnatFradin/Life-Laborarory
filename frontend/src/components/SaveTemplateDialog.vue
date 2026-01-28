@@ -159,6 +159,10 @@ async function handleSubmit() {
     };
 
     emit('save', templateData);
+    // Reset saving state after a short delay to allow parent to handle
+    setTimeout(() => {
+      saving.value = false;
+    }, 100);
   } catch (err) {
     error.value = err.message || 'Failed to save template';
     saving.value = false;
