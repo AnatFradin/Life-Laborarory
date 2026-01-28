@@ -22,6 +22,13 @@
       </div>
     </header>
 
+    <!-- Template Selector (only for text mode) -->
+    <TemplateSelector
+      v-if="currentMode === 'text'"
+      @template-selected="handleTemplateSelected"
+      @template-cleared="handleTemplateCleared"
+    />
+
     <div class="compose-content" role="region" aria-label="Reflection composition area">
       <!-- Text Mode -->
       <template v-if="currentMode === 'text'">
@@ -203,6 +210,7 @@ import ReflectionEditor from '../components/ReflectionEditor.vue';
 import AIMirrorPanel from '../components/AIMirrorPanel.vue';
 import ExternalAIDialog from '../components/ExternalAIDialog.vue';
 import ImageImport from '../components/ImageImport.vue';
+import TemplateSelector from '../components/TemplateSelector.vue';
 import { useReflections } from '../composables/useReflections.js';
 import { useAIMirror } from '../composables/useAIMirror.js';
 import { usePreferences } from '../composables/usePreferences.js';
@@ -347,6 +355,24 @@ const handleModeChange = () => {
   error.value = null;
   // Clear current reflection ID when switching modes
   currentReflectionId.value = null;
+};
+
+/**
+ * Handle template selection
+ * @param {Object} template - Selected template object
+ */
+const handleTemplateSelected = (template) => {
+  // Load template content into editor
+  currentContent.value = template.content;
+  error.value = null;
+};
+
+/**
+ * Handle template cleared
+ */
+const handleTemplateCleared = () => {
+  // Optionally clear content or just do nothing
+  // For now, we'll keep the content
 };
 
 /**
