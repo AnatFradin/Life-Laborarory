@@ -60,9 +60,10 @@ export function usePersonas() {
    * Generate a ChatGPT link for the current reflection with the selected persona
    * @param {string} reflectionText - The reflection text to send to ChatGPT
    * @param {string} personaId - Optional persona ID (uses selected if not provided)
+   * @param {string} promptId - Optional prompt ID (uses persona default if not provided)
    * @returns {Promise<Object>} - Response with chatGPTUrl, personaId, personaName, timestamp
    */
-  async function generateChatGPTLink(reflectionText, personaId = null) {
+  async function generateChatGPTLink(reflectionText, personaId = null, promptId = null) {
     loading.value = true;
     error.value = null;
 
@@ -73,13 +74,14 @@ export function usePersonas() {
         throw new Error('No persona selected. Please select a coach persona first.');
       }
 
-      if (!reflectionText || reflectionText.trim().length === 0) {
+      if (reflectionText === null || reflectionText === undefined || typeof reflectionText !== 'string') {
         throw new Error('Reflection text is required to generate a ChatGPT link.');
       }
 
       const response = await api.post('/personas/generate-link', {
         reflectionText: reflectionText.trim(),
         personaId: targetPersonaId,
+        promptId: promptId || null,
       });
 
       if (response.data.success) {

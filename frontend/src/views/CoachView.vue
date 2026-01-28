@@ -1,6 +1,12 @@
 <template>
   <div class="coach-view">
     <header class="view-header">
+      <div class="header-actions">
+        <router-link to="/" class="back-link">← Back to Reflection</router-link>
+        <button class="add-coach-btn" type="button" @click="showAddCoach = true">
+          + Add coach
+        </button>
+      </div>
       <h1 class="view-title">AI Coach</h1>
       <p class="view-description">
         Choose a coaching style and talk with ChatGPT using your existing ChatGPT Plus subscription. Your reflections will open in ChatGPT with pre-filled prompts tailored to each coach's perspective.
@@ -55,8 +61,11 @@
       <PromptSelectorDialog
         :persona="promptSelectorPersona"
         :open="showPromptSelector"
+        :default-prompt-id="preferences?.selectedPromptIds?.[promptSelectorPersona?.id] || ''"
+        :active-prompt-id="preferences?.selectedPromptIds?.[promptSelectorPersona?.id] || ''"
         @update:open="showPromptSelector = $event"
         @select="handlePromptSelected"
+        @set-active="handlePromptSelected"
         @chat="handleChatRequest"
       />
 
@@ -68,6 +77,11 @@
         :open="showChatDialog"
         @update:open="showChatDialog = $event"
       />
+        <!-- Add Coach Dialog -->
+        <AddCoachDialog
+          :open="showAddCoach"
+          @update:open="showAddCoach = $event"
+        />
 
       <!-- Privacy & Cost Information -->
       <section class="info-section">
@@ -136,13 +150,14 @@ import { useRoute } from 'vue-router';
 import { usePersonas } from '../composables/usePersonas.js';
 import { usePreferences } from '../composables/usePreferences.js';
 import PersonaCard from '../components/PersonaCard.vue';
+import AddCoachDialog from '../components/AddCoachDialog.vue';
 import PromptViewDialog from '../components/PromptViewDialog.vue';
 import PromptSelectorDialog from '../components/PromptSelectorDialog.vue';
 import CoachChatDialog from '../components/CoachChatDialog.vue';
 
 const route = useRoute();
 const { personas, selectedPersona, loading, error, loadPersonas, selectPersona } = usePersonas();
-const { preferences, updatePreferences } = usePreferences();
+const { preferences, loadPreferences, updatePreferences } = usePreferences();
 
 // Guard against undefined route in test environments
 const safeRoute = route || { query: {} };
@@ -160,6 +175,7 @@ const showChatDialog = ref(false);
 const chatPersona = ref(null);
 const chatPromptId = ref(null);
 const chatPromptTitle = ref('');
+const showAddCoach = ref(false);
 
 /**
  * Handle persona selection
@@ -194,9 +210,13 @@ const handleSelectPrompt = (persona) => {
 /**
  * Handle prompt selection
  */
-const handlePromptSelected = ({ personaId, promptId, prompt }) => {
-  // Store selected prompt for future use if needed
-  // You can store this in preferences or state management
+const handlePromptSelected = async ({ personaId, promptId, prompt }) => {
+  if (!preferences.value) return;
+  const selectedPromptIds = {
+    ...(preferences.value.selectedPromptIds || {}),
+    [personaId]: promptId,
+  };
+  await updatePreferences({ selectedPromptIds });
 };
 
 /**
@@ -222,6 +242,7 @@ const closePromptDialog = () => {
 
 // Load personas on mount
 onMounted(async () => {
+  await loadPreferences();
   await loadPersonas();
   
   // Check if there's a persona query parameter (from sidebar navigation)
@@ -266,6 +287,45 @@ watch(() => safeRoute.query?.persona, (newPersonaId) => {
 .view-header {
   margin-bottom: 3rem;
   text-align: center;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary, #666666);
+  text-decoration: none;
+  margin-bottom: var(--space-sm);
+}
+
+.back-link:hover {
+  color: var(--color-text, #1a1a1a);
+  text-decoration: underline;
+}
+
+.add-coach-btn {
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #e5e1d9);
+  background: var(--color-bg-elevated, #ffffff);
+  color: var(--color-text, #1a1816);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.add-coach-btn:hover {
+  background: var(--color-bg-hover, #f0ede5);
+  border-color: var(--color-border-strong, #d4cfc3);
 }
 
 .view-title {

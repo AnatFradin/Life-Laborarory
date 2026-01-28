@@ -158,7 +158,7 @@ describe('Personas API Integration Tests', () => {
       expect(response.body.error).toContain('Reflection text');
     });
 
-    it('should return 400 for empty reflection text', async () => {
+    it('should allow empty reflection text', async () => {
       const requestBody = {
         reflectionText: '   ',
         personaId: 'stoic-coach',
@@ -167,10 +167,10 @@ describe('Personas API Integration Tests', () => {
       const response = await request(app)
         .post('/api/personas/generate-link')
         .send(requestBody)
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('empty');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.chatGPTUrl).toContain('https://chat.openai.com');
     });
 
     it('should return 400 for missing persona ID', async () => {

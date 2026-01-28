@@ -46,7 +46,7 @@
           :loading="generating"
         />
 
-        <div v-if="currentContent && currentContent.trim().length > 0" class="external-ai-actions">
+        <div class="external-ai-actions">
           <label class="coach-select">
             <span class="coach-select-label">Coach</span>
             <select
@@ -62,15 +62,40 @@
             </select>
           </label>
 
+          <label class="coach-select">
+            <span class="coach-select-label">Prompt</span>
+            <select
+              v-model="selectedPromptId"
+              class="coach-select-input"
+              :disabled="promptsLoading || prompts.length === 0 || !selectedPersona"
+              aria-label="Select a coach prompt"
+            >
+              <option value="" disabled>
+                {{ promptsLoading ? 'Loading prompts...' : prompts.length === 0 ? 'No prompts' : 'Select prompt' }}
+              </option>
+              <option v-for="prompt in prompts" :key="prompt.id" :value="prompt.id">
+                {{ prompt.title }}
+              </option>
+            </select>
+          </label>
+
           <button
             class="talk-chatgpt-btn"
             @click="handleTalkInChatGPT"
-            :disabled="personasLoading || !selectedPersona"
+            :disabled="personasLoading || !selectedPersona || (prompts.length > 0 && !selectedPrompt)"
             :aria-label="selectedPersona
               ? `Open ChatGPT with ${selectedPersona.name}`
               : 'Open ChatGPT with selected coach'"
           >
             Talk in ChatGPT
+          </button>
+
+          <button
+            class="manage-coaches-btn"
+            type="button"
+            @click="goToCoachManager"
+          >
+            Manage coaches
           </button>
         </div>
 
@@ -172,7 +197,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import ReflectionEditor from '../components/ReflectionEditor.vue';
 import AIMirrorPanel from '../components/AIMirrorPanel.vue';
 import ExternalAIDialog from '../components/ExternalAIDialog.vue';
@@ -181,11 +207,13 @@ import { useReflections } from '../composables/useReflections.js';
 import { useAIMirror } from '../composables/useAIMirror.js';
 import { usePreferences } from '../composables/usePreferences.js';
 import { usePersonas } from '../composables/usePersonas.js';
+import { usePrompts } from '../composables/usePrompts.js';
 
 const { createReflection, updateReflectionAI, saveExternalAIResponse } = useReflections();
 const { generateMirrorResponse, generating, error: aiError } = useAIMirror();
-const { preferences, loadPreferences, isUsingLocalAI, isUsingOnlineAI, getPrivacyLevel } = usePreferences();
+const { preferences, loadPreferences, updatePreferences, isUsingLocalAI, isUsingOnlineAI, getPrivacyLevel } = usePreferences();
 const { personas, selectedPersona, loadPersonas, generateChatGPTLink, loading: personasLoading, selectPersona } = usePersonas();
+const router = useRouter();
 
 // Header data
 const currentDate = computed(() => {
@@ -224,6 +252,38 @@ const selectedPersonaId = computed({
   set: (id) => selectPersona(id),
 });
 
+const { prompts, loading: promptsLoading, selectedPrompt, selectPrompt } = usePrompts(selectedPersonaId);
+
+const selectedPromptId = computed({
+  get: () => selectedPrompt.value?.id || '',
+  set: (id) => {
+    const prompt = prompts.value.find((item) => item.id === id) || null;
+    selectPrompt(prompt);
+    if (preferences.value && selectedPersonaId.value) {
+      updatePreferences({
+        selectedPromptIds: {
+          ...(preferences.value.selectedPromptIds || {}),
+          [selectedPersonaId.value]: id,
+        },
+      });
+    }
+  },
+});
+
+watch(selectedPersonaId, () => {
+  selectPrompt(null);
+});
+
+watch([() => preferences.value, selectedPersonaId, () => prompts.value], () => {
+  const personaId = selectedPersonaId.value;
+  const preferred = preferences.value?.selectedPromptIds?.[personaId];
+  if (!preferred || !prompts.value.length) return;
+  const match = prompts.value.find((item) => item.id === preferred);
+  if (match) {
+    selectPrompt(match);
+  }
+});
+
 defineEmits(['toggle-formatting-guide']);
 
 // Local state for external AI dialog
@@ -247,6 +307,10 @@ const privacyStatus = computed(() => {
   }
   return { text: 'Local processing only', icon: '🔒' };
 });
+
+const goToCoachManager = () => {
+  router.push('/coach');
+};
 
 /**
  * Check if mixed mode reflection can be saved
@@ -432,7 +496,11 @@ const handleTalkInChatGPT = async () => {
   }
 
   try {
-    const result = await generateChatGPTLink(currentContent.value, selectedPersona?.value?.id);
+    const result = await generateChatGPTLink(
+      currentContent.value,
+      selectedPersona?.value?.id,
+      selectedPrompt.value?.id
+    );
     if (result && result.chatGPTUrl) {
       lastGeneratedUrl.value = result.chatGPTUrl;
       // If we successfully opened a blank tab, navigate it to the generated URL.
@@ -473,6 +541,8 @@ const handleSaveExternalSummary = async () => {
   const sessionData = {
     personaId: selectedPersona.value?.id,
     personaName: selectedPersona.value?.name,
+    promptId: selectedPrompt.value?.id || null,
+    promptTitle: selectedPrompt.value?.title || null,
     sessionSummary: externalSummary.value.trim(),
     chatGPTUrl: lastGeneratedUrl.value || null,
   };
@@ -564,7 +634,7 @@ const handleSaveExternalSummary = async () => {
   min-height: 34px;
   padding: 0 var(--space-lg);
   border-radius: var(--radius-md);
-  background: var(--color-accent-purple);
+  background: var(--color-primary);
   color: white;
   font-weight: 500;
   font-size: var(--text-sm);
@@ -578,7 +648,7 @@ const handleSaveExternalSummary = async () => {
 }
 
 .complete-entry-btn:hover:not(:disabled) {
-  background: var(--color-accent-purple-hover);
+  background: var(--color-primary-hover);
   transform: none;
   box-shadow: none;
 }
@@ -822,5 +892,23 @@ const handleSaveExternalSummary = async () => {
 .talk-chatgpt-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.manage-coaches-btn {
+  min-height: 34px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+
+.manage-coaches-btn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
 }
 </style>

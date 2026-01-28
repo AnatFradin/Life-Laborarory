@@ -33,6 +33,14 @@
 
         <div class="dialog-actions">
           <button
+            @click="handleTalkInChatGPT"
+            class="button button-secondary"
+            type="button"
+            :disabled="loading || openingChat"
+          >
+            {{ openingChat ? 'Opening...' : 'Talk in ChatGPT' }}
+          </button>
+          <button
             @click="closeDialog"
             class="button button-primary"
             data-testid="close-button"
@@ -81,6 +89,7 @@ const loading = ref(false);
 const error = ref(null);
 const promptText = ref('');
 const loadedFromFile = ref(false);
+const openingChat = ref(false);
 
 // Watch for open prop changes
 watch(() => props.open, (newValue) => {
@@ -137,12 +146,38 @@ async function loadPrompt() {
 function closeDialog() {
   isOpen.value = false;
 }
+
+/**
+ * Open ChatGPT with the current coach prompt
+ */
+async function handleTalkInChatGPT() {
+  if (!props.persona) return;
+  openingChat.value = true;
+
+  const basePrompt = promptText.value || props.persona.systemPrompt || '';
+  const fullPrompt = basePrompt.trim().length > 0 ? basePrompt : props.persona.name;
+  const url = `https://chat.openai.com/?q=${encodeURIComponent(fullPrompt)}`;
+
+  try {
+    const newTab = window.open(url, '_blank');
+    if (!newTab) {
+      window.location.href = url;
+    }
+  } catch (err) {
+    console.error('Failed to open ChatGPT link', err);
+  } finally {
+    openingChat.value = false;
+  }
+}
 </script>
 
 <style scoped>
 .prompt-view-dialog {
   max-width: 700px;
   max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .prompt-intro {
@@ -164,6 +199,12 @@ function closeDialog() {
 
 .prompt-content {
   margin-top: 1rem;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  overflow: hidden;
 }
 
 .file-badge {
@@ -178,8 +219,8 @@ function closeDialog() {
 }
 
 .prompt-text {
-  background-color: var(--color-bg-surface, #f9f9f9);
-  border: 1px solid var(--color-border-light, #e0e0e0);
+  background-color: var(--color-bg-secondary, #f7f5f0);
+  border: 1px solid var(--color-border-strong, #d4cfc3);
   border-radius: 8px;
   padding: 1.5rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -188,7 +229,7 @@ function closeDialog() {
   color: var(--color-text-primary, #1a1a1a);
   white-space: pre-wrap;
   word-wrap: break-word;
-  max-height: 400px;
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -196,7 +237,11 @@ function closeDialog() {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border, #e5e1d9);
+  background: white;
+  flex-shrink: 0;
 }
 
 .button {
@@ -216,6 +261,16 @@ function closeDialog() {
 
 .button-primary:hover {
   background-color: var(--color-primary-hover, #357ABD);
+}
+
+.button-secondary {
+  background: var(--color-bg-elevated, #ffffff);
+  color: var(--color-text, #1a1a1a);
+  border: 1px solid var(--color-border, #e5e1d9);
+}
+
+.button-secondary:hover {
+  background: var(--color-bg-hover, #f0ede5);
 }
 
 .button:focus-visible {
