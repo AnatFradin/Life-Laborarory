@@ -46,6 +46,7 @@ import createPersonasRouter from './adapters/http/routes/personas.js';
 import createChatRouter from './adapters/http/routes/ai-chat.js';
 import visualsRouter from './adapters/http/routes/visuals.js';
 import storageRouter from './adapters/http/routes/storage.js';
+import templatesRouter from './adapters/http/routes/templates.js';
 
 // API routes
 app.use('/api/reflections', reflectionsRouter);
@@ -56,6 +57,7 @@ app.use('/api/preferences', preferencesRouter);
 app.use('/api/personas', createPersonasRouter(promptFileService));
 app.use('/api/visuals', visualsRouter);
 app.use('/api/storage', storageRouter);
+app.use('/api/templates', templatesRouter);
 
 // Error handler middleware (must be last)
 app.use(errorHandler);
