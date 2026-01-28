@@ -68,7 +68,7 @@
       </router-link>
     </nav>
 
-    <!-- AI Coaches Section -->
+    <!-- Coach Summary Section -->
     <div v-if="!isCollapsed" class="coaches-section">
       <h3 class="section-title">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="section-icon">
@@ -79,63 +79,40 @@
           <path d="M15 13v2"></path>
           <path d="M9 13v2"></path>
         </svg>
-        AI COACHES
+        COACH
       </h3>
 
-      <div class="coaches-list">
-        <button
-          v-for="persona in favoritePersonas"
-          :key="persona.id"
-          class="coach-card"
-          :class="{ 'selected': selectedPersona?.id === persona.id }"
-          @click="selectCoach(persona)"
-          :aria-label="`Select ${persona.name} coach`"
-        >
-          <div class="coach-avatar" :style="{ background: persona.color }">
-            {{ persona.icon || persona.name?.charAt(0) || '?' }}
-          </div>
-          <div class="coach-info">
-            <div class="coach-name">{{ persona.name }}</div>
-            <div class="coach-type">{{ persona.style }}</div>
-          </div>
+      <div class="coach-summary">
+        <button class="coach-summary-button" @click="viewAllCoaches">
+          <span
+            class="coach-summary-avatar"
+            :style="{ background: selectedPersona?.color || 'var(--color-border-strong)' }"
+          >
+            {{ selectedPersona?.icon || selectedPersona?.name?.charAt(0) || '•' }}
+          </span>
+          <span class="coach-summary-text">
+            <span class="coach-summary-title">Current coach</span>
+            <span class="coach-summary-value">{{ selectedPersona?.name || 'Not selected' }}</span>
+          </span>
         </button>
       </div>
 
-      <button class="view-all-btn" @click="viewAllCoaches">
-        View All Coaches →
+      <button class="manage-coaches-btn" @click="viewAllCoaches">
+        Manage coaches & prompts
       </button>
     </div>
 
-    <!-- Collapsed View AI Coaches -->
+    <!-- Collapsed View Coach Shortcut -->
     <div v-else class="coaches-collapsed">
-      <button
-        v-for="persona in favoritePersonas"
-        :key="persona.id"
-        class="coach-avatar-mini"
-        :class="{ 'selected': selectedPersona?.id === persona.id }"
-        :style="{ background: persona.color }"
-        @click="selectCoach(persona)"
-        :aria-label="`Select ${persona.name} coach`"
-        :title="`${persona.name} - ${persona.style}`"
-      >
-        {{ persona.icon || persona.name?.charAt(0) || '?' }}
-      </button>
       <button
         class="view-all-mini"
         @click="viewAllCoaches"
-        aria-label="View all coaches"
-        title="View All Coaches"
+        aria-label="Manage coaches"
+        title="Manage Coaches"
       >
-        •••
+        🤝
       </button>
     </div>
-
-    <!-- Prompt Selector Dialog -->
-    <PromptSelectorDialog
-      :persona="promptSelectorPersona"
-      :open="showPromptSelector"
-      @update:open="showPromptSelector = $event"
-    />
   </aside>
 </template>
 
@@ -143,7 +120,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePersonas } from '../composables/usePersonas.js'
-import PromptSelectorDialog from './PromptSelectorDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -153,28 +129,10 @@ const isCollapsed = ref(false)
 const currentRoute = computed(() => route.path)
 
 // Use the personas composable
-const { personas, selectedPersona, loadPersonas, selectPersona } = usePersonas()
-
-// Show only first 3 coaches as favorites
-const favoritePersonas = computed(() => personas.value.slice(0, 3))
-
-// Dialog state for prompt selector
-const showPromptSelector = ref(false)
-const promptSelectorPersona = ref(null)
+const { selectedPersona, loadPersonas } = usePersonas()
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
-}
-
-const selectCoach = (persona) => {
-  console.log('selectCoach called with:', persona)
-  // Select the persona
-  selectPersona(persona.id)
-  console.log('After selectPersona, selectedPersona is:', selectedPersona.value)
-  
-  // Open the prompt selector dialog
-  promptSelectorPersona.value = persona
-  showPromptSelector.value = true
 }
 
 const viewAllCoaches = () => {
@@ -183,10 +141,7 @@ const viewAllCoaches = () => {
 
 // Load personas on mount
 onMounted(async () => {
-  console.log('AppSidebar mounted, loading personas...')
   await loadPersonas()
-  console.log('Personas loaded:', personas.value)
-  console.log('Favorite personas:', favoritePersonas.value)
 })
 </script>
 
@@ -337,7 +292,7 @@ onMounted(async () => {
   gap: var(--space-sm);
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--color-accent-purple);
+  color: var(--color-text-tertiary);
   margin-bottom: var(--space-md);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -347,14 +302,61 @@ onMounted(async () => {
   opacity: 0.7;
 }
 
-.coaches-list {
+.coach-summary {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
 }
 
-.view-all-btn {
-  margin-top: var(--space-sm);
+.coach-summary-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.coach-summary-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  color: white;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.coach-summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coach-summary-title {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.coach-summary-value {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.manage-coaches-btn {
+  width: 100%;
   padding: var(--space-sm) var(--space-md);
   background: transparent;
   border: 1px solid var(--color-border);
@@ -366,66 +368,10 @@ onMounted(async () => {
   text-align: center;
 }
 
-.view-all-btn:hover {
+.manage-coaches-btn:hover {
   background: var(--color-bg-hover);
-  color: var(--color-accent-purple);
-  border-color: var(--color-accent-purple);
-}
-
-.coach-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-}
-
-.coach-card:hover {
-  background: var(--color-accent-purple-light);
-  border-color: var(--color-accent-purple-surface);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-.coach-card.selected {
-  background: var(--color-accent-purple-light);
-  border-color: var(--color-accent-purple);
-  box-shadow: var(--shadow-sm);
-}
-
-.coach-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 20px;
-  color: white;
-  flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.coach-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.coach-name {
-  font-weight: 600;
-  font-size: var(--text-sm);
   color: var(--color-text);
-}
-
-.coach-type {
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
+  border-color: var(--color-border-strong);
 }
 
 /* Collapsed Coaches */
@@ -437,31 +383,6 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
-}
-
-.coach-avatar-mini {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 18px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.coach-avatar-mini:hover {
-  transform: scale(1.1);
-  border-color: white;
-}
-
-.coach-avatar-mini.selected {
-  border-color: white;
-  box-shadow: 0 0 0 3px var(--color-accent-purple);
 }
 
 .view-all-mini {

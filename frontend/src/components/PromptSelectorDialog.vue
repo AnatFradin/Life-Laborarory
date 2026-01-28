@@ -3,6 +3,7 @@
     <DialogPortal>
       <DialogOverlay class="dialog-overlay" />
       <DialogContent 
+        ref="dialogContent"
         class="dialog-content prompt-selector-dialog" 
         role="dialog" 
         :aria-labelledby="`prompt-selector-${persona?.id}`"
@@ -55,7 +56,12 @@
               <label :for="`prompt-${prompt.id}`" class="prompt-card__title">
                 {{ prompt.title }}
               </label>
-              <span v-if="prompt.isDefault" class="prompt-card__badge">DEFAULT</span>
+              <span
+                v-if="prompt.id === activePromptId || (!activePromptId && prompt.isDefault)"
+                class="prompt-card__badge"
+              >
+                CURRENTLY ACTIVE
+              </span>
             </div>
             
             <p class="prompt-card__description">{{ prompt.description }}</p>
@@ -72,21 +78,27 @@
 
             <div class="prompt-card__actions">
               <button
-                @click.stop="handlePreview(prompt.id)"
+                type="button"
+                @click.stop.prevent="handlePreview(prompt.id)"
+                @mousedown.stop
                 class="button button-text"
                 :disabled="loadingPromptDetails"
               >
                 👁️ Preview
               </button>
               <button
-                @click.stop="handleCopy(prompt.id)"
+                type="button"
+                @click.stop.prevent="handleCopy(prompt.id)"
+                @mousedown.stop
                 class="button button-text"
                 :disabled="copying"
               >
                 📋 Copy
               </button>
               <button
-                @click.stop="handleChat(prompt.id)"
+                type="button"
+                @click.stop.prevent="handleChat(prompt.id)"
+                @mousedown.stop
                 class="button button-text"
               >
                 💬 Chat
@@ -96,12 +108,21 @@
         </div>
 
         <!-- Preview Section -->
-        <div v-if="previewPrompt" class="preview-section">
+        <div v-if="previewPrompt" ref="previewSection" class="preview-section">
           <div class="preview-header">
             <h3>Preview: {{ previewPrompt.title }}</h3>
-            <button @click="closePreview" class="button-icon" aria-label="Close preview">
-              ×
-            </button>
+            <div class="preview-actions">
+              <button
+                type="button"
+                class="button button-text"
+                @click.stop.prevent="openChatGPTWithPrompt(previewPrompt)"
+              >
+                💬 Talk in ChatGPT
+              </button>
+              <button @click="closePreview" class="button-icon" aria-label="Close preview">
+                ×
+              </button>
+            </div>
           </div>
           <pre class="preview-text">{{ previewPrompt.systemPrompt }}</pre>
         </div>
@@ -158,7 +179,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import {
   DialogRoot,
   DialogPortal,
@@ -182,15 +203,25 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  defaultPromptId: {
+    type: String,
+    default: '',
+  },
+  activePromptId: {
+    type: String,
+    default: '',
+  },
 });
 
-const emit = defineEmits(['update:open', 'select', 'chat']);
+const emit = defineEmits(['update:open', 'select', 'chat', 'set-active']);
 
 const isOpen = ref(props.open);
 const selectedPromptId = ref(null);
 const previewPrompt = ref(null);
 const loadingPromptDetails = ref(false);
 const showCreateDialog = ref(false);
+const dialogContent = ref(null);
+const previewSection = ref(null);
 
 // Toast state
 const showToast = ref(false);
@@ -209,8 +240,12 @@ watch(() => props.open, (newValue) => {
   isOpen.value = newValue;
   if (newValue && props.persona && prompts.value.length > 0) {
     // Auto-select default prompt when opening
+    const preferredId = props.defaultPromptId;
+    const preferredPrompt = preferredId ? prompts.value.find(p => p.id === preferredId) : null;
     const defaultPrompt = prompts.value.find(p => p.isDefault);
-    if (defaultPrompt) {
+    if (preferredPrompt) {
+      selectedPromptId.value = preferredPrompt.id;
+    } else if (defaultPrompt) {
       selectedPromptId.value = defaultPrompt.id;
     } else if (prompts.value.length > 0) {
       selectedPromptId.value = prompts.value[0].id;
@@ -229,8 +264,12 @@ watch(isOpen, (newValue) => {
 // Watch for prompts changes to auto-select default
 watch(prompts, (newPrompts) => {
   if (newPrompts.length > 0 && !selectedPromptId.value) {
+    const preferredId = props.defaultPromptId;
+    const preferredPrompt = preferredId ? newPrompts.find(p => p.id === preferredId) : null;
     const defaultPrompt = newPrompts.find(p => p.isDefault);
-    if (defaultPrompt) {
+    if (preferredPrompt) {
+      selectedPromptId.value = preferredPrompt.id;
+    } else if (defaultPrompt) {
       selectedPromptId.value = defaultPrompt.id;
     } else {
       selectedPromptId.value = newPrompts[0].id;
@@ -255,12 +294,30 @@ async function handlePreview(promptId) {
   
   try {
     const promptDetails = await fetchPromptById(promptId);
+    if (!promptDetails?.systemPrompt) {
+      throw new Error('Prompt details not available');
+    }
+
     previewPrompt.value = promptDetails;
+    await nextTick();
+
+    if (previewSection.value?.scrollIntoView) {
+      previewSection.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (dialogContent.value && dialogContent.value.scrollTo) {
+      dialogContent.value.scrollTo({ top: dialogContent.value.scrollHeight, behavior: 'smooth' });
+    }
+
   } catch (err) {
     showToastMessage('Unable to load prompt preview', 'error');
   } finally {
     loadingPromptDetails.value = false;
   }
+}
+
+function openChatGPTWithPrompt(promptDetails) {
+  const prompt = promptDetails?.systemPrompt || '';
+  const url = `https://chat.openai.com/?q=${encodeURIComponent(prompt)}`;
+  window.open(url, '_blank');
 }
 
 /**
@@ -308,6 +365,7 @@ function handleUseSelected() {
   const prompt = prompts.value.find(p => p.id === selectedPromptId.value);
   if (prompt) {
     emit('select', { personaId: props.persona.id, promptId: selectedPromptId.value, prompt });
+    emit('set-active', { personaId: props.persona.id, promptId: selectedPromptId.value });
     closeDialog();
   }
 }
@@ -426,8 +484,8 @@ function showToastMessage(message, type = 'info') {
 
 .prompt-card__badge {
   padding: 0.25rem 0.625rem;
-  background-color: var(--color-primary-light, #E3F2FD);
-  color: var(--color-primary, #4A90E2);
+  background-color: var(--color-primary-light, #e5f3eb);
+  color: var(--color-primary, #2d5a3d);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 700;
@@ -461,13 +519,16 @@ function showToastMessage(message, type = 'info') {
   gap: 0.75rem;
   margin-top: 1rem;
   margin-left: 2rem;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .preview-section {
   margin: 1.5rem 0;
-  border: 1px solid var(--color-border-light, #e0e0e0);
+  border: 1px solid var(--color-border-strong, #d4cfc3);
   border-radius: 8px;
-  background-color: var(--color-bg-surface, #f9f9f9);
+  background-color: var(--color-bg-secondary, #f7f5f0);
   overflow: hidden;
 }
 
@@ -478,6 +539,18 @@ function showToastMessage(message, type = 'info') {
   padding: 1rem;
   background-color: white;
   border-bottom: 1px solid var(--color-border-light, #e0e0e0);
+}
+
+.preview-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.preview-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .preview-header h3 {

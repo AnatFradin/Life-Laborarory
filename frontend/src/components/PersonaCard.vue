@@ -28,9 +28,11 @@
         </span>
       </div>
 
-      <div class="persona-card__buttons">
+      <div class="persona-card__buttons" @click.stop @mousedown.stop>
         <button
-          @click.stop="handleSelectPrompt"
+          type="button"
+          @click.stop.prevent="handleSelectPrompt"
+          @mousedown.stop
           class="persona-card__select-prompt-btn"
           data-testid="select-prompt-button"
           :aria-label="`Select prompt for ${persona.name}`"
@@ -38,7 +40,9 @@
           📝 Select Prompt
         </button>
         <button
-          @click.stop="handleViewPrompt"
+          type="button"
+          @click.stop.prevent="handleViewPrompt"
+          @mousedown.stop
           class="persona-card__view-prompt-btn"
           data-testid="view-prompt-button"
           :aria-label="`View coaching prompt for ${persona.name}`"
@@ -90,7 +94,7 @@ function handleSelectPrompt() {
   position: relative;
   display: flex;
   gap: 1rem;
-  padding: 1.5rem;
+  padding: 0.9rem 1rem;
   border: 2px solid var(--color-border-light, #e0e0e0);
   border-radius: 8px;
   background: var(--color-bg-surface, #ffffff);
@@ -116,7 +120,7 @@ function handleSelectPrompt() {
 }
 
 .persona-card__icon {
-  font-size: 3rem;
+  font-size: 2.2rem;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -125,35 +129,39 @@ function handleSelectPrompt() {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .persona-card__name {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--color-text-primary, #1a1a1a);
 }
 
 .persona-card__style {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--persona-color, #8B7355);
 }
 
 .persona-card__description {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--color-text-secondary, #666666);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .persona-card__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .persona-card__tag {
@@ -167,18 +175,21 @@ function handleSelectPrompt() {
 .persona-card__buttons {
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .persona-card__select-prompt-btn,
 .persona-card__view-prompt-btn {
   flex: 1;
-  padding: 0.625rem 1rem;
+  padding: 0.5rem 0.75rem;
   background-color: var(--color-bg-surface, #f9f9f9);
   border: 1px solid var(--persona-color, #8B7355);
   color: var(--persona-color, #8B7355);
   border-radius: 6px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -186,6 +197,7 @@ function handleSelectPrompt() {
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
+  pointer-events: auto;
 }
 
 .persona-card__select-prompt-btn:hover,
@@ -210,7 +222,7 @@ function handleSelectPrompt() {
 /* Ensure proper spacing in grid layouts */
 @media (min-width: 768px) {
   .persona-card {
-    min-height: 200px;
+    min-height: 150px;
   }
 }
 </style>

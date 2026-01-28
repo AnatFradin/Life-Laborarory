@@ -50,16 +50,6 @@
 
     <div class="editor-actions">
       <button
-        type="button"
-        class="btn-save"
-        @click="handleSave"
-        :disabled="!hasContent || saving"
-        :aria-busy="saving"
-      >
-        {{ saving ? 'Saving...' : 'Save Reflection' }}
-      </button>
-
-      <button
         v-if="hasSavedContent"
         type="button"
         class="btn-ai"
@@ -108,10 +98,15 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['save', 'request-ai-feedback']);
+const emit = defineEmits(['save', 'request-ai-feedback', 'update:content']);
 
 const textareaRef = ref(null);
 const localContent = ref(props.initialContent);
+
+// Emit content changes to parent
+watch(localContent, (newValue) => {
+  emit('update:content', newValue);
+});
 const hasSavedContent = ref(false);
 const markdownEnabled = ref(true); // Default: enabled
 

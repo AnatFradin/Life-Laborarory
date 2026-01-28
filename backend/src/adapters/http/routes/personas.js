@@ -1,6 +1,6 @@
 import express from 'express';
 import { getAllPersonas, getPersonaById, isValidPersonaId } from '../../../domain/entities/predefined-personas.js';
-import { generateChatGPTLinkForPersona, validateLinkInputs } from '../../../domain/services/ChatGPTLinkGenerator.js';
+import { generateChatGPTLink, generateChatGPTLinkForPersona, validateLinkInputs } from '../../../domain/services/ChatGPTLinkGenerator.js';
 import { getPersonaPrompt } from '../../../domain/entities/prompt-loader.js';
 
 /**
@@ -301,13 +301,13 @@ router.post('/:id/prompts', async (req, res) => {
  */
 router.post('/generate-link', (req, res) => {
   try {
-    const { reflectionText, personaId } = req.body;
+    const { reflectionText, personaId, promptId } = req.body;
 
     // Validate inputs
-    if (!reflectionText || typeof reflectionText !== 'string' || reflectionText.trim().length === 0) {
+    if (reflectionText === null || reflectionText === undefined || typeof reflectionText !== 'string') {
       return res.status(400).json({
         success: false,
-        error: 'Reflection text is required and cannot be empty.',
+        error: 'Reflection text is required and must be a string.',
       });
     }
 
@@ -329,8 +329,30 @@ router.post('/generate-link', (req, res) => {
     // Get the persona
     const persona = getPersonaById(personaId);
 
+    let systemPrompt = persona.systemPrompt;
+    let selectedPrompt = null;
+
+    if (promptId) {
+      if (!promptFileService || !promptFileService.prompts) {
+        return res.status(500).json({
+          success: false,
+          error: 'Prompt system is not available. Please try again later.',
+        });
+      }
+
+      selectedPrompt = promptFileService.getPromptById(personaId, promptId);
+      if (!selectedPrompt) {
+        return res.status(404).json({
+          success: false,
+          error: `Prompt "${promptId}" not found for this coach.`,
+        });
+      }
+
+      systemPrompt = selectedPrompt.systemPrompt;
+    }
+
     // Validate link generation inputs
-    const validation = validateLinkInputs(reflectionText, persona.systemPrompt);
+    const validation = validateLinkInputs(reflectionText, systemPrompt);
     if (!validation.valid) {
       return res.status(400).json({
         success: false,
@@ -339,7 +361,9 @@ router.post('/generate-link', (req, res) => {
     }
 
     // Generate the ChatGPT link
-    const chatGPTUrl = generateChatGPTLinkForPersona(reflectionText, persona);
+    const chatGPTUrl = promptId
+      ? generateChatGPTLink(reflectionText, systemPrompt)
+      : generateChatGPTLinkForPersona(reflectionText, persona);
 
     res.json({
       success: true,
@@ -347,6 +371,8 @@ router.post('/generate-link', (req, res) => {
         chatGPTUrl,
         personaId: persona.id,
         personaName: persona.name,
+        promptId: selectedPrompt?.id || null,
+        promptTitle: selectedPrompt?.title || null,
         timestamp: new Date().toISOString(),
       },
     });

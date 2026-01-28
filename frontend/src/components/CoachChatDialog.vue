@@ -273,12 +273,13 @@ function closeDialog() {
   flex-direction: column;
   padding: 0;
   overflow: hidden;
+  border: 1px solid var(--color-border, #e5e1d9);
 }
 
 .chat-header {
   padding: 1.5rem;
-  border-bottom: 1px solid var(--color-border-light, #e0e0e0);
-  background-color: white;
+  border-bottom: 1px solid var(--color-border, #e5e1d9);
+  background-color: var(--color-bg-secondary, #f7f5f0);
 }
 
 .chat-title {
@@ -290,7 +291,7 @@ function closeDialog() {
 
 .chat-subtitle {
   font-size: 0.875rem;
-  color: var(--color-text-secondary, #666666);
+  color: var(--color-text-secondary, #524e47);
   margin: 0.25rem 0 0 0;
 }
 
@@ -298,9 +299,10 @@ function closeDialog() {
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem;
-  background-color: var(--color-bg-subtle, #fafafa);
-  min-height: 300px;
-  max-height: 500px;
+  background-color: var(--color-bg, #fdfbf7);
+  border-bottom: 1px solid var(--color-border, #e5e1d9);
+  min-height: 220px;
+  max-height: 420px;
 }
 
 .chat-empty {
@@ -357,16 +359,16 @@ function closeDialog() {
 }
 
 .chat-message--user .chat-message-text {
-  background-color: var(--color-primary, #4A90E2);
+  background-color: var(--color-primary, #2d5a3d);
   color: white;
   margin-left: auto;
   max-width: 80%;
 }
 
 .chat-message--assistant .chat-message-text {
-  background-color: white;
-  color: var(--color-text-primary, #1a1a1a);
-  border: 1px solid var(--color-border-light, #e0e0e0);
+  background-color: var(--color-bg-elevated, #ffffff);
+  color: var(--color-text, #1a1816);
+  border: 1px solid var(--color-border, #e5e1d9);
   max-width: 90%;
 }
 
@@ -386,8 +388,8 @@ function closeDialog() {
   align-items: center;
   gap: 0.375rem;
   padding: 1rem 1.125rem;
-  background-color: white;
-  border: 1px solid var(--color-border-light, #e0e0e0);
+  background-color: var(--color-bg-elevated, #ffffff);
+  border: 1px solid var(--color-border, #e5e1d9);
   border-radius: 12px;
   max-width: 90%;
 }
@@ -436,14 +438,14 @@ function closeDialog() {
 
 .chat-input-form {
   padding: 1.5rem;
-  background-color: white;
-  border-top: 1px solid var(--color-border-light, #e0e0e0);
+  background-color: var(--color-bg-elevated, #ffffff);
+  border-top: 1px solid var(--color-border, #e5e1d9);
 }
 
 .chat-input {
   width: 100%;
   padding: 0.875rem;
-  border: 1px solid var(--color-border-light, #e0e0e0);
+  border: 1px solid var(--color-border-strong, #d4cfc3);
   border-radius: 8px;
   font-family: inherit;
   font-size: 0.9375rem;
@@ -455,9 +457,9 @@ function closeDialog() {
 }
 
 .chat-input:focus {
-  outline: 2px solid var(--color-focus, #4A90E2);
+  outline: 2px solid var(--color-focus, #2d5a3d);
   outline-offset: 0;
-  border-color: var(--color-primary, #4A90E2);
+  border-color: var(--color-primary, #2d5a3d);
 }
 
 .chat-input:disabled {
@@ -487,27 +489,27 @@ function closeDialog() {
 }
 
 .button-primary {
-  background-color: var(--color-primary, #4A90E2);
+  background-color: var(--color-primary, #2d5a3d);
   color: white;
 }
 
 .button-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover, #357ABD);
+  background-color: var(--color-primary-hover, #234a30);
 }
 
 .button-secondary {
-  background-color: var(--color-bg-surface, #f0f0f0);
-  color: var(--color-text-primary, #1a1a1a);
+  background-color: var(--color-bg-secondary, #f7f5f0);
+  color: var(--color-text, #1a1816);
 }
 
 .button-secondary:hover {
-  background-color: var(--color-bg-hover, #e0e0e0);
+  background-color: var(--color-bg-hover, #f0ede5);
 }
 
 .button-text {
   background: none;
   border: none;
-  color: var(--color-primary, #4A90E2);
+  color: var(--color-primary, #2d5a3d);
   cursor: pointer;
   font-size: 0.875rem;
   text-decoration: underline;

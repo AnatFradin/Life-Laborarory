@@ -18,8 +18,11 @@ export function generateChatGPTLink(reflectionText, personaSystemPrompt) {
     throw new Error('Persona system prompt is required and must be a string');
   }
 
-  // Format the complete prompt: persona's system instructions + user's reflection
-  const fullPrompt = `${personaSystemPrompt}\n\n---\n\nMy reflection:\n\n${reflectionText}`;
+  // Format the complete prompt: persona's system instructions + optional reflection
+  const trimmedReflection = reflectionText.trim();
+  const fullPrompt = trimmedReflection.length > 0
+    ? `${personaSystemPrompt}\n\n---\n\nMy reflection:\n\n${trimmedReflection}`
+    : personaSystemPrompt;
 
   // Encode the prompt for URL
   const encodedPrompt = encodeURIComponent(fullPrompt);
@@ -50,17 +53,10 @@ export function generateChatGPTLinkForPersona(reflectionText, persona) {
  * @returns {Object} - { valid: boolean, error?: string }
  */
 export function validateLinkInputs(reflectionText, personaSystemPrompt) {
-  if (!reflectionText || typeof reflectionText !== 'string') {
+  if (reflectionText === null || reflectionText === undefined || typeof reflectionText !== 'string') {
     return {
       valid: false,
       error: 'Reflection text is required and must be a string',
-    };
-  }
-
-  if (reflectionText.trim().length === 0) {
-    return {
-      valid: false,
-      error: 'Reflection text cannot be empty',
     };
   }
 

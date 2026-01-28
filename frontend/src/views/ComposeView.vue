@@ -35,6 +35,7 @@
               :last-saved="lastSaved"
               @save="handleSave"
               @request-ai-feedback="handleAIFeedback"
+              @update:content="currentContent = $event"
             />
           </div>
         </div>
@@ -45,28 +46,68 @@
           :loading="generating"
         />
 
-        <div v-if="currentContent && currentContent.trim().length > 0" class="external-ai-actions">
+        <div class="external-ai-actions">
+          <label class="coach-select">
+            <span class="coach-select-label">Coach</span>
+            <select
+              v-model="selectedPersonaId"
+              class="coach-select-input"
+              :disabled="personasLoading || personas.length === 0"
+              aria-label="Select a coach persona"
+            >
+              <option value="" disabled>Select coach</option>
+              <option v-for="persona in personas" :key="persona.id" :value="persona.id">
+                {{ persona.name }}
+              </option>
+            </select>
+          </label>
+
+          <label class="coach-select">
+            <span class="coach-select-label">Prompt</span>
+            <select
+              v-model="selectedPromptId"
+              class="coach-select-input"
+              :disabled="promptsLoading || prompts.length === 0 || !selectedPersona"
+              aria-label="Select a coach prompt"
+            >
+              <option value="" disabled>
+                {{ promptsLoading ? 'Loading prompts...' : prompts.length === 0 ? 'No prompts' : 'Select prompt' }}
+              </option>
+              <option v-for="prompt in prompts" :key="prompt.id" :value="prompt.id">
+                {{ prompt.title }}
+              </option>
+            </select>
+          </label>
+
           <button
             class="talk-chatgpt-btn"
             @click="handleTalkInChatGPT"
-            :disabled="personasLoading || !selectedPersona"
-            :aria-label="`Open ChatGPT with this reflection and persona ${selectedPersona?.name ?? ''}`"
+            :disabled="personasLoading || !selectedPersona || (prompts.length > 0 && !selectedPrompt)"
+            :aria-label="selectedPersona
+              ? `Open ChatGPT with ${selectedPersona.name}`
+              : 'Open ChatGPT with selected coach'"
           >
-            <!-- show persona name when selected -->
-            <span v-if="selectedPersona">Talk to {{ selectedPersona.name }} in ChatGPT</span>
-            <span v-else>Talk in ChatGPT</span>
+            Talk in ChatGPT
+          </button>
+
+          <button
+            class="manage-coaches-btn"
+            type="button"
+            @click="goToCoachManager"
+          >
+            Manage coaches
           </button>
         </div>
 
-        <!-- Complete Entry Button for Text Mode -->
+        <!-- Save Reflection Button for Text Mode -->
         <button
           class="complete-entry-btn"
           @click="handleSave(currentContent)"
           :disabled="saving || !hasContent"
-          :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+          :aria-label="saving ? 'Saving reflection...' : 'Save reflection'"
         >
           <span v-if="saving">Saving...</span>
-          <span v-else>Complete Entry</span>
+          <span v-else>Save Reflection</span>
         </button>
       </template>
 
@@ -87,15 +128,15 @@
             Last saved: {{ lastSaved.toLocaleString() }}
           </p>
 
-          <!-- Complete Entry Button for Visual Mode -->
+          <!-- Save Reflection Button for Visual Mode -->
           <button
             class="complete-entry-btn"
             @click="handleSaveVisual"
             :disabled="saving || !hasContent"
-            :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+            :aria-label="saving ? 'Saving reflection...' : 'Save reflection'"
           >
             <span v-if="saving">Saving...</span>
-            <span v-else>Complete Entry</span>
+            <span v-else>Save Reflection</span>
           </button>
         </div>
       </template>
@@ -130,15 +171,15 @@
             Last saved: {{ lastSaved.toLocaleString() }}
           </p>
 
-          <!-- Complete Entry Button for Mixed Mode -->
+          <!-- Save Reflection Button for Mixed Mode -->
           <button
             class="complete-entry-btn"
             @click="handleSaveMixed"
             :disabled="saving || !canSaveMixed"
-            :aria-label="saving ? 'Saving reflection...' : 'Complete reflection entry'"
+            :aria-label="saving ? 'Saving reflection...' : 'Save reflection'"
           >
             <span v-if="saving">Saving...</span>
-            <span v-else>Complete Entry</span>
+            <span v-else>Save Reflection</span>
           </button>
         </div>
       </template>
@@ -156,7 +197,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import ReflectionEditor from '../components/ReflectionEditor.vue';
 import AIMirrorPanel from '../components/AIMirrorPanel.vue';
 import ExternalAIDialog from '../components/ExternalAIDialog.vue';
@@ -165,11 +207,13 @@ import { useReflections } from '../composables/useReflections.js';
 import { useAIMirror } from '../composables/useAIMirror.js';
 import { usePreferences } from '../composables/usePreferences.js';
 import { usePersonas } from '../composables/usePersonas.js';
+import { usePrompts } from '../composables/usePrompts.js';
 
 const { createReflection, updateReflectionAI, saveExternalAIResponse } = useReflections();
 const { generateMirrorResponse, generating, error: aiError } = useAIMirror();
-const { preferences, loadPreferences, isUsingLocalAI, isUsingOnlineAI, getPrivacyLevel } = usePreferences();
-const { personas, selectedPersona, loadPersonas, generateChatGPTLink, loading: personasLoading } = usePersonas();
+const { preferences, loadPreferences, updatePreferences, isUsingLocalAI, isUsingOnlineAI, getPrivacyLevel } = usePreferences();
+const { personas, selectedPersona, loadPersonas, generateChatGPTLink, loading: personasLoading, selectPersona } = usePersonas();
+const router = useRouter();
 
 // Header data
 const currentDate = computed(() => {
@@ -203,6 +247,43 @@ const saveStatusText = computed(() => {
   return '';
 });
 
+const selectedPersonaId = computed({
+  get: () => selectedPersona.value?.id || '',
+  set: (id) => selectPersona(id),
+});
+
+const { prompts, loading: promptsLoading, selectedPrompt, selectPrompt } = usePrompts(selectedPersonaId);
+
+const selectedPromptId = computed({
+  get: () => selectedPrompt.value?.id || '',
+  set: (id) => {
+    const prompt = prompts.value.find((item) => item.id === id) || null;
+    selectPrompt(prompt);
+    if (preferences.value && selectedPersonaId.value) {
+      updatePreferences({
+        selectedPromptIds: {
+          ...(preferences.value.selectedPromptIds || {}),
+          [selectedPersonaId.value]: id,
+        },
+      });
+    }
+  },
+});
+
+watch(selectedPersonaId, () => {
+  selectPrompt(null);
+});
+
+watch([() => preferences.value, selectedPersonaId, () => prompts.value], () => {
+  const personaId = selectedPersonaId.value;
+  const preferred = preferences.value?.selectedPromptIds?.[personaId];
+  if (!preferred || !prompts.value.length) return;
+  const match = prompts.value.find((item) => item.id === preferred);
+  if (match) {
+    selectPrompt(match);
+  }
+});
+
 defineEmits(['toggle-formatting-guide']);
 
 // Local state for external AI dialog
@@ -226,6 +307,10 @@ const privacyStatus = computed(() => {
   }
   return { text: 'Local processing only', icon: '🔒' };
 });
+
+const goToCoachManager = () => {
+  router.push('/coach');
+};
 
 /**
  * Check if mixed mode reflection can be saved
@@ -411,7 +496,11 @@ const handleTalkInChatGPT = async () => {
   }
 
   try {
-    const result = await generateChatGPTLink(currentContent.value, selectedPersona?.value?.id);
+    const result = await generateChatGPTLink(
+      currentContent.value,
+      selectedPersona?.value?.id,
+      selectedPrompt.value?.id
+    );
     if (result && result.chatGPTUrl) {
       lastGeneratedUrl.value = result.chatGPTUrl;
       // If we successfully opened a blank tab, navigate it to the generated URL.
@@ -452,6 +541,8 @@ const handleSaveExternalSummary = async () => {
   const sessionData = {
     personaId: selectedPersona.value?.id,
     personaName: selectedPersona.value?.name,
+    promptId: selectedPrompt.value?.id || null,
+    promptTitle: selectedPrompt.value?.title || null,
     sessionSummary: externalSummary.value.trim(),
     chatGPTUrl: lastGeneratedUrl.value || null,
   };
@@ -538,29 +629,32 @@ const handleSaveExternalSummary = async () => {
   line-height: 1;
 }
 
-/* Complete Entry Button - Moved to bottom */
+/* Save Reflection Button - Moved to bottom */
 .complete-entry-btn {
-  padding: var(--space-md) var(--space-xl);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--color-accent-purple) 0%, var(--color-accent-purple-hover) 100%);
+  min-height: 34px;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
   color: white;
-  font-weight: 600;
-  font-size: var(--text-base);
+  font-weight: 500;
+  font-size: var(--text-sm);
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
-  width: 100%;
-  margin-top: var(--space-xl);
+  box-shadow: none;
+  width: auto;
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
 .complete-entry-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  background: var(--color-primary-hover);
+  transform: none;
+  box-shadow: none;
 }
 
 .complete-entry-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -668,7 +762,7 @@ const handleSaveExternalSummary = async () => {
 .compose-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xl);
+  gap: var(--space-sm);
 }
 
 /* Editor Layout - Side by Side */
@@ -748,29 +842,73 @@ const handleSaveExternalSummary = async () => {
 }
 
 .external-ai-actions {
-  margin-top: var(--space-lg);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.coach-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.coach-select-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.coach-select-input {
+  min-height: 34px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: var(--text-sm);
 }
 
 .talk-chatgpt-btn {
-  padding: var(--space-md) var(--space-xl);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: white;
-  border: none;
-  border-radius: var(--radius-lg);
+  min-height: 34px;
+  padding: 0 var(--space-lg);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border: 1px solid var(--color-primary-surface);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  box-shadow: none;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
 }
 
 .talk-chatgpt-btn:hover:not(:disabled) {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  background: var(--color-primary-surface);
+  border-color: var(--color-primary);
 }
 
 .talk-chatgpt-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
-  transform: none;
+}
+
+.manage-coaches-btn {
+  min-height: 34px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+
+.manage-coaches-btn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
 }
 </style>
