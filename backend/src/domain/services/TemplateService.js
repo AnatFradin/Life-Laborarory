@@ -243,9 +243,9 @@ class TemplateService {
    */
   _escapeYamlValue(value) {
     // If value contains special characters, quote it
-    if (value.match(/[:\n\r"'#\[\]{}]/) || value.trim() !== value) {
-      // Escape double quotes and wrap in quotes
-      return `"${value.replace(/"/g, '\\"')}"`;
+    if (value.match(/[:\n\r"'#\[\]{}\\]/) || value.trim() !== value) {
+      // Escape backslashes first, then double quotes, and wrap in quotes
+      return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
     }
     return value;
   }
