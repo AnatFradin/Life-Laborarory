@@ -26,7 +26,6 @@ export async function getTemplate(id) {
 /**
  * Create a new template
  * @param {Object} templateData - Template data
- * @param {string} templateData.id - Unique identifier
  * @param {string} templateData.name - Display name
  * @param {string} templateData.content - Markdown content
  * @param {string} [templateData.description] - Optional description

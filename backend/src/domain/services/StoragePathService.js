@@ -1,4 +1,5 @@
 import path from 'path';
+import os from 'os';
 import config from '../../config/index.js';
 import { getiCloudStoragePath } from '../../utils/icloud.js';
 
@@ -28,8 +29,22 @@ class StoragePathService {
   async getBasePath(storageLocation = 'local', customPath = null) {
     // If custom path is provided, use it regardless of storage location
     if (customPath && customPath.trim() !== '') {
-      console.log(`Using custom storage path: ${customPath}`);
-      return customPath;
+      const trimmed = customPath.trim();
+      let normalized = trimmed;
+
+      if (trimmed === '~') {
+        normalized = os.homedir();
+      } else if (trimmed.startsWith('~/')) {
+        normalized = path.join(os.homedir(), trimmed.slice(2));
+      }
+
+      if (!path.isAbsolute(normalized)) {
+        console.warn('Custom storage path is not absolute; resolving relative to home directory');
+        normalized = path.resolve(os.homedir(), normalized);
+      }
+
+      console.log(`Using custom storage path: ${normalized}`);
+      return normalized;
     }
 
     switch (storageLocation) {
@@ -84,6 +99,17 @@ class StoragePathService {
   async getExportsDir(storageLocation = 'local', customPath = null) {
     const basePath = await this.getBasePath(storageLocation, customPath);
     return path.join(basePath, 'exports');
+  }
+
+  /**
+   * Get templates directory path
+   * @param {string} storageLocation
+   * @param {string|null} customPath
+   * @returns {Promise<string>}
+   */
+  async getTemplatesDir(storageLocation = 'local', customPath = null) {
+    const basePath = await this.getBasePath(storageLocation, customPath);
+    return path.join(basePath, 'templates');
   }
 
   /**

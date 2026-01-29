@@ -7,10 +7,11 @@
 import express from 'express';
 import { z } from 'zod';
 import ExportService from '../../../domain/services/ExportService.js';
-import ReflectionService from '../../../domain/services/ReflectionService.js';
 import MarkdownExporter from '../../export/MarkdownExporter.js';
-import LocalFileRepository from '../../storage/LocalFileRepository.js';
 import config from '../../../config/index.js';
+import repositoryFactory from '../../../domain/factories/RepositoryFactory.js';
+import storagePathService from '../../../domain/services/StoragePathService.js';
+import { LocalPreferencesRepository } from '../../storage/LocalPreferencesRepository.js';
 
 /**
  * Create export router with optional dependencies
@@ -21,11 +22,14 @@ import config from '../../../config/index.js';
 function createExportRouter(deps = {}) {
   const router = express.Router();
 
-  // Initialize services (use injected or create new)
-  const repository = deps.repository || new LocalFileRepository();
-  const reflectionService = new ReflectionService(repository);
-  const exporter = new MarkdownExporter();
-  const exportService = new ExportService(repository, exporter);
+  const preferencesRepo = new LocalPreferencesRepository(config.preferencesFile());
+
+  async function getBaseDataDir() {
+    const preferences = await preferencesRepo.getPreferences();
+    const storageLocation = preferences.storageLocation || 'local';
+    const customPath = preferences.customStoragePath || null;
+    return await storagePathService.getBasePath(storageLocation, customPath);
+  }
 
 // Request validation schema
 const ExportRequestSchema = z.object({
@@ -64,10 +68,14 @@ router.post('/', async (req, res, next) => {
     const { format, includeMetadata } = validation.data;
 
     // Export reflections with dataDir for reading images
+    const dataDir = await getBaseDataDir();
+    const repository = deps.repository || await repositoryFactory.createReflectionRepository();
+    const exporter = new MarkdownExporter();
+    const exportService = new ExportService(repository, exporter);
     const result = await exportService.exportAllToMarkdown({
       format,
       includeMetadata,
-      dataDir: config.dataDir,
+      dataDir,
     });
 
     // Generate filename with timestamp

@@ -96,15 +96,15 @@ watch(() => templates.value, () => {
 .label-text {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary, #524e47);
 }
 
 .template-select {
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--color-border, #e5e1d9);
   border-radius: 0.5rem;
-  background: var(--bg-surface);
-  color: var(--text-primary);
+  background: var(--color-bg-elevated, #ffffff);
+  color: var(--color-text, #1a1816);
   font-size: 0.875rem;
   font-family: inherit;
   cursor: pointer;
@@ -112,13 +112,13 @@ watch(() => templates.value, () => {
 }
 
 .template-select:hover:not(:disabled) {
-  border-color: var(--border-hover);
+  border-color: var(--color-border-strong, #d4cfc3);
 }
 
 .template-select:focus {
   outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--accent-primary-alpha);
+  border-color: var(--color-primary, #2d5a3d);
+  box-shadow: 0 0 0 3px var(--color-focus-ring, rgba(45, 90, 61, 0.15));
 }
 
 .template-select:disabled {
@@ -128,10 +128,10 @@ watch(() => templates.value, () => {
 
 .clear-template-btn {
   padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--color-border, #e5e1d9);
   border-radius: 0.375rem;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  background: var(--color-bg-elevated, #ffffff);
+  color: var(--color-text-secondary, #524e47);
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
@@ -139,15 +139,15 @@ watch(() => templates.value, () => {
 }
 
 .clear-template-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--border-hover);
-  color: var(--text-primary);
+  background: var(--color-bg-hover, #f0ede5);
+  border-color: var(--color-border-strong, #d4cfc3);
+  color: var(--color-text, #1a1816);
 }
 
 .error-message {
   padding: 0.5rem 0.75rem;
-  background: var(--error-bg);
-  color: var(--error-text);
+  background: var(--color-error-light, #fef1f1);
+  color: var(--color-error, #a63232);
   border-radius: 0.5rem;
   font-size: 0.875rem;
 }

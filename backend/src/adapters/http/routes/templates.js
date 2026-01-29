@@ -11,13 +11,24 @@
 import express from 'express';
 import TemplateService from '../../../domain/services/TemplateService.js';
 import config from '../../../config/index.js';
-import path from 'path';
+import storagePathService from '../../../domain/services/StoragePathService.js';
+import { LocalPreferencesRepository } from '../../storage/LocalPreferencesRepository.js';
 
 const router = express.Router();
 
-// Create a shared TemplateService instance to maintain cache
-const templatesDir = path.join(config.dataDir, 'reflection-templates');
-const templateService = new TemplateService(templatesDir);
+const preferencesRepo = new LocalPreferencesRepository(config.preferencesFile());
+
+async function getTemplateService() {
+  const preferences = await preferencesRepo.getPreferences();
+  const storageLocation = preferences.storageLocation || 'local';
+  const customPath = preferences.customStoragePath || null;
+  const templatesDir = await storagePathService.getTemplatesDir(
+    storageLocation,
+    customPath
+  );
+
+  return new TemplateService(templatesDir);
+}
 
 /**
  * GET /api/templates
@@ -25,6 +36,7 @@ const templateService = new TemplateService(templatesDir);
  */
 router.get('/', async (req, res, next) => {
   try {
+    const templateService = await getTemplateService();
     const templates = await templateService.getAllTemplates();
     
     res.json({
@@ -42,6 +54,7 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
+    const templateService = await getTemplateService();
     const { id } = req.params;
     const template = await templateService.getTemplateById(id);
 
@@ -63,7 +76,6 @@ router.get('/:id', async (req, res, next) => {
  * 
  * Request body:
  * {
- *   id: string (required, unique identifier/filename without .md)
  *   name: string (required, display name)
  *   description?: string
  *   content: string (required, markdown content)
@@ -73,25 +85,17 @@ router.get('/:id', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
   try {
-    const { id, name, description, content, tags, isDefault } = req.body;
+    const templateService = await getTemplateService();
+    const { name, description, content, tags, isDefault } = req.body;
 
     // Validate required fields
-    if (!id || !name || !content) {
-      const error = new Error('id, name, and content are required');
+    if (!name || !content) {
+      const error = new Error('name and content are required');
       error.statusCode = 400;
       throw error;
     }
 
-    // Check if template with this ID already exists
-    const existing = await templateService.getTemplateById(id);
-    if (existing) {
-      const error = new Error('Template with this ID already exists');
-      error.statusCode = 409;
-      throw error;
-    }
-
     const templateData = {
-      id,
       name,
       description,
       content,
@@ -115,6 +119,7 @@ router.post('/', async (req, res, next) => {
  */
 router.put('/:id', async (req, res, next) => {
   try {
+    const templateService = await getTemplateService();
     const { id } = req.params;
     const updates = req.body;
 
@@ -132,6 +137,7 @@ router.put('/:id', async (req, res, next) => {
  */
 router.delete('/:id', async (req, res, next) => {
   try {
+    const templateService = await getTemplateService();
     const { id } = req.params;
     
     const deleted = await templateService.deleteTemplate(id);

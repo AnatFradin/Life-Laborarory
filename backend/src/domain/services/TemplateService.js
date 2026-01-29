@@ -1,7 +1,7 @@
 /**
  * TemplateService - Service for loading and managing reflection templates
  * 
- * Handles loading templates from markdown files in data/reflection-templates/,
+ * Handles loading templates from markdown files in the storage templates directory,
  * validation, and CRUD operations
  */
 
@@ -177,8 +177,10 @@ class TemplateService {
     await this._ensureTemplatesDir();
 
     const now = new Date().toISOString();
+    const id = await this._generateTemplateId(templateData.name);
     const template = createTemplate({
       ...templateData,
+      id,
       createdAt: now,
     });
 
@@ -197,6 +199,34 @@ class TemplateService {
 
     console.log(`[TemplateService] Template ${validated.id} saved successfully`);
     return validated;
+  }
+
+  /**
+   * Generate a unique template ID from the template name
+   * @param {string} name - Template name
+   * @returns {Promise<string>} Unique template ID
+   * @private
+   */
+  async _generateTemplateId(name) {
+    const raw = (name || '').toString().toLowerCase();
+    let base = raw
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '-');
+
+    if (!base) {
+      base = 'template';
+    }
+
+    let candidate = base;
+    let counter = 1;
+
+    while (existsSync(join(this.templatesDir, `${candidate}.md`))) {
+      counter += 1;
+      candidate = `${base}-${counter}`;
+    }
+
+    return candidate;
   }
 
   /**
