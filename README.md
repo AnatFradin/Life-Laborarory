@@ -243,14 +243,37 @@ npm run test:coverage # Coverage report
 
 ## 📚 Documentation
 
+### For Users
 - **[User Guide](./docs/user-guide.md)**: Complete guide for end users
-- **[Developer Quickstart](./docs/quickstart.md)**: Get started developing in < 5 minutes
 - **[CHANGELOG](./CHANGELOG.md)**: Version history and release notes
+
+### For Developers
+- **[Architecture Documentation](./ARCHITECTURE.md)**: Complete system architecture, design patterns, and data flows
+- **[Refactoring Proposals](./REFACTORING-PROPOSALS.md)**: Code quality review and improvement opportunities
+- **[Developer Quickstart](./docs/quickstart.md)**: Get started developing in < 5 minutes
 - **[Product Vision](./specs/000-product-vision/spec.md)**: What and why
 - **[Implementation Plan](./specs/000-product-vision/plan.md)**: Architecture and technical decisions
 - **[Data Model](./specs/000-product-vision/data-model.md)**: Entity definitions and validation
 - **[API Contracts](./specs/000-product-vision/contracts/)**: REST API specifications
 - **[Tasks](./specs/000-product-vision/tasks.md)**: Implementation task breakdown
+
+### 📝 Documentation Maintenance
+
+**IMPORTANT**: When making structural changes to the codebase, update the relevant documentation:
+
+- **ARCHITECTURE.md**: Update when:
+  - Adding/removing architectural layers or patterns
+  - Changing domain entities or relationships
+  - Adding/modifying API endpoints
+  - Integrating new external services
+  - Changing component hierarchy
+
+- **REFACTORING-PROPOSALS.md**: Update after:
+  - Implementing proposed refactorings (mark as complete)
+  - Identifying new code quality issues
+  - Completing code reviews
+
+See [ARCHITECTURE.md - Maintenance Guidelines](./ARCHITECTURE.md#maintenance-guidelines) for detailed instructions.
 
 ## 🌱 Philosophy
 
