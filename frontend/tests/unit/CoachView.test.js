@@ -69,6 +69,7 @@ describe('CoachView Component', () => {
 
     mockUsePreferences = {
       preferences: { value: { selectedPersonaId: 'stoic-coach' } },
+      loadPreferences: vi.fn().mockResolvedValue(undefined),
       updatePreferences: vi.fn().mockResolvedValue(undefined),
     };
     
@@ -158,7 +159,7 @@ describe('CoachView Component', () => {
       expect(wrapper.text()).toContain('Loading');
     });
 
-    it('should call loadPersonas on mount', () => {
+    it('should call loadPersonas on mount', async () => {
       mount(CoachView, {
         global: {
           mocks: {
@@ -168,6 +169,8 @@ describe('CoachView Component', () => {
           }
         }
       });
+
+      await flushPromises();
 
       expect(mockUsePersonas.loadPersonas).toHaveBeenCalled();
     });

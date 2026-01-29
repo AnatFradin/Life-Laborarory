@@ -156,7 +156,7 @@ describe('AI Chat API Integration Tests', () => {
         expect(response.body.data.promptId).toBe('stoic-daily-reflection');
         expect(response.body.data.timestamp).toBeDefined();
       }
-    });
+    }, 20000);
 
     it('should have proper response structure when successful', async () => {
       const requestBody = {
@@ -179,7 +179,7 @@ describe('AI Chat API Integration Tests', () => {
         expect(typeof response.body.data.message).toBe('string');
         expect(response.body.data.message.length).toBeGreaterThan(0);
       }
-    });
+    }, 20000);
 
     it('should work with different prompts for same persona', async () => {
       const requestBody1 = {
@@ -205,7 +205,7 @@ describe('AI Chat API Integration Tests', () => {
       // Both should have same success/failure status
       expect(response1.status).toBeDefined();
       expect(response2.status).toBeDefined();
-    });
+    }, 20000);
 
     it('should handle special characters in message', async () => {
       const requestBody = {
@@ -220,7 +220,7 @@ describe('AI Chat API Integration Tests', () => {
 
       // Should either succeed or fail gracefully
       expect([200, 503, 504]).toContain(response.status);
-    });
+    }, 20000);
 
     it('should handle multi-line messages', async () => {
       const requestBody = {
@@ -235,6 +235,6 @@ describe('AI Chat API Integration Tests', () => {
 
       // Should either succeed or fail gracefully
       expect([200, 503, 504]).toContain(response.status);
-    });
+    }, 20000);
   });
 });

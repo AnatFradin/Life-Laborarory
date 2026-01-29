@@ -7,8 +7,11 @@
 import express from 'express';
 import path from 'path';
 import config from '../../../config/index.js';
+import storagePathService from '../../../domain/services/StoragePathService.js';
+import { LocalPreferencesRepository } from '../../storage/LocalPreferencesRepository.js';
 
 const router = express.Router();
+const preferencesRepo = new LocalPreferencesRepository(config.preferencesFile());
 
 /**
  * GET /api/visuals/:year-:month/:filename
@@ -16,7 +19,7 @@ const router = express.Router();
  * 
  * Example: /api/visuals/2025-11/abc123-def456.jpg
  */
-router.get('/:yearMonth/:filename', (req, res, next) => {
+router.get('/:yearMonth/:filename', async (req, res, next) => {
   try {
     const { yearMonth, filename } = req.params;
     
@@ -35,7 +38,11 @@ router.get('/:yearMonth/:filename', (req, res, next) => {
     }
     
     // Construct file path
-    const filePath = path.join(config.visualsDir(), yearMonth, filename);
+    const preferences = await preferencesRepo.getPreferences();
+    const storageLocation = preferences.storageLocation || 'local';
+    const customPath = preferences.customStoragePath || null;
+    const visualsDir = await storagePathService.getVisualsDir(storageLocation, customPath);
+    const filePath = path.join(visualsDir, yearMonth, filename);
     
     // Send file (Express handles 404 if file doesn't exist)
     res.sendFile(filePath, (err) => {

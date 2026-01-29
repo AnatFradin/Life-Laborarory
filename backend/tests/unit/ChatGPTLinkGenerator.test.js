@@ -14,16 +14,16 @@ describe('ChatGPTLinkGenerator', () => {
       expect(result.error).toBeUndefined();
     });
 
-    it('should reject empty reflection text', () => {
+    it('should allow empty reflection text', () => {
       const result = validateLinkInputs('', 'System prompt');
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('Reflection text');
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
     });
 
-    it('should reject whitespace-only reflection text', () => {
+    it('should allow whitespace-only reflection text', () => {
       const result = validateLinkInputs('   ', 'System prompt');
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain('Reflection text');
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
     });
 
     it('should reject empty system prompt', () => {

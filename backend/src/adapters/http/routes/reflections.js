@@ -15,8 +15,11 @@ import repositoryFactory from '../../../domain/factories/RepositoryFactory.js';
 import { validateBody } from '../middleware/validation.js';
 import { ReflectionSchema } from '../../../domain/entities/Reflection.js';
 import config from '../../../config/index.js';
+import storagePathService from '../../../domain/services/StoragePathService.js';
+import { LocalPreferencesRepository } from '../../storage/LocalPreferencesRepository.js';
 
 const router = express.Router();
+const preferencesRepo = new LocalPreferencesRepository(config.preferencesFile());
 
 // Configure multer for memory storage (we'll handle file writing in the service)
 const upload = multer({
@@ -30,6 +33,13 @@ const upload = multer({
 async function getReflectionService() {
   const repository = await repositoryFactory.createReflectionRepository();
   return new ReflectionService(repository);
+}
+
+async function getBaseDataDir() {
+  const preferences = await preferencesRepo.getPreferences();
+  const storageLocation = preferences.storageLocation || 'local';
+  const customPath = preferences.customStoragePath || null;
+  return await storagePathService.getBasePath(storageLocation, customPath);
 }
 
 /**
@@ -142,9 +152,10 @@ router.post(
             dimensions,
           };
 
+          const dataDir = await getBaseDataDir();
           const created = await reflectionService.importVisual(
             imageData,
-            config.dataDir
+            dataDir
           );
 
           res.status(201).json(created);
@@ -157,10 +168,11 @@ router.post(
             sizeBytes: file.size,
           }));
 
+          const dataDir = await getBaseDataDir();
           const created = await reflectionService.createWithImages(
             { mode, content },
             imagesData,
-            config.dataDir
+            dataDir
           );
 
           res.status(201).json(created);
