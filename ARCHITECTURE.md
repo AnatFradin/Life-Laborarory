@@ -1,7 +1,7 @@
 # 🏗️ Architecture Documentation - Laboratory of Life
 
-> **Last Updated**: 2026-01-29  
-> **Version**: 1.0.0  
+> **Last Updated**: 2026-01-31  
+> **Version**: 1.1.0  
 > **Maintainers**: Keep this document in sync with structural changes (see [Maintenance Guidelines](#maintenance-guidelines))
 
 ---
@@ -43,62 +43,81 @@
 
 ### High-Level Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         USER INTERFACE                          │
-│                      (Vue 3 SPA - Port 5173)                    │
-│  ┌──────────┬──────────┬──────────┬──────────┬────────────┐   │
-│  │ Compose  │ History  │  Coach   │ Settings │   Export   │   │
-│  │  View    │   View   │   View   │   View   │    View    │   │
-│  └──────────┴──────────┴──────────┴──────────┴────────────┘   │
-│               │ Composables (State Management)                  │
-│               │ useReflections, useAIMirror, usePersonas, ...   │
-└───────────────┼─────────────────────────────────────────────────┘
-                │
-                │ HTTP/REST (Axios)
-                │
-┌───────────────▼─────────────────────────────────────────────────┐
-│                    BACKEND API SERVER                           │
-│                  (Express.js - Port 3000)                       │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐ │
-│  │              HTTP ADAPTERS (Routes Layer)                │ │
-│  │  /reflections  /ai  /personas  /export  /preferences    │ │
-│  └────────────────────┬─────────────────────────────────────┘ │
-│                       │                                         │
-│  ┌────────────────────▼─────────────────────────────────────┐ │
-│  │            DOMAIN LAYER (Business Logic)                 │ │
-│  │  ┌────────────────────────────────────────────────────┐ │ │
-│  │  │  Services: ReflectionService, AIMirrorService,     │ │ │
-│  │  │            ExportService, TemplateService          │ │ │
-│  │  └────────────────────────────────────────────────────┘ │ │
-│  │  ┌────────────────────────────────────────────────────┐ │ │
-│  │  │  Entities: Reflection, CoachPersona, Template,     │ │ │
-│  │  │            UserPreferences, AIInteraction          │ │ │
-│  │  └────────────────────────────────────────────────────┘ │ │
-│  │  ┌────────────────────────────────────────────────────┐ │ │
-│  │  │  Ports (Interfaces): IAIProvider, IRepository,     │ │ │
-│  │  │                      IExporter                      │ │ │
-│  │  └────────────────────────────────────────────────────┘ │ │
-│  └────────────────────┬─────────────────────────────────────┘ │
-│                       │                                         │
-│  ┌────────────────────▼─────────────────────────────────────┐ │
-│  │              EXTERNAL ADAPTERS                           │ │
-│  │  ┌──────────┬────────────────┬───────────────────────┐  │ │
-│  │  │ Storage  │  AI Providers  │  Export              │  │ │
-│  │  │ ────────┤ ──────────────┤ ─────────────────────│  │ │
-│  │  │ Local    │  Ollama        │  Markdown            │  │ │
-│  │  │ File     │  OpenAI        │  Exporter            │  │ │
-│  │  │ Repo     │  Anthropic     │                      │  │ │
-│  │  └──────────┴────────────────┴───────────────────────┘  │ │
-│  └──────────────────────────────────────────────────────────┘ │
-└───────────────┬─────────────┬──────────────┬──────────────────┘
-                │             │              │
-     ┌──────────▼──┐   ┌──────▼────┐   ┌────▼──────┐
-     │  Local File │   │  Ollama   │   │  OpenAI/  │
-     │   System    │   │  (Local)  │   │ Anthropic │
-     │ (data/)     │   │ :11434    │   │ (Online)  │
-     └─────────────┘   └───────────┘   └───────────┘
+```plantuml
+@startuml
+!define RECTANGLE class
+
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+
+package "USER INTERFACE\n(Vue 3 SPA - Port 5173)" as frontend {
+  component "Compose\nView" as compose
+  component "History\nView" as history
+  component "Coach\nView" as coach
+  component "Settings\nView" as settings
+  component "Export\nView" as export
+  
+  note bottom of frontend
+    Composables (State Management)
+    useReflections, useAIMirror, usePersonas, ...
+  end note
+}
+
+package "BACKEND API SERVER\n(Express.js - Port 3000)" as backend {
+  
+  package "HTTP ADAPTERS (Routes Layer)" as routes {
+    component "/reflections" as ref_route
+    component "/ai" as ai_route
+    component "/personas" as personas_route
+    component "/export" as export_route
+    component "/preferences" as pref_route
+  }
+  
+  package "DOMAIN LAYER (Business Logic)" as domain {
+    package "Services" as services {
+      component "ReflectionService" as ref_svc
+      component "AIMirrorService" as ai_svc
+      component "ExportService" as exp_svc
+      component "TemplateService" as tpl_svc
+    }
+    
+    package "Entities" as entities {
+      component "Reflection" as reflection
+      component "CoachPersona" as persona
+      component "Template" as template
+      component "UserPreferences" as prefs
+      component "AIInteraction" as ai_int
+    }
+    
+    package "Ports (Interfaces)" as ports {
+      interface "IAIProvider" as ai_port
+      interface "IRepository" as repo_port
+      interface "IExporter" as exp_port
+    }
+  }
+  
+  package "EXTERNAL ADAPTERS" as adapters {
+    component "Storage\nLocal File Repo" as storage
+    component "AI Providers\nOllama\nOpenAI\nAnthropic" as ai_adapters
+    component "Export\nMarkdown Exporter" as exp_adapter
+  }
+  
+  routes -down-> domain
+  domain -down-> adapters
+}
+
+database "Local File\nSystem\n(data/)" as filesystem
+cloud "Ollama\n(Local)\n:11434" as ollama
+cloud "OpenAI/\nAnthropic\n(Online)" as online_ai
+
+frontend -down-> routes : HTTP/REST (Axios)
+storage -down-> filesystem
+ai_adapters -down-> ollama
+ai_adapters -down-> online_ai
+
+@enduml
 ```
 
 ### Hexagonal Architecture Layers
@@ -310,86 +329,103 @@ Life-Laborarory/
 
 ### Entity Relationship Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Reflection                              │
-│  ───────────────────────────────────────────────────────────    │
-│  - id: UUID                                                     │
-│  - timestamp: ISO 8601                                          │
-│  - mode: "text" | "visual"                                      │
-│  - content: string                                              │
-│  - tags: string[]                                               │
-│  - template: string (template ID)                               │
-│  - aiInteractions: AIInteraction[]        ─────────┐            │
-│  - visualAttachments: VisualAttachment[]  ────────┐│            │
-│  - externalAISessions: ExternalAISession[] ──────┐││            │
-└───────────────────────────────────────────────────┼┼┼───────────┘
-                                                    │││
-                                                    │││
-  ┌─────────────────────────────────────────────────┼┼┘
-  │ ┌───────────────────────────────────────────────┼┘
-  │ │ ┌─────────────────────────────────────────────┘
-  │ │ │
-  │ │ └──▶ ┌──────────────────────────────┐
-  │ │      │    AIInteraction             │
-  │ │      │  ──────────────────────────  │
-  │ │      │  - provider: "local"|"online"│
-  │ │      │  - model: string             │
-  │ │      │  - prompt: string            │
-  │ │      │  - response: string          │
-  │ │      │  - timestamp: ISO 8601       │
-  │ │      │  - systemPromptVersion: SV   │
-  │ │      └──────────────────────────────┘
-  │ │
-  │ └──▶ ┌──────────────────────────────┐
-  │      │   VisualAttachment           │
-  │      │  ──────────────────────────  │
-  │      │  - originalFilename: string  │
-  │      │  - storedPath: string        │
-  │      │  - mimeType: string          │
-  │      │  - sizeBytes: number         │
-  │      │  - dimensions: {w, h}        │
-  │      │  - importTimestamp: ISO 8601 │
-  │      └──────────────────────────────┘
-  │
-  └──▶ ┌──────────────────────────────┐
-       │  ExternalAISession           │
-       │  ──────────────────────────  │
-       │  - personaId: string         │
-       │  - chatGPTLink: URL          │
-       │  - timestamp: ISO 8601       │
-       └──────────────────────────────┘
+```plantuml
+@startuml
+!define ENTITY class
 
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
 
-┌───────────────────────────┐       ┌──────────────────────────┐
-│     CoachPersona          │       │      Template            │
-│  ───────────────────────  │       │  ──────────────────────  │
-│  - id: string             │       │  - id: UUID              │
-│  - name: string           │       │  - name: string          │
-│  - style: string          │       │  - description: string   │
-│  - description: string    │       │  - content: markdown     │
-│  - systemPrompt: string   │       │  - tags: string[]        │
-│  - icon: string           │       │  - isDefault: boolean    │
-│  - color: hex             │       │  - createdAt: ISO 8601   │
-│  - tags: string[]         │       │  - updatedAt: ISO 8601   │
-│  - dynamicPrompts: {...}  │       └──────────────────────────┘
-└───────────────────────────┘
+ENTITY Reflection {
+  - id: UUID
+  - timestamp: ISO 8601
+  - mode: "text" | "visual"
+  - content: string
+  - tags: string[]
+  - template: string (template ID)
+  - aiInteractions: AIInteraction[]
+  - visualAttachments: VisualAttachment[]
+  - externalAISessions: ExternalAISession[]
+}
 
+ENTITY AIInteraction {
+  - provider: "local" | "online"
+  - model: string
+  - prompt: string
+  - response: string
+  - timestamp: ISO 8601
+  - systemPromptVersion: string
+}
 
-┌─────────────────────────────────────────────────────────────┐
-│                   UserPreferences (Singleton)               │
-│  ─────────────────────────────────────────────────────────  │
-│  - aiProvider: "local" | "online"                           │
-│  - localModel: string (e.g., "llama2")                      │
-│  - onlineProvider: "openai" | "anthropic"                   │
-│  - onlineModel: string (e.g., "gpt-4")                      │
-│  - hasAcknowledgedOnlineWarning: boolean                    │
-│  - selectedPersonaId: string                                │
-│  - language: "en" | "ru"                                    │
-│  - theme: "light" | "dark"                                  │
-│  - storageLocation: "local" | "icloud"                      │
-│  - customStoragePath: string (optional)                     │
-└─────────────────────────────────────────────────────────────┘
+ENTITY VisualAttachment {
+  - originalFilename: string
+  - storedPath: string
+  - mimeType: string
+  - sizeBytes: number
+  - dimensions: {w, h}
+  - importTimestamp: ISO 8601
+}
+
+ENTITY ExternalAISession {
+  - personaId: string
+  - chatGPTLink: URL
+  - timestamp: ISO 8601
+}
+
+ENTITY CoachPersona {
+  - id: string
+  - name: string
+  - style: string
+  - description: string
+  - systemPrompt: string
+  - icon: string
+  - color: hex
+  - tags: string[]
+  - dynamicPrompts: {...}
+}
+
+ENTITY Template {
+  - id: UUID
+  - name: string
+  - description: string
+  - content: markdown
+  - tags: string[]
+  - isDefault: boolean
+  - createdAt: ISO 8601
+  - updatedAt: ISO 8601
+}
+
+ENTITY UserPreferences {
+  - aiProvider: "local" | "online"
+  - localModel: string (e.g., "llama2")
+  - onlineProvider: "openai" | "anthropic"
+  - onlineModel: string (e.g., "gpt-4")
+  - hasAcknowledgedOnlineWarning: boolean
+  - selectedPersonaId: string
+  - language: "en" | "ru"
+  - theme: "light" | "dark"
+  - storageLocation: "local" | "icloud"
+  - customStoragePath: string (optional)
+}
+
+Reflection "1" *-- "0..*" AIInteraction : contains
+Reflection "1" *-- "0..*" VisualAttachment : contains
+Reflection "1" *-- "0..*" ExternalAISession : contains
+Reflection "0..*" --> "0..1" Template : uses
+
+note right of Reflection
+  Primary entity representing
+  a user's reflection entry
+end note
+
+note right of UserPreferences
+  Singleton per user
+  Controls AI provider and
+  storage configuration
+end note
+
+@enduml
 ```
 
 ### Validation Rules (Zod Schemas)
@@ -619,45 +655,67 @@ All AI components now use new provider
 
 ### Frontend Component Hierarchy
 
-```
-App.vue
-├── AppSidebar.vue (navigation)
-│   └── router-link components
-└── router-view
-    ├── ComposeView.vue (main editor)
-    │   ├── TemplateSelector.vue
-    │   ├── ReflectionEditor.vue
-    │   │   ├── MarkdownEditor.vue
-    │   │   │   └── MarkdownToolbar.vue
-    │   │   └── MarkdownPreview.vue
-    │   ├── ImageImport.vue (for visual mode)
-    │   ├── AIMirrorPanel.vue
-    │   │   ├── RephraseDialog.vue
-    │   │   └── ExternalAIDialog.vue
-    │   └── SaveTemplateDialog.vue
-    │
-    ├── HistoryView.vue (reflection list)
-    │   ├── ReflectionList.vue
-    │   │   └── ReflectionCard.vue (per item)
-    │   ├── FilterBar.vue
-    │   └── DeleteDialog.vue
-    │
-    ├── CoachView.vue (AI coaching)
-    │   ├── PersonaCard.vue (multiple, for selection)
-    │   ├── CoachChatDialog.vue
-    │   │   └── ChatMessage.vue (per message)
-    │   └── PromptViewDialog.vue
-    │
-    ├── SettingsView.vue (user preferences)
-    │   ├── AIProviderSelector.vue
-    │   ├── StoragePathSelector.vue
-    │   ├── PrivacyWarningDialog.vue
-    │   └── DeleteAllDialog.vue
-    │
-    └── ExportView.vue (data export)
-        ├── ExportOptions.vue
-        ├── ExportPreview.vue
-        └── DownloadButton.vue
+```plantuml
+@startuml
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+
+package "App.vue" {
+  component "AppSidebar.vue" as sidebar {
+    component "router-link" as links
+  }
+  
+  component "router-view" as router {
+    
+    package "ComposeView.vue\n(main editor)" as compose {
+      component "TemplateSelector.vue" as tpl_sel
+      component "ReflectionEditor.vue" as editor {
+        component "MarkdownEditor.vue" as md_edit {
+          component "MarkdownToolbar.vue" as toolbar
+        }
+        component "MarkdownPreview.vue" as preview
+      }
+      component "ImageImport.vue\n(for visual mode)" as img_import
+      component "AIMirrorPanel.vue" as ai_panel {
+        component "RephraseDialog.vue" as rephrase
+        component "ExternalAIDialog.vue" as ext_ai
+      }
+      component "SaveTemplateDialog.vue" as save_tpl
+    }
+    
+    package "HistoryView.vue\n(reflection list)" as history {
+      component "ReflectionList.vue" as ref_list {
+        component "ReflectionCard.vue\n(per item)" as ref_card
+      }
+      component "FilterBar.vue" as filter
+      component "DeleteDialog.vue" as del_dialog
+    }
+    
+    package "CoachView.vue\n(AI coaching)" as coach {
+      component "PersonaCard.vue\n(multiple, for selection)" as persona_card
+      component "CoachChatDialog.vue" as chat_dialog {
+        component "ChatMessage.vue\n(per message)" as chat_msg
+      }
+      component "PromptViewDialog.vue" as prompt_view
+    }
+    
+    package "SettingsView.vue\n(user preferences)" as settings {
+      component "AIProviderSelector.vue" as ai_sel
+      component "StoragePathSelector.vue" as storage_sel
+      component "PrivacyWarningDialog.vue" as privacy_warn
+      component "DeleteAllDialog.vue" as del_all
+    }
+    
+    package "ExportView.vue\n(data export)" as export {
+      component "ExportOptions.vue" as exp_opts
+      component "ExportPreview.vue" as exp_preview
+      component "DownloadButton.vue" as download
+    }
+  }
+}
+
+@enduml
 ```
 
 ### Composable Functions (State Management)
@@ -1046,11 +1104,48 @@ User must explicitly acknowledge before online AI is enabled.
 
 ### Diagram Update Guidelines
 
-- Use **ASCII art** for diagrams (easy to edit, no external tools)
-- For complex diagrams, consider tools like:
-  - [Mermaid](https://mermaid.js.org/) for flowcharts (can be rendered in GitHub)
-  - [PlantUML](https://plantuml.com/) for UML diagrams
-  - [Excalidraw](https://excalidraw.com/) for whiteboard-style diagrams (export as SVG)
+All diagrams in this document use **PlantUML** format for precision and consistency.
+
+#### Viewing PlantUML Diagrams
+
+PlantUML diagrams can be viewed in several ways:
+
+1. **GitHub Integration**: Install a browser extension like:
+   - [Pegmatite](https://chrome.google.com/webstore/detail/plantuml-viewer/legbfeljfbjgfifnkmpoajgpgejojooj) for Chrome
+   - [PlantUML Viewer](https://addons.mozilla.org/en-US/firefox/addon/plantuml-viewer/) for Firefox
+
+2. **VS Code**: Install the "PlantUML" extension by jebbs
+   - Provides live preview with `Alt+D` or `Ctrl+P`
+
+3. **Online Viewer**: Use [PlantUML Web Server](https://www.plantuml.com/plantuml/uml/)
+   - Copy/paste diagram code for instant rendering
+
+4. **Command Line**: Install PlantUML locally
+   ```bash
+   # macOS
+   brew install plantuml
+   
+   # Ubuntu/Debian
+   sudo apt-get install plantuml
+   
+   # Render to PNG
+   plantuml ARCHITECTURE.md
+   ```
+
+#### Editing PlantUML Diagrams
+
+When updating diagrams:
+1. **Maintain consistency**: Use same styling (skinparam) across all diagrams
+2. **Test syntax**: Validate with PlantUML before committing
+3. **Keep it simple**: Focus on clarity over complexity
+4. **Add notes**: Use `note` elements to explain complex relationships
+5. **Update all three**: High-Level Architecture, Entity Relationships, Component Hierarchy
+
+#### PlantUML Resources
+- [PlantUML Guide](https://plantuml.com/guide)
+- [Component Diagrams](https://plantuml.com/component-diagram)
+- [Class Diagrams](https://plantuml.com/class-diagram)
+- [Deployment Diagrams](https://plantuml.com/deployment-diagram)
 
 ### Review Checklist
 
